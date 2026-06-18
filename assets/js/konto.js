@@ -10,6 +10,7 @@
   let editingId = null;     // gesetzt = Bearbeiten-Modus
   let currentPhoto = "";    // Data-URL des aktuellen Fotos
   let membershipItems = []; // zuletzt geladene Mitgliedschaften (für Bearbeiten)
+  let weightCats = [];      // Gewichtsklassen-Kategorien (aus /api/weight-classes)
 
   const $ = (sel) => document.querySelector(sel);
 
@@ -74,12 +75,41 @@
     $("#acc-email").textContent = account.email;
     $("#greet-name").textContent = account.name.split(" ")[0];
 
+    try { weightCats = (await (await fetch("/api/weight-classes")).json()).categories || []; } catch (e) { weightCats = []; }
+
     fillAccountForms();
     await loadMemberships();
     await loadTournaments();
     wireEvents();
     $("#dash").hidden = false;
     $("#dash-loading").hidden = true;
+  }
+
+  /* ----- Gewichtsklassen passend zu Geburtsjahr + Geschlecht ----- */
+  function relevantWeights(birthdate, gender) {
+    const y = new Date(birthdate).getFullYear();
+    if (isNaN(y)) return [];
+    const j = new Date().getFullYear() - y;
+    const cat = weightCats.find((c) => j >= c.minAge && j <= c.maxAge);
+    if (!cat) return [];
+    const male = cat.male || [], female = cat.female || [];
+    if (gender === "männlich") return male.slice();
+    if (gender === "weiblich") return female.slice();
+    const out = male.slice();
+    female.forEach((w) => { if (!out.includes(w)) out.push(w); });
+    return out;
+  }
+  function rebuildWeights(selected, preserveInvalid) {
+    const sel = $("#m-weightclass");
+    if (!sel) return;
+    const form = $("#membership-form");
+    const list = relevantWeights(form.elements.birthdate.value, form.elements.gender.value);
+    let value = selected || "";
+    const opts = list.slice();
+    if (value && !opts.includes(value)) { if (preserveInvalid) opts.unshift(value); else value = ""; }
+    sel.innerHTML = '<option value="">Keine Angabe</option>' +
+      opts.map((w) => "<option>" + BSG.escape(w) + "</option>").join("");
+    sel.value = value;
   }
 
   function fillAccountForms() {
@@ -291,16 +321,22 @@
       }
       hint.hidden = true; editingId = null;
       mForm.reset(); clearErrors(mForm); setPhoto("");
+      rebuildWeights("", false);
       formTitle.textContent = "Mitglied anmelden"; submitLabel("Mitglied anmelden");
       mForm.hidden = false; mForm.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     function openEdit(m) {
       editingId = m.id; clearErrors(mForm);
-      fill(mForm, { firstName: m.firstName, lastName: m.lastName, birthdate: m.birthdate, weightClass: m.weightClass || "", belt: m.belt || "", gender: m.gender || "", nationality: m.nationality || "" });
+      fill(mForm, { firstName: m.firstName, lastName: m.lastName, birthdate: m.birthdate, belt: m.belt || "", gender: m.gender || "", nationality: m.nationality || "" });
+      rebuildWeights(m.weightClass || "", true);
       setPhoto(m.photo || "");
       formTitle.textContent = "Mitglied bearbeiten"; submitLabel("Änderungen speichern");
       mForm.hidden = false; mForm.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+
+    // Gewichtsklassen-Auswahl an Geburtsjahr & Geschlecht anpassen
+    $("#m-birth").addEventListener("change", () => rebuildWeights($("#m-weightclass").value, false));
+    $("#m-gender").addEventListener("change", () => rebuildWeights($("#m-weightclass").value, false));
 
     $("#add-membership-btn").addEventListener("click", () => {
       if (!mForm.hidden && !editingId) { mForm.hidden = true; return; }

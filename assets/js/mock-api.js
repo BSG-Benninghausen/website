@@ -212,6 +212,20 @@
   }
   const overlaps = (a, b) => Array.isArray(a) && Array.isArray(b) && a.some((x) => b.includes(x));
 
+  /* ----- Gewichtsklassen je Altersklasse & Geschlecht (Jahrgangsprinzip) ----- */
+  function weightClassesFor(j, gender, cfg) {
+    if (j == null || !cfg) return [];
+    const cat = (cfg.categories || []).find((c) => j >= c.minAge && j <= c.maxAge);
+    if (!cat) return [];
+    const male = cat.male || [], female = cat.female || [];
+    if (gender === "männlich") return male.slice();
+    if (gender === "weiblich") return female.slice();
+    // divers / keine Angabe: beide Listen zusammenführen (ohne Duplikate)
+    const out = male.slice();
+    female.forEach((w) => { if (!out.includes(w)) out.push(w); });
+    return out;
+  }
+
   /* ----- Judopass-Felder: Foto, Passnummer, Profilfelder ----- */
   const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
   function nextPassNumber() {
@@ -230,11 +244,11 @@
     if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Judopass).";
     return { age };
   }
-  function memberFields(body) {
+  function memberFields(body, allowedWeights) {
     return {
       firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
       photo: body.photo,
-      weightClass: fromList(WEIGHT_CLASSES, body.weightClass),
+      weightClass: (allowedWeights || WEIGHT_CLASSES).includes(body.weightClass) ? body.weightClass : "",
       belt: fromList(BELTS, body.belt),
       gender: fromList(GENDERS, body.gender),
       nationality: fromList(NATIONALITIES, body.nationality),
@@ -393,6 +407,11 @@
     "GET /api/age-classes": async () => {
       const cfg = await loadData("age-classes.json");
       return json({ ok: true, items: allAgeClassLabels(cfg) });
+    },
+
+    "GET /api/weight-classes": async () => {
+      const cfg = await loadData("weight-classes.json");
+      return json({ ok: true, categories: cfg.categories || [] });
     },
 
     /* ---------- Trainingszeiten ---------- */
@@ -789,9 +808,11 @@
       const all = getStore(KEYS.memberships, []);
       // Beitrag/Klasse automatisch aus dem Alter ableiten
       const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
+      const wcfg = await loadData("weight-classes.json");
+      const allowedWeights = weightClassesFor(ageInYear(body.birthdate), fromList(GENDERS, body.gender), wcfg);
       const membership = {
         id: genId("mem"), userId: user.id,
-        ...memberFields(body),
+        ...memberFields(body, allowedWeights),
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
         passNumber: nextPassNumber(),
         status: "aktiv", startedAt: new Date().toISOString(),
@@ -813,9 +834,11 @@
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
 
       const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
+      const wcfg = await loadData("weight-classes.json");
+      const allowedWeights = weightClassesFor(ageInYear(body.birthdate), fromList(GENDERS, body.gender), wcfg);
       all[idx] = {
         ...all[idx],
-        ...memberFields(body),
+        ...memberFields(body, allowedWeights),
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
       };
       setStore(KEYS.memberships, all);

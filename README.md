@@ -73,6 +73,7 @@ Bereitgestellte Endpunkte:
 | `GET /api/memberships` · `POST /api/memberships` | Mitgliedschaften lesen · abschließen |
 | `POST /api/memberships/cancel` | Mitgliedschaft kündigen |
 | `GET /api/age-classes` | Auswählbare Wettkampf-Altersklassen (für den Termin-Editor) |
+| `GET /api/weight-classes` | Gewichtsklassen je Altersklasse & Geschlecht (für gefilterte Auswahl) |
 | `GET /api/training` · `POST /api/training`(`/update`,`/delete`) | Trainingszeiten lesen (öffentlich) · pflegen (`manage_training`) |
 | `GET /api/team` · `POST /api/team`(`/update`,`/delete`) | Team & Vorstand lesen (öffentlich) · pflegen (`manage_team`) |
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
@@ -98,6 +99,11 @@ Bereitgestellte Endpunkte:
   (`POST /api/memberships/update`, nur Eigentümer) und wird als kleiner **Judopass** angezeigt.
   Pflicht-**Foto** (clientseitig verkleinert, als Data-URL gespeichert) plus optional Gewichtsklasse,
   Gürtel/Graduierung, Geschlecht, Nationalität; automatische **Passnummer** (`bsg_pass_counter`).
+  Die **Gewichtsklassen** werden passend zu **Geburtsjahr und Geschlecht vorgefiltert** – es
+  erscheinen nur die für die jeweilige Alters-/Geschlechtsklasse gültigen Klassen (Kinder, U15,
+  U18, Senioren … getrennt nach m/w; bei „divers"/keiner Angabe zusammengeführt). Die Zuordnung
+  ist als anpassbare Vorlage in **`assets/data/weight-classes.json`** hinterlegt; die serverseitige
+  Validierung verwirft eine nicht passende Klasse.
 - **Wettkampf-Altersklassen** (U9…U21/Senioren, Veteranen M1…/F1…) werden je Mitglied aus dem
   Geburtsjahrgang berechnet und als Badges angezeigt – inkl. Übergangsjahrgängen (mehrere Klassen).
   Die Zuordnung ist als anpassbare Vorlage in **`assets/data/age-classes.json`** hinterlegt
