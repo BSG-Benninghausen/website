@@ -31,7 +31,11 @@
     news: "bsg_news",
     events: "bsg_events",
     seedVersion: "bsg_seed_version",
+    passCounter: "bsg_pass_counter",
   };
+
+  const BELTS = ["", "Weißgurt", "Weiß-Gelb", "Gelbgurt", "Gelb-Orange", "Orangegurt", "Orange-Grün", "Grüngurt", "Blaugurt", "Braungurt", "1. Dan (Schwarzgurt)", "2. Dan", "3. Dan", "4. Dan", "5. Dan"];
+  const GENDERS = ["", "männlich", "weiblich", "divers"];
 
   /* Berechtigungs-Katalog (vom Admin auf Rollen verteilbar) */
   const PERMISSIONS = [
@@ -124,6 +128,40 @@
       familyFlat,
       effectiveTotal: Math.min(sumIndividual, familyFlat),
       familyApplied: familyFlat < sumIndividual,
+    };
+  }
+
+  /* ----- Judopass-Felder: Foto, Passnummer, Profilfelder ----- */
+  const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
+  function nextPassNumber() {
+    const n = (getStore(KEYS.passCounter, 0) || 0) + 1;
+    setStore(KEYS.passCounter, n);
+    return "BSG-" + String(n).padStart(4, "0");
+  }
+  function parseWeight(v) {
+    if (v === undefined || v === null || norm(v) === "") return null;
+    const n = parseFloat(String(v).replace(",", "."));
+    return isNaN(n) ? NaN : n;
+  }
+  // gemeinsame Validierung & Übernahme der editierbaren Profilfelder
+  function memberProfile(body, errors) {
+    if (norm(body.firstName).length < 2) errors.firstName = "Bitte Vornamen angeben.";
+    if (norm(body.lastName).length < 2) errors.lastName = "Bitte Nachnamen angeben.";
+    const age = ageFromBirthdate(body.birthdate);
+    if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
+    else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
+    if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Judopass).";
+    const weight = parseWeight(body.weight);
+    if (weight !== null && (isNaN(weight) || weight < 10 || weight > 250)) errors.weight = "Bitte ein gültiges Gewicht (10–250 kg) angeben.";
+    return { age, weight };
+  }
+  function memberFields(body, weight) {
+    return {
+      firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
+      photo: body.photo, weight: weight,
+      belt: BELTS.includes(body.belt) ? body.belt : "",
+      gender: GENDERS.includes(body.gender) ? body.gender : "",
+      nationality: norm(body.nationality),
     };
   }
 
@@ -298,6 +336,7 @@
           id: m.id, firstName: m.firstName, lastName: m.lastName,
           categoryLabel: m.categoryLabel || "", individualFee: m.individualFee || 0,
           status: m.status, startedAt: m.startedAt,
+          photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weight: m.weight != null ? m.weight : null,
           ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
         };
         if (fin) row.iban = owner.iban || null;
@@ -527,11 +566,7 @@
 
       const cfg = await loadData("membership-types.json");
       const errors = {};
-      if (norm(body.firstName).length < 2) errors.firstName = "Bitte Vornamen angeben.";
-      if (norm(body.lastName).length < 2) errors.lastName = "Bitte Nachnamen angeben.";
-      const age = ageFromBirthdate(body.birthdate);
-      if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
-      else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
+      const { age, weight } = memberProfile(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
 
       const all = getStore(KEYS.memberships, []);
@@ -539,12 +574,35 @@
       const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
       const membership = {
         id: genId("mem"), userId: user.id,
-        firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
+        ...memberFields(body, weight),
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
+        passNumber: nextPassNumber(),
         status: "aktiv", startedAt: new Date().toISOString(),
       };
       all.push(membership); setStore(KEYS.memberships, all);
       return json({ ok: true, membership, message: "Mitgliedschaft für " + membership.firstName + " wurde angelegt." }, 201);
+    },
+
+    "POST /api/memberships/update": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const all = getStore(KEYS.memberships, []);
+      const idx = all.findIndex((m) => m.id === body.id && m.userId === user.id);
+      if (idx === -1) return json({ ok: false, message: "Mitgliedschaft nicht gefunden." }, 404);
+
+      const cfg = await loadData("membership-types.json");
+      const errors = {};
+      const { age, weight } = memberProfile(body, errors);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+
+      const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
+      all[idx] = {
+        ...all[idx],
+        ...memberFields(body, weight),
+        ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
+      };
+      setStore(KEYS.memberships, all);
+      return json({ ok: true, membership: all[idx], message: "Mitglied gespeichert." });
     },
 
     "POST /api/memberships/cancel": async (body) => {

@@ -27,14 +27,20 @@
       "<strong>" + items.length + "</strong></div>";
 
     // Tabelle
-    const cols = ["Name", "Klasse", "Status", "Haushalt", "Anschrift"];
-    if (fin) { cols.splice(2, 0, "Beitrag"); cols.push("IBAN"); }
+    const cols = ["Foto", "Name", "Pass-Nr.", "Klasse", "Status", "Haushalt", "Anschrift"];
+    if (fin) { cols.splice(4, 0, "Beitrag"); cols.push("IBAN"); }
     $("#members-table").querySelector("thead").innerHTML = "<tr>" + cols.map((c) => "<th>" + c + "</th>").join("") + "</tr>";
+
+    const thumb = (m) => m.photo
+      ? '<img class="member-thumb" src="' + m.photo + '" alt="">'
+      : '<span class="member-thumb member-thumb--empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="3.2"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></span>';
 
     $("#members-table").querySelector("tbody").innerHTML = items.map((m) => {
       const addr = m.address ? (m.address.street + ", " + m.address.zip + " " + m.address.city) : "—";
       const statusBadge = '<span class="badge badge--' + (m.status === "aktiv" ? "aktiv" : "gekuendigt") + '">' + esc(m.status) + "</span>";
-      let row = "<td><b>" + esc(m.firstName) + " " + esc(m.lastName) + "</b></td>" +
+      let row = "<td>" + thumb(m) + "</td>" +
+        "<td><b>" + esc(m.firstName) + " " + esc(m.lastName) + "</b></td>" +
+        "<td>" + esc(m.passNumber || "—") + "</td>" +
         "<td>" + esc(m.categoryLabel) + "</td>";
       if (fin) row += "<td>" + esc(m.individualFee) + " €</td>";
       row += "<td>" + statusBadge + "</td>" +

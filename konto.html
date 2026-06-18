@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=11">
+  <link rel="stylesheet" href="assets/css/styles.css?v=12">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -90,10 +90,11 @@
 
             <p id="membership-hint" class="muted-note" style="margin-top:16px" hidden></p>
 
-            <!-- Anmelde-Formular: nur Person, Beitrag automatisch nach Alter -->
+            <!-- Anmelde-/Bearbeiten-Formular: Person + Judopass-Daten -->
             <form id="membership-form" class="sub-form" hidden novalidate>
-              <h3 style="font-size:1.1rem;margin-bottom:4px">Mitglied anmelden</h3>
-              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Der Beitrag ergibt sich <b>automatisch aus dem Alter</b>. Du meldest nur Personen deines Haushalts unter deiner hinterlegten Bankverbindung an.</p>
+              <input type="hidden" name="id">
+              <h3 id="membership-form-title" style="font-size:1.1rem;margin-bottom:4px">Mitglied anmelden</h3>
+              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Der Beitrag ergibt sich <b>automatisch aus dem Alter</b>. Ein <b>Foto ist Pflicht</b> (für den Judopass).</p>
               <div class="field-row">
                 <div class="field">
                   <label for="m-first">Vorname <span class="req">*</span></label>
@@ -106,10 +107,66 @@
                   <p class="field__error"></p>
                 </div>
               </div>
-              <div class="field">
-                <label for="m-birth">Geburtsdatum <span class="req">*</span></label>
-                <input id="m-birth" name="birthdate" type="date" required>
+              <div class="field-row">
+                <div class="field">
+                  <label for="m-birth">Geburtsdatum <span class="req">*</span></label>
+                  <input id="m-birth" name="birthdate" type="date" required>
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="m-gender">Geschlecht</label>
+                  <select id="m-gender" name="gender">
+                    <option value="">Keine Angabe</option>
+                    <option>männlich</option>
+                    <option>weiblich</option>
+                    <option>divers</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field" data-photo-field>
+                <label for="m-photo">Foto <span class="req">*</span> <span style="font-weight:400;color:var(--text-soft)">(Pflicht für den Judopass)</span></label>
+                <div class="photo-input">
+                  <img id="m-photo-preview" class="photo-input__preview" alt="" hidden>
+                  <div class="photo-input__ph" id="m-photo-ph" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="3.2"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+                  </div>
+                  <div>
+                    <input id="m-photo" name="photo" type="file" accept="image/*" capture="user">
+                    <p style="color:var(--text-soft);font-size:.82rem;margin-top:6px">JPG/PNG, wird automatisch verkleinert. Hochformat (Passbild) empfohlen.</p>
+                  </div>
+                </div>
                 <p class="field__error"></p>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="m-belt">Gürtel / Graduierung</label>
+                  <select id="m-belt" name="belt">
+                    <option value="">Keine Angabe</option>
+                    <option>Weißgurt</option>
+                    <option>Weiß-Gelb</option>
+                    <option>Gelbgurt</option>
+                    <option>Gelb-Orange</option>
+                    <option>Orangegurt</option>
+                    <option>Orange-Grün</option>
+                    <option>Grüngurt</option>
+                    <option>Blaugurt</option>
+                    <option>Braungurt</option>
+                    <option>1. Dan (Schwarzgurt)</option>
+                    <option>2. Dan</option>
+                    <option>3. Dan</option>
+                    <option>4. Dan</option>
+                    <option>5. Dan</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="m-weight">Gewicht (kg)</label>
+                  <input id="m-weight" name="weight" type="number" min="10" max="250" step="0.1" inputmode="decimal">
+                  <p class="field__error"></p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="m-nat">Nationalität</label>
+                <input id="m-nat" name="nationality" type="text" placeholder="z. B. Deutsch">
               </div>
               <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
                 <button type="submit" class="btn btn--primary">
@@ -215,8 +272,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=11" defer></script>
-  <script src="assets/js/main.js?v=11" defer></script>
-  <script src="assets/js/konto.js?v=11" defer></script>
+  <script src="assets/js/mock-api.js?v=12" defer></script>
+  <script src="assets/js/main.js?v=12" defer></script>
+  <script src="assets/js/konto.js?v=12" defer></script>
 </body>
 </html>

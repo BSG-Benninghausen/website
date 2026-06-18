@@ -7,8 +7,42 @@
   "use strict";
 
   let account = null;
+  let editingId = null;     // gesetzt = Bearbeiten-Modus
+  let currentPhoto = "";    // Data-URL des aktuellen Fotos
+  let membershipItems = []; // zuletzt geladene Mitgliedschaften (für Bearbeiten)
 
   const $ = (sel) => document.querySelector(sel);
+
+  /* Foto clientseitig verkleinern -> Data-URL (JPEG) */
+  function readAndResize(file, maxEdge = 360) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error("Keine Datei"));
+      if (!/^image\//.test(file.type)) return reject(new Error("Bitte ein Bild wählen."));
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Bild konnte nicht geladen werden."));
+        img.onload = () => {
+          let { width, height } = img;
+          const scale = Math.min(1, maxEdge / Math.max(width, height));
+          width = Math.round(width * scale); height = Math.round(height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function setPhoto(dataUrl) {
+    currentPhoto = dataUrl || "";
+    const prev = $("#m-photo-preview"); const ph = $("#m-photo-ph");
+    if (currentPhoto) { prev.src = currentPhoto; prev.hidden = false; if (ph) ph.hidden = true; }
+    else { prev.removeAttribute("src"); prev.hidden = true; if (ph) ph.hidden = false; }
+  }
 
   async function postJSON(url, data) {
     const res = await fetch(url, {
@@ -81,10 +115,11 @@
     try {
       const res = await fetch("/api/memberships");
       const d = await res.json();
-      if (!d.items.length) {
+      membershipItems = d.items || [];
+      if (!membershipItems.length) {
         wrap.innerHTML = '<p class="muted-note">Noch keine Mitglieder angemeldet. Melde die Mitglieder deines Haushalts an – der Beitrag ergibt sich automatisch aus dem Alter.</p>';
       } else {
-        wrap.innerHTML = d.items.map(membershipCard).join("");
+        wrap.innerHTML = membershipItems.map(judopass).join("");
       }
       renderSummary(d.summary);
     } catch (e) {
@@ -109,20 +144,49 @@
       '<p class="muted-note">' + detail + "</p>";
   }
 
-  function membershipCard(m) {
+  const PHOTO_PLACEHOLDER =
+    '<div class="judopass__photo judopass__photo--empty" title="Foto fehlt">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="3.2"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></div>';
+
+  function row(label, value) {
+    return '<div class="judopass__row"><span>' + label + "</span><b>" + value + "</b></div>";
+  }
+
+  function judopass(m) {
     const since = BSG.formatDate(m.startedAt);
+    const birth = m.birthdate ? BSG.formatDate(m.birthdate) : "—";
     const active = m.status === "aktiv";
     const label = m.categoryLabel || m.typeLabel || "Mitglied";
     const fee = m.individualFee != null ? m.individualFee : m.feeMonthly;
+    const photo = m.photo
+      ? '<div class="judopass__photo"><img src="' + m.photo + '" alt="Foto von ' + BSG.escape(m.firstName) + '"></div>'
+      : PHOTO_PLACEHOLDER;
     return (
-      '<article class="membership">' +
-        '<div class="membership__main">' +
-          "<h3>" + BSG.escape(m.firstName) + " " + BSG.escape(m.lastName) + "</h3>" +
-          "<p>" + BSG.escape(label) + " · " + fee + " €/Monat</p>" +
-          '<p class="membership__meta">seit ' + since + "</p>" +
+      '<article class="judopass' + (active ? "" : " judopass--inactive") + '">' +
+        '<div class="judopass__head">' +
+          '<img class="judopass__logo" src="assets/img/drache-light.png" alt="">' +
+          "<span>Judopass</span>" +
+          '<span class="judopass__no">' + BSG.escape(m.passNumber || "—") + "</span>" +
         "</div>" +
-        '<div class="membership__side">' +
-          '<span class="badge badge--' + (active ? "aktiv" : "gekuendigt") + '">' + BSG.escape(m.status) + "</span>" +
+        '<div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>' +
+        '<div class="judopass__body">' +
+          photo +
+          '<div class="judopass__data">' +
+            '<h3>' + BSG.escape(m.firstName) + " " + BSG.escape(m.lastName) + "</h3>" +
+            '<span class="badge badge--' + (active ? "aktiv" : "gekuendigt") + '">' + BSG.escape(m.status) + "</span>" +
+            '<div class="judopass__grid">' +
+              row("Geboren", BSG.escape(birth)) +
+              row("Klasse", BSG.escape(label)) +
+              row("Gürtel", BSG.escape(m.belt || "—")) +
+              row("Gewicht", m.weight != null ? BSG.escape(m.weight) + " kg" : "—") +
+              row("Beitrag", fee + " €/Mon.") +
+              row("Mitglied seit", BSG.escape(since)) +
+            "</div>" +
+          "</div>" +
+        "</div>" +
+        (m.photo ? "" : '<p class="judopass__warn">Foto fehlt – bitte über „Bearbeiten" ergänzen (Pflicht für den Judopass).</p>') +
+        '<div class="judopass__actions">' +
+          '<button class="btn btn--outline btn--sm" data-edit="' + m.id + '">Bearbeiten</button>' +
           (active ? '<button class="btn btn--outline btn--sm" data-cancel="' + m.id + '">Kündigen</button>' : "") +
         "</div>" +
       "</article>"
@@ -157,38 +221,70 @@
       else { applyErrors(form, data.errors); status(form, "err", data.message || "Fehler."); }
     });
 
-    // Mitgliedschaft-Formular ein-/ausblenden
+    // Mitglied-Formular
     const mForm = $("#membership-form");
     const hint = $("#membership-hint");
-    $("#add-membership-btn").addEventListener("click", () => {
-      // Voraussetzung: Haushalts-Anschrift + Bankverbindung vorhanden
+    const formTitle = $("#membership-form-title");
+    const submitLabel = (txt) => { const b = mForm.querySelector("[type=submit]"); if (b && b.lastChild) b.lastChild.textContent = " " + txt; };
+    const photoField = () => mForm.querySelector("[data-photo-field]");
+
+    function openCreate() {
       if (!account.address || !account.iban) {
         hint.hidden = false;
         hint.innerHTML = "Bitte hinterlege zuerst <b>Anschrift und Bankverbindung</b> deines Haushalts (unten) – darunter werden alle Mitglieder angemeldet.";
         $("#address-form").scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
-      hint.hidden = true;
-      const show = mForm.hidden;
-      mForm.hidden = !show;
-      if (show) mForm.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-    $("#membership-cancel").addEventListener("click", () => { mForm.hidden = true; });
+      hint.hidden = true; editingId = null;
+      mForm.reset(); clearErrors(mForm); setPhoto("");
+      formTitle.textContent = "Mitglied anmelden"; submitLabel("Mitglied anmelden");
+      mForm.hidden = false; mForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    function openEdit(m) {
+      editingId = m.id; clearErrors(mForm);
+      fill(mForm, { firstName: m.firstName, lastName: m.lastName, birthdate: m.birthdate, weight: m.weight ?? "", belt: m.belt || "", gender: m.gender || "", nationality: m.nationality || "" });
+      setPhoto(m.photo || "");
+      formTitle.textContent = "Mitglied bearbeiten"; submitLabel("Änderungen speichern");
+      mForm.hidden = false; mForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
 
-    // Mitgliedschaft abschließen
+    $("#add-membership-btn").addEventListener("click", () => {
+      if (!mForm.hidden && !editingId) { mForm.hidden = true; return; }
+      openCreate();
+    });
+    $("#membership-cancel").addEventListener("click", () => { mForm.hidden = true; editingId = null; });
+
+    // Foto auswählen -> clientseitig verkleinern
+    $("#m-photo").addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      photoField().classList.remove("field--error");
+      try { setPhoto(await readAndResize(file)); }
+      catch (err) { photoField().classList.add("field--error"); const p = photoField().querySelector(".field__error"); if (p) p.textContent = err.message; }
+    });
+
+    // Anlegen / Speichern
     mForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       clearErrors(mForm);
+      if (!currentPhoto) {
+        photoField().classList.add("field--error");
+        const p = photoField().querySelector(".field__error"); if (p) p.textContent = "Bitte ein Foto hochladen (Pflicht).";
+        status(mForm, "err", "Bitte ein Foto hochladen.");
+        return;
+      }
       const fd = Object.fromEntries(new FormData(mForm).entries());
-      const payload = { firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate };
-      const btn = mForm.querySelector("[type=submit]");
-      btn.setAttribute("aria-busy", "true");
-      const { res, data } = await postJSON("/api/memberships", payload);
+      const payload = {
+        firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate,
+        weight: fd.weight, belt: fd.belt, gender: fd.gender, nationality: fd.nationality,
+        photo: currentPhoto,
+      };
+      if (editingId) payload.id = editingId;
+      const btn = mForm.querySelector("[type=submit]"); btn.setAttribute("aria-busy", "true");
+      const { res, data } = await postJSON(editingId ? "/api/memberships/update" : "/api/memberships", payload);
       btn.removeAttribute("aria-busy");
       if (res.ok && data.ok) {
-        status(mForm, "ok", data.message);
-        mForm.reset();
-        mForm.hidden = true;
+        mForm.reset(); setPhoto(""); editingId = null; mForm.hidden = true;
         await loadMemberships();
       } else {
         applyErrors(mForm, data.errors);
@@ -196,14 +292,21 @@
       }
     });
 
-    // Kündigen (Delegation)
+    // Aktionen je Karte (Delegation): Bearbeiten + Kündigen
     $("#memberships").addEventListener("click", async (e) => {
-      const btn = e.target.closest("[data-cancel]");
-      if (!btn) return;
-      if (!confirm("Diese Mitgliedschaft wirklich kündigen?")) return;
-      const { res, data } = await postJSON("/api/memberships/cancel", { id: btn.getAttribute("data-cancel") });
-      if (res.ok && data.ok) await loadMemberships();
-      else alert(data.message || "Fehler beim Kündigen.");
+      const editBtn = e.target.closest("[data-edit]");
+      const cancelBtn = e.target.closest("[data-cancel]");
+      if (editBtn) {
+        const m = membershipItems.find((x) => x.id === editBtn.getAttribute("data-edit"));
+        if (m) openEdit(m);
+        return;
+      }
+      if (cancelBtn) {
+        if (!confirm("Diese Mitgliedschaft wirklich kündigen?")) return;
+        const { res, data } = await postJSON("/api/memberships/cancel", { id: cancelBtn.getAttribute("data-cancel") });
+        if (res.ok && data.ok) await loadMemberships();
+        else alert(data.message || "Fehler beim Kündigen.");
+      }
     });
   }
 

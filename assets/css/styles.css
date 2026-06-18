@@ -531,3 +531,37 @@ button { font: inherit; cursor: pointer; }
 .data-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .data-table tr:last-child td { border-bottom: 0; }
 .data-table .muted-note { font-size: .82rem; }
+
+/* ----------  Judopass-Karte  ---------- */
+.memberships { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.judopass { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+.judopass--inactive { opacity: .82; }
+.judopass__head { display: flex; align-items: center; gap: 10px; background: var(--gradient-night); color: #fff; padding: 10px 16px; font-family: var(--font-display); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; }
+.judopass__logo { width: 22px; height: 22px; }
+.judopass__no { margin-left: auto; color: var(--gold); letter-spacing: .06em; }
+.judopass__body { display: flex; gap: 18px; padding: 18px 16px; }
+.judopass__photo { width: 96px; height: 120px; flex: none; border-radius: 12px; overflow: hidden; border: 2px solid var(--line); background: var(--mist); }
+.judopass__photo img { width: 100%; height: 100%; object-fit: cover; }
+.judopass__photo--empty { display: grid; place-items: center; color: var(--text-soft); }
+.judopass__photo--empty svg { width: 48px; height: 48px; }
+.judopass__data { flex: 1; min-width: 0; }
+.judopass__data h3 { font-size: 1.2rem; }
+.judopass__data .badge { margin: 6px 0 12px; }
+.judopass__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; }
+.judopass__row { display: flex; flex-direction: column; font-size: .92rem; }
+.judopass__row span { color: var(--text-soft); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+.judopass__row b { font-family: var(--font-display); }
+.judopass__warn { color: var(--accent-dark); background: rgba(227, 20, 27, .06); border-top: 1px solid var(--line); padding: 10px 16px; font-size: .85rem; }
+.judopass__actions { display: flex; gap: 10px; padding: 0 16px 16px; }
+@media (max-width: 520px) { .judopass__grid { grid-template-columns: 1fr; } .judopass__photo { width: 80px; height: 100px; } }
+
+/* Foto-Eingabe im Formular */
+.photo-input { display: flex; gap: 14px; align-items: flex-start; }
+.photo-input__preview { width: 84px; height: 104px; object-fit: cover; border-radius: 10px; border: 2px solid var(--line); flex: none; }
+.photo-input__ph { width: 84px; height: 104px; border-radius: 10px; border: 2px dashed var(--line); display: grid; place-items: center; color: var(--text-soft); flex: none; }
+.photo-input__ph svg { width: 40px; height: 40px; }
+
+/* Mini-Foto in der internen Liste */
+.member-thumb { width: 40px; height: 48px; object-fit: cover; border-radius: 7px; border: 1px solid var(--line); display: inline-block; vertical-align: middle; }
+.member-thumb--empty { display: inline-grid; place-items: center; background: var(--mist); color: var(--text-soft); }
+.member-thumb--empty svg { width: 22px; height: 22px; }
