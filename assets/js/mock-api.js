@@ -28,15 +28,20 @@
     session: "bsg_session",
     codes: "bsg_login_codes",
     roles: "bsg_roles",
+    news: "bsg_news",
+    events: "bsg_events",
+    seedVersion: "bsg_seed_version",
   };
 
   /* Berechtigungs-Katalog (vom Admin auf Rollen verteilbar) */
   const PERMISSIONS = [
     { key: "manage_roles", label: "Rollen & Berechtigungen verwalten" },
     { key: "manage_users", label: "Benutzer & Rollenzuweisung verwalten" },
+    { key: "manage_news", label: "Newsmeldungen schreiben & bearbeiten" },
+    { key: "manage_events", label: "Termine pflegen" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
-    { key: "manage_content", label: "News & Termine pflegen" },
-    { key: "view_members", label: "Mitgliederliste einsehen" },
+    { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
+    { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
@@ -71,6 +76,22 @@
   const lc = (v) => norm(v).toLowerCase();
   const genId = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
+  /* ----- Content-Validierung (News & Termine) ----- */
+  const EVENT_TYPES = ["Training", "Turnier", "Prüfung", "Event"];
+  function newsErrors(b) {
+    const e = {};
+    if (norm(b.title).length < 3) e.title = "Bitte einen Titel angeben.";
+    if (!norm(b.date)) e.date = "Bitte ein Datum angeben.";
+    if (norm(b.excerpt).length < 10) e.excerpt = "Bitte einen kurzen Anrisstext (min. 10 Zeichen).";
+    return e;
+  }
+  function eventErrors(b) {
+    const e = {};
+    if (norm(b.title).length < 3) e.title = "Bitte einen Titel angeben.";
+    if (!norm(b.date)) e.date = "Bitte ein Datum angeben.";
+    return e;
+  }
 
   /* ----- IBAN-Prüfung inkl. Mod-97 ----- */
   function isIban(v) {
@@ -142,15 +163,27 @@
   const hasPerm = (user, perm) => isAdmin(user) || userPermissions(user).includes(perm);
 
   /* Seed: Standardrollen + Admin-Konto (idempotent) */
+  const EXAMPLE_ROLES = [
+    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_memberships", "view_members", "view_finance"], system: false },
+    { id: "pressewart", label: "Pressewart", permissions: ["manage_news"], system: false },
+    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance"], system: false },
+    { id: "trainer", label: "Trainer", permissions: ["view_members"], system: false },
+  ];
+
   function seed() {
-    let roles = getStore(KEYS.roles, null);
-    if (!roles) {
-      roles = [
-        { id: "admin", label: "Administrator", permissions: ALL_PERMS.slice(), system: true },
-        { id: "member", label: "Mitglied", permissions: [], system: true },
-      ];
-      setRoles(roles);
+    let roles = getStore(KEYS.roles, null) || [];
+    // System-Rollen sicherstellen
+    if (!roles.some((r) => r.id === "admin")) roles.push({ id: "admin", label: "Administrator", permissions: ALL_PERMS.slice(), system: true });
+    if (!roles.some((r) => r.id === "member")) roles.push({ id: "member", label: "Mitglied", permissions: [], system: true });
+
+    // Einmalige Migration: Beispiel-Rollen ergänzen (nicht wieder auferstehen lassen)
+    const seedVersion = getStore(KEYS.seedVersion, 0);
+    if (seedVersion < 2) {
+      EXAMPLE_ROLES.forEach((ex) => { if (!roles.some((r) => r.id === ex.id)) roles.push({ ...ex, permissions: ex.permissions.slice() }); });
+      setStore(KEYS.seedVersion, 2);
     }
+    setRoles(roles);
+
     const users = getUsers();
     if (!users.some((u) => u.email === ADMIN_EMAIL)) {
       users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
@@ -166,19 +199,120 @@
     return res.json();
   }
 
+  /* Dynamischer Content: beim ersten Zugriff aus JSON in den Store übernehmen */
+  async function ensureNews() {
+    let items = getStore(KEYS.news, null);
+    if (!items) { items = await loadData("news.json"); setStore(KEYS.news, items); }
+    return items;
+  }
+  async function ensureEvents() {
+    let items = getStore(KEYS.events, null);
+    if (!items) { items = await loadData("events.json"); setStore(KEYS.events, items); }
+    return items;
+  }
+
   /* ----- Route-Handler ----- */
   const routes = {
     /* ---------- News & Termine ---------- */
     "GET /api/news": async () => {
-      const news = await loadData("news.json");
-      news.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const news = (await ensureNews()).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
       return json({ ok: true, items: news });
+    },
+    "POST /api/news": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_news")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = newsErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureNews();
+      const item = { id: genId("news"), date: norm(body.date), tag: norm(body.tag) || "Verein", title: norm(body.title), excerpt: norm(body.excerpt), body: norm(body.body) };
+      items.push(item); setStore(KEYS.news, items);
+      return json({ ok: true, item, message: "Newsmeldung veröffentlicht." }, 201);
+    },
+    "POST /api/news/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_news")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = newsErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureNews();
+      const idx = items.findIndex((n) => n.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Newsmeldung nicht gefunden." }, 404);
+      items[idx] = { ...items[idx], date: norm(body.date), tag: norm(body.tag) || "Verein", title: norm(body.title), excerpt: norm(body.excerpt), body: norm(body.body) };
+      setStore(KEYS.news, items);
+      return json({ ok: true, item: items[idx], message: "Newsmeldung gespeichert." });
+    },
+    "POST /api/news/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_news")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = await ensureNews();
+      if (!items.some((n) => n.id === body.id)) return json({ ok: false, message: "Newsmeldung nicht gefunden." }, 404);
+      setStore(KEYS.news, items.filter((n) => n.id !== body.id));
+      return json({ ok: true, message: "Newsmeldung gelöscht." });
     },
 
     "GET /api/events": async () => {
-      const events = await loadData("events.json");
-      events.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const events = (await ensureEvents()).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
       return json({ ok: true, items: events });
+    },
+    "POST /api/events": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = eventErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureEvents();
+      const item = { id: genId("ev"), date: norm(body.date), time: norm(body.time), type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location) };
+      items.push(item); setStore(KEYS.events, items);
+      return json({ ok: true, item, message: "Termin angelegt." }, 201);
+    },
+    "POST /api/events/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = eventErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureEvents();
+      const idx = items.findIndex((ev) => ev.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Termin nicht gefunden." }, 404);
+      items[idx] = { ...items[idx], date: norm(body.date), time: norm(body.time), type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location) };
+      setStore(KEYS.events, items);
+      return json({ ok: true, item: items[idx], message: "Termin gespeichert." });
+    },
+    "POST /api/events/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = await ensureEvents();
+      if (!items.some((ev) => ev.id === body.id)) return json({ ok: false, message: "Termin nicht gefunden." }, 404);
+      setStore(KEYS.events, items.filter((ev) => ev.id !== body.id));
+      return json({ ok: true, message: "Termin gelöscht." });
+    },
+
+    "GET /api/admin/members": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "view_members")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const fin = hasPerm(user, "view_finance");
+      const cfg = await loadData("membership-types.json");
+      const users = getUsers();
+      const byId = {}; users.forEach((u) => { byId[u.id] = u; });
+      const memberships = getStore(KEYS.memberships, []);
+      const items = memberships.map((m) => {
+        const owner = byId[m.userId] || {};
+        const row = {
+          id: m.id, firstName: m.firstName, lastName: m.lastName,
+          categoryLabel: m.categoryLabel || "", individualFee: m.individualFee || 0,
+          status: m.status, startedAt: m.startedAt,
+          ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
+        };
+        if (fin) row.iban = owner.iban || null;
+        return row;
+      });
+      let households = null;
+      if (fin) {
+        households = users.map((u) => {
+          const active = memberships.filter((m) => m.userId === u.id && m.status === "aktiv");
+          if (!active.length) return null;
+          const s = billingSummary(active, cfg.familyFlatMonthly);
+          return { ownerName: u.name, ownerEmail: u.email, iban: u.iban || null, activeCount: s.activeCount, effectiveTotal: s.effectiveTotal, familyApplied: s.familyApplied };
+        }).filter(Boolean);
+      }
+      return json({ ok: true, items, canViewFinance: fin, households });
     },
 
     "GET /api/membership-types": async () => {

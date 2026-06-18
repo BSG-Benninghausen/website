@@ -54,8 +54,8 @@
 
   /* ----- Konto-Link in der Navigation aktualisieren ----- */
   const accountLinks = document.querySelectorAll("[data-account-link]");
-  const adminLinks = document.querySelectorAll("[data-admin-link]");
-  if (accountLinks.length || adminLinks.length) {
+  const navHasManaged = document.querySelector("[data-admin-link], [data-redaktion-link], [data-members-link]");
+  if (accountLinks.length || navHasManaged) {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
@@ -65,8 +65,11 @@
           a.setAttribute("href", "konto.html");
           a.classList.add("nav__account--in");
         });
-        const canAdmin = d.isAdmin || (d.permissions && (d.permissions.includes("manage_roles") || d.permissions.includes("manage_users")));
-        if (canAdmin) adminLinks.forEach((a) => { a.hidden = false; });
+        const has = (p) => d.isAdmin || (d.permissions && d.permissions.includes(p));
+        const reveal = (sel) => document.querySelectorAll(sel).forEach((a) => { a.hidden = false; });
+        if (has("manage_roles") || has("manage_users")) reveal("[data-admin-link]");
+        if (has("manage_news") || has("manage_events")) reveal("[data-redaktion-link]");
+        if (has("view_members")) reveal("[data-members-link]");
       })
       .catch(() => {});
   }

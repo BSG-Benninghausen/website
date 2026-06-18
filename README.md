@@ -87,21 +87,38 @@ Bereitgestellte Endpunkte:
 - **Beitrag automatisch:** Der Mitgliedschaftstyp ergibt sich aus dem **Alter** (Altersbänder
   in `assets/data/membership-types.json`). Ist der **Familien-Pauschalbeitrag günstiger** als
   die Summe der Einzelbeiträge, wird er automatisch angesetzt (Beitragsübersicht im Dashboard).
-- **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`, `bsg_roles`.
+- **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
+  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_seed_version`.
 
 ### Rollen, Berechtigungen & Admin
 
 - **Rollen & Berechtigungen** (`admin.html`, `assets/js/admin.js`): Benutzer mit der Rolle
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
-  zuweisen. Berechtigungs-Katalog: `manage_roles`, `manage_users`, `manage_memberships`,
-  `manage_content`, `view_members` (in `assets/js/mock-api.js`, Konstante `PERMISSIONS`).
-- **Seed-Admin:** Beim ersten Laden legt der Mock automatisch die Rollen *Administrator*/
-  *Mitglied* sowie ein Admin-Konto **`admin@bsg-benninghausen.de`** an. Anmeldung wie üblich
+  zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
+  `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_memberships`,
+  `view_members`, `view_finance`.
+- **Seed-Admin & Beispiel-Rollen:** Beim ersten Laden legt der Mock die System-Rollen
+  *Administrator*/*Mitglied*, ein Admin-Konto **`admin@bsg-benninghausen.de`** sowie
+  bearbeitbare Beispiel-Rollen **Vorstand, Pressewart, Kassenwart, Trainer** an. Anmeldung
   passwordlos per Code (im Demo angezeigt). Neue Konten erhalten die Rolle *Mitglied*.
-- Endpunkte: `GET /api/permissions`, `GET/POST /api/roles`, `POST /api/roles/update`,
+- **Rollen-Endpunkte:** `GET /api/permissions`, `GET/POST /api/roles`, `POST /api/roles/update`,
   `POST /api/roles/delete`, `GET /api/users`, `POST /api/users/roles`. Schutz: System-Rollen
-  sind nicht löschbar, die Admin-Rolle behält immer alle Rechte, und es muss stets mindestens
-  ein Administrator bestehen bleiben.
+  sind nicht löschbar, die Admin-Rolle behält immer alle Rechte, mindestens ein Administrator
+  bleibt erhalten.
+
+### Dynamischer Content & interne Bereiche
+
+- **Redaktion** (`redaktion.html`, `assets/js/redaktion.js`, Recht `manage_news`/`manage_events`):
+  Newsmeldungen und Termine **anlegen/bearbeiten/löschen**. Inhalte erscheinen sofort auf
+  `aktuelles.html`, der Startseite und `kalender.html`. Beim ersten Zugriff werden News/Termine
+  aus `assets/data/news.json` bzw. `events.json` in den Store übernommen (Seed-on-read) und
+  sind danach editierbar. Endpunkte: `GET /api/news`, `POST /api/news`(`/update`,`/delete`),
+  analog `…/events`.
+- **Mitgliederübersicht** (`mitglieder.html`, `assets/js/mitglieder.js`, Recht `view_members`):
+  **lesende** Liste aller Mitglieder. IBAN, Beiträge und Haushalts-Summen nur mit zusätzlichem
+  Recht `view_finance` (z. B. *Kassenwart*). Endpunkt: `GET /api/admin/members`.
+- Die rechtebasierten Navigationslinks **Mitglieder/Redaktion/Admin** werden nur eingeblendet,
+  wenn der angemeldete Benutzer die nötigen Rechte hat (`assets/js/main.js`).
 
 ### Auf ein echtes Backend umstellen
 
