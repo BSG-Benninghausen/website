@@ -81,11 +81,13 @@ Bereitgestellte Endpunkte:
 - **Registrierung** (`registrieren.html`): nur Name + E-Mail.
 - **Login** (`login.html`): passwordlos – E-Mail eingeben, Anmeldecode wird (mangels echtem
   E-Mail-Versand) im Mock direkt angezeigt und automatisch eingetragen, dann einloggen.
-- **Dashboard** (`konto.html`, login-geschützt): Vereinsmitgliedschaften für sich und
-  Familienmitglieder abschließen/kündigen, Adresse und IBAN pflegen. Für den Abschluss
-  einer Mitgliedschaft sind **Anschrift + IBAN** Pflicht.
+- **Dashboard** (`konto.html`, login-geschützt): Mitglieder (sich selbst + Familienmitglieder
+  desselben Haushalts) anmelden/kündigen. **Anschrift und IBAN gehören zum Konto/Haushalt**
+  (genau eine Bankverbindung) und müssen vor der ersten Anmeldung hinterlegt sein.
+- **Beitrag automatisch:** Der Mitgliedschaftstyp ergibt sich aus dem **Alter** (Altersbänder
+  in `assets/data/membership-types.json`). Ist der **Familien-Pauschalbeitrag günstiger** als
+  die Summe der Einzelbeiträge, wird er automatisch angesetzt (Beitragsübersicht im Dashboard).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`.
-- Beitragstypen/-höhen sind Platzhalter und in `assets/data/membership-types.json` anpassbar.
 
 ### Auf ein echtes Backend umstellen
 

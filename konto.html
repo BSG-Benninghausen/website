@@ -78,15 +78,19 @@
                 <span class="eyebrow">Mitgliedschaften</span>
                 <h2 style="font-size:1.3rem;margin-top:6px">Meine Mitgliedschaften</h2>
               </div>
-              <button id="add-membership-btn" class="btn btn--primary">+ Mitgliedschaft abschließen</button>
+              <button id="add-membership-btn" class="btn btn--primary">+ Mitglied anmelden</button>
             </div>
 
             <div id="memberships" class="memberships" style="margin-top:18px"></div>
 
-            <!-- Abschluss-Formular -->
+            <div id="billing-summary" class="billing-summary" hidden></div>
+
+            <p id="membership-hint" class="muted-note" style="margin-top:16px" hidden></p>
+
+            <!-- Anmelde-Formular: nur Person, Beitrag automatisch nach Alter -->
             <form id="membership-form" class="sub-form" hidden novalidate>
-              <h3 style="font-size:1.1rem;margin-bottom:4px">Neue Mitgliedschaft</h3>
-              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Für den Abschluss benötigen wir Person, Mitgliedschaftstyp sowie Anschrift und IBAN für den Beitragseinzug.</p>
+              <h3 style="font-size:1.1rem;margin-bottom:4px">Mitglied anmelden</h3>
+              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Der Beitrag ergibt sich <b>automatisch aus dem Alter</b>. Du meldest nur Personen deines Haushalts unter deiner hinterlegten Bankverbindung an.</p>
               <div class="field-row">
                 <div class="field">
                   <label for="m-first">Vorname <span class="req">*</span></label>
@@ -109,47 +113,15 @@
                   <label for="m-relation">Für wen? <span class="req">*</span></label>
                   <select id="m-relation" name="relation" required>
                     <option value="self">Mich selbst</option>
-                    <option value="family">Familienmitglied</option>
+                    <option value="family">Familienmitglied (gleicher Haushalt)</option>
                   </select>
                   <p class="field__error"></p>
                 </div>
               </div>
-              <div class="field">
-                <label for="m-type">Mitgliedschaftstyp <span class="req">*</span></label>
-                <select id="m-type" name="type" required>
-                  <option value="">Bitte wählen…</option>
-                </select>
-                <p class="field__error"></p>
-              </div>
-
-              <h4 style="font-family:var(--font-display);margin:18px 0 12px;font-size:1rem">Anschrift &amp; Kontoverbindung</h4>
-              <div class="field">
-                <label for="m-street">Straße &amp; Hausnummer <span class="req">*</span></label>
-                <input id="m-street" name="street" type="text" autocomplete="street-address" required>
-                <p class="field__error"></p>
-              </div>
-              <div class="field-row">
-                <div class="field">
-                  <label for="m-zip">PLZ <span class="req">*</span></label>
-                  <input id="m-zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code" required>
-                  <p class="field__error"></p>
-                </div>
-                <div class="field">
-                  <label for="m-city">Ort <span class="req">*</span></label>
-                  <input id="m-city" name="city" type="text" autocomplete="address-level2" required>
-                  <p class="field__error"></p>
-                </div>
-              </div>
-              <div class="field">
-                <label for="m-iban">IBAN <span class="req">*</span></label>
-                <input id="m-iban" name="iban" type="text" autocomplete="off" placeholder="DE00 0000 0000 0000 0000 00">
-                <p class="field__error"></p>
-              </div>
-
               <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
                 <button type="submit" class="btn btn--primary">
                   <span class="spinner" aria-hidden="true"></span>
-                  Mitgliedschaft abschließen
+                  Mitglied anmelden
                 </button>
                 <button type="button" id="membership-cancel" class="btn btn--outline">Abbrechen</button>
               </div>
@@ -160,8 +132,9 @@
           <!-- Adresse & Konto -->
           <div class="grid grid--2">
             <form id="address-form" class="card" novalidate>
-              <span class="eyebrow">Persönliche Daten</span>
+              <span class="eyebrow">Haushalt</span>
               <h2 style="font-size:1.2rem;margin:6px 0 18px">Anschrift</h2>
+              <p style="color:var(--text-soft);font-size:.86rem;margin-bottom:16px">Gilt für alle Mitglieder deines Haushalts.</p>
               <div class="field">
                 <label for="a-street">Straße &amp; Hausnummer</label>
                 <input id="a-street" name="street" type="text" autocomplete="street-address">
@@ -184,8 +157,8 @@
             </form>
 
             <form id="bank-form" class="card" novalidate>
-              <span class="eyebrow">Zahlung</span>
-              <h2 style="font-size:1.2rem;margin:6px 0 18px">Kontoverbindung</h2>
+              <span class="eyebrow">Haushalt</span>
+              <h2 style="font-size:1.2rem;margin:6px 0 18px">Bankverbindung</h2>
               <div class="field">
                 <label for="b-iban">IBAN</label>
                 <input id="b-iban" name="iban" type="text" autocomplete="off" placeholder="DE00 0000 0000 0000 0000 00">

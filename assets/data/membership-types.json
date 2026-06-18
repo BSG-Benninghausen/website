@@ -1,26 +1,8 @@
-[
-  {
-    "id": "kind",
-    "label": "Kind (bis 11 Jahre)",
-    "feeMonthly": 7,
-    "note": "Für unsere jüngsten Judoka."
-  },
-  {
-    "id": "jugend",
-    "label": "Jugend (12–17 Jahre)",
-    "feeMonthly": 9,
-    "note": "Für Jugendliche und Wettkampfnachwuchs."
-  },
-  {
-    "id": "erwachsene",
-    "label": "Erwachsene",
-    "feeMonthly": 12,
-    "note": "Judo & Fitness für Erwachsene."
-  },
-  {
-    "id": "familie",
-    "label": "Familie",
-    "feeMonthly": 25,
-    "note": "Für die ganze Familie – mehrere Personen zu einem Beitrag."
-  }
-]
+{
+  "ageBands": [
+    { "id": "kind", "label": "Kind", "minAge": 0, "maxAge": 11, "feeMonthly": 7 },
+    { "id": "jugend", "label": "Jugend", "minAge": 12, "maxAge": 17, "feeMonthly": 9 },
+    { "id": "erwachsene", "label": "Erwachsene", "minAge": 18, "maxAge": 199, "feeMonthly": 12 }
+  ],
+  "familyFlatMonthly": 25
+}

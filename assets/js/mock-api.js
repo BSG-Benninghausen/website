@@ -72,6 +72,28 @@
   }
   const fmtIban = (v) => String(v || "").replace(/\s+/g, "").toUpperCase().replace(/(.{4})/g, "$1 ").trim();
 
+  /* ----- Alter & Beitrag ----- */
+  function ageFromBirthdate(iso) {
+    const b = new Date(iso);
+    if (isNaN(b.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+    return age;
+  }
+  const bandForAge = (age, bands) => bands.find((b) => age >= b.minAge && age <= b.maxAge) || null;
+  function billingSummary(active, familyFlat) {
+    const sumIndividual = active.reduce((s, m) => s + (m.individualFee || 0), 0);
+    return {
+      activeCount: active.length,
+      sumIndividual,
+      familyFlat,
+      effectiveTotal: Math.min(sumIndividual, familyFlat),
+      familyApplied: familyFlat < sumIndividual,
+    };
+  }
+
   /* ----- Benutzer / Session ----- */
   const getUsers = () => getStore(KEYS.users, []);
   const setUsers = (u) => setStore(KEYS.users, u);
@@ -112,8 +134,8 @@
     },
 
     "GET /api/membership-types": async () => {
-      const types = await loadData("membership-types.json");
-      return json({ ok: true, items: types });
+      const cfg = await loadData("membership-types.json");
+      return json({ ok: true, ageBands: cfg.ageBands, familyFlatMonthly: cfg.familyFlatMonthly });
     },
 
     /* ---------- Probetraining & Kontakt ---------- */
@@ -228,45 +250,47 @@
       const user = currentUser();
       if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
       const items = getStore(KEYS.memberships, []).filter((m) => m.userId === user.id);
-      return json({ ok: true, items });
+      const cfg = await loadData("membership-types.json");
+      const active = items.filter((m) => m.status === "aktiv");
+      return json({ ok: true, items, summary: billingSummary(active, cfg.familyFlatMonthly) });
     },
 
     "POST /api/memberships": async (body) => {
       const user = currentUser();
       if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
 
-      const types = await loadData("membership-types.json");
-      const type = types.find((t) => t.id === body.type);
+      // Voraussetzung Haushalt: eine Anschrift + eine Bankverbindung am Konto
+      if (!user.address || !user.iban) {
+        return json({ ok: false, code: "ACCOUNT_INCOMPLETE", message: "Bitte zuerst Anschrift und Kontoverbindung im Konto hinterlegen – darunter werden alle Mitglieder deines Haushalts angemeldet." }, 409);
+      }
+
+      const cfg = await loadData("membership-types.json");
       const errors = {};
       if (norm(body.firstName).length < 2) errors.firstName = "Bitte Vornamen angeben.";
       if (norm(body.lastName).length < 2) errors.lastName = "Bitte Nachnamen angeben.";
-      if (!norm(body.birthdate)) errors.birthdate = "Bitte Geburtsdatum angeben.";
+      const age = ageFromBirthdate(body.birthdate);
+      if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
+      else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
       if (!["self", "family"].includes(body.relation)) errors.relation = "Bitte auswählen.";
-      if (!type) errors.type = "Bitte Mitgliedschaftstyp wählen.";
 
-      // Pflicht beim Mitgliedschaftsabschluss: Anschrift + IBAN
-      const a = body.address || {};
-      if (norm(a.street).length < 3) errors.street = "Bitte Straße & Hausnummer angeben.";
-      if (!/^\d{4,5}$/.test(norm(a.zip))) errors.zip = "Bitte gültige PLZ angeben.";
-      if (norm(a.city).length < 2) errors.city = "Bitte Ort angeben.";
-      if (!isIban(body.iban)) errors.iban = "Bitte gültige IBAN angeben.";
-
+      const all = getStore(KEYS.memberships, []);
+      const mine = all.filter((m) => m.userId === user.id);
+      if (body.relation === "self" && mine.some((m) => m.relation === "self" && m.status === "aktiv")) {
+        errors.relation = "Für dich selbst besteht bereits eine aktive Mitgliedschaft.";
+      }
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
 
-      // Adresse + IBAN am Konto hinterlegen (Wiederverwendung)
-      const users = getUsers();
-      const idx = users.findIndex((u) => u.id === user.id);
-      users[idx] = { ...users[idx], address: { street: norm(a.street), zip: norm(a.zip), city: norm(a.city) }, iban: fmtIban(body.iban) };
-      setUsers(users);
-
+      // Beitrag/Klasse automatisch aus dem Alter ableiten
+      const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
       const membership = {
         id: genId("mem"), userId: user.id,
         firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
-        relation: body.relation, type: type.id, typeLabel: type.label, feeMonthly: type.feeMonthly,
+        relation: body.relation,
+        ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
         status: "aktiv", startedAt: new Date().toISOString(),
       };
-      saveLocal(KEYS.memberships, membership);
-      return json({ ok: true, membership, message: "Mitgliedschaft für " + membership.firstName + " wurde abgeschlossen." }, 201);
+      all.push(membership); setStore(KEYS.memberships, all);
+      return json({ ok: true, membership, message: "Mitgliedschaft für " + membership.firstName + " wurde angelegt." }, 201);
     },
 
     "POST /api/memberships/cancel": async (body) => {

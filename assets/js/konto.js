@@ -63,7 +63,6 @@
     $("#greet-name").textContent = account.name.split(" ")[0];
 
     fillAccountForms();
-    await loadTypes();
     await loadMemberships();
     wireEvents();
     $("#dash").hidden = false;
@@ -76,21 +75,6 @@
     fill($("#bank-form"), { iban: account.iban || "" });
   }
 
-  /* ---------- Beitragstypen ---------- */
-  async function loadTypes() {
-    try {
-      const res = await fetch("/api/membership-types");
-      const d = await res.json();
-      const sel = $("#m-type");
-      d.items.forEach((t) => {
-        const o = document.createElement("option");
-        o.value = t.id;
-        o.textContent = t.label + " – " + t.feeMonthly + " €/Monat";
-        sel.appendChild(o);
-      });
-    } catch (e) { /* ignore */ }
-  }
-
   /* ---------- Mitgliedschaften ---------- */
   async function loadMemberships() {
     const wrap = $("#memberships");
@@ -98,24 +82,44 @@
       const res = await fetch("/api/memberships");
       const d = await res.json();
       if (!d.items.length) {
-        wrap.innerHTML = '<p class="muted-note">Noch keine Mitgliedschaften. Schließe deine erste Mitgliedschaft ab – für dich oder ein Familienmitglied.</p>';
-        return;
+        wrap.innerHTML = '<p class="muted-note">Noch keine Mitglieder angemeldet. Melde dich selbst oder ein Familienmitglied an – der Beitrag ergibt sich automatisch aus dem Alter.</p>';
+      } else {
+        wrap.innerHTML = d.items.map(membershipCard).join("");
       }
-      wrap.innerHTML = d.items.map(membershipCard).join("");
+      renderSummary(d.summary);
     } catch (e) {
       wrap.innerHTML = '<p class="load-error">Mitgliedschaften konnten nicht geladen werden.</p>';
     }
+  }
+
+  function renderSummary(sum) {
+    const box = $("#billing-summary");
+    if (!box) return;
+    if (!sum || !sum.activeCount) { box.hidden = true; return; }
+    const memberWord = sum.activeCount === 1 ? "aktives Mitglied" : "aktive Mitglieder";
+    const detail = sum.familyApplied
+      ? '<span class="badge badge--aktiv">Familienbeitrag angewendet</span> – günstiger als die Einzelbeiträge (' + sum.sumIndividual + " €)."
+      : "Summe der Einzelbeiträge.";
+    box.hidden = false;
+    box.innerHTML =
+      '<div class="billing-summary__total">' +
+        '<span class="muted-note">Monatlicher Gesamtbeitrag · ' + sum.activeCount + " " + memberWord + "</span>" +
+        "<strong>" + sum.effectiveTotal + " € / Monat</strong>" +
+      "</div>" +
+      '<p class="muted-note">' + detail + "</p>";
   }
 
   function membershipCard(m) {
     const since = BSG.formatDate(m.startedAt);
     const rel = m.relation === "self" ? "Ich selbst" : "Familienmitglied";
     const active = m.status === "aktiv";
+    const label = m.categoryLabel || m.typeLabel || "Mitglied";
+    const fee = m.individualFee != null ? m.individualFee : m.feeMonthly;
     return (
       '<article class="membership">' +
         '<div class="membership__main">' +
           "<h3>" + BSG.escape(m.firstName) + " " + BSG.escape(m.lastName) + "</h3>" +
-          "<p>" + BSG.escape(m.typeLabel) + " · " + m.feeMonthly + " €/Monat · " + rel + "</p>" +
+          "<p>" + BSG.escape(label) + " · " + fee + " €/Monat · " + rel + "</p>" +
           '<p class="membership__meta">seit ' + since + "</p>" +
         "</div>" +
         '<div class="membership__side">' +
@@ -156,15 +160,19 @@
 
     // Mitgliedschaft-Formular ein-/ausblenden
     const mForm = $("#membership-form");
+    const hint = $("#membership-hint");
     $("#add-membership-btn").addEventListener("click", () => {
+      // Voraussetzung: Haushalts-Anschrift + Bankverbindung vorhanden
+      if (!account.address || !account.iban) {
+        hint.hidden = false;
+        hint.innerHTML = "Bitte hinterlege zuerst <b>Anschrift und Bankverbindung</b> deines Haushalts (unten) – darunter werden alle Mitglieder angemeldet.";
+        $("#address-form").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      hint.hidden = true;
       const show = mForm.hidden;
       mForm.hidden = !show;
-      if (show) {
-        // Adresse/IBAN aus Konto vorbefüllen (Pflicht beim Abschluss)
-        const addr = account.address || {};
-        fill(mForm, { street: addr.street, zip: addr.zip, city: addr.city, iban: account.iban || "" });
-        mForm.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      if (show) mForm.scrollIntoView({ behavior: "smooth", block: "center" });
     });
     $("#membership-cancel").addEventListener("click", () => { mForm.hidden = true; });
 
@@ -173,11 +181,7 @@
       e.preventDefault();
       clearErrors(mForm);
       const fd = Object.fromEntries(new FormData(mForm).entries());
-      const payload = {
-        firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate,
-        relation: fd.relation, type: fd.type,
-        address: { street: fd.street, zip: fd.zip, city: fd.city }, iban: fd.iban,
-      };
+      const payload = { firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate, relation: fd.relation };
       const btn = mForm.querySelector("[type=submit]");
       btn.setAttribute("aria-busy", "true");
       const { res, data } = await postJSON("/api/memberships", payload);
@@ -186,8 +190,6 @@
         status(mForm, "ok", data.message);
         mForm.reset();
         mForm.hidden = true;
-        const meRes = await fetch("/api/auth/me"); account = (await meRes.json()).user;
-        fillAccountForms();
         await loadMemberships();
       } else {
         applyErrors(mForm, data.errors);
