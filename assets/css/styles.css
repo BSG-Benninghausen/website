@@ -6,16 +6,16 @@
 /* ----------  Design Tokens  ---------- */
 :root {
   /* Farben – Anlehnung an Judo-Gürtel & Tatami */
-  --night: #0d1030;
-  --night-2: #161a44;
-  --ink: #14182f;
-  --indigo: #2b2f77;
-  --indigo-2: #3b40a0;
+  --night: #0d0d12;         /* Drachen-Schwarz */
+  --night-2: #1a1a22;
+  --ink: #141119;
+  --indigo: #23232e;        /* dunkles Slate (Text-Akzent) */
+  --indigo-2: #38313a;
 
-  --accent: #ff5436;        /* warmes Rot/Orange */
-  --accent-dark: #e23c20;
+  --accent: #e3141b;        /* Drachen-Rot (Flamme) */
+  --accent-dark: #b00f15;
   --gold: #f6c453;
-  --mat: #1f7a5a;           /* Tatami-Grün */
+  --mat: #1f7a5a;           /* Tatami-Grün (funktional) */
 
   --sand: #f6f2e9;          /* helle Tatami-Fläche */
   --paper: #ffffff;
@@ -37,8 +37,8 @@
   --shadow: 0 14px 40px rgba(13, 16, 48, .12);
   --shadow-lg: 0 30px 70px rgba(13, 16, 48, .22);
 
-  --gradient: linear-gradient(135deg, var(--accent), var(--gold));
-  --gradient-night: radial-gradient(120% 120% at 80% 0%, #2a2f80 0%, var(--night) 55%);
+  --gradient: linear-gradient(135deg, var(--accent), #ff5a2a);
+  --gradient-night: radial-gradient(120% 120% at 80% 0%, #2c1015 0%, var(--night) 58%);
 
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Sora", var(--font-body);
@@ -133,7 +133,9 @@ button { font: inherit; cursor: pointer; }
 }
 .nav { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 .brand { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-weight: 700; }
-.brand__logo { width: 42px; height: 42px; }
+.brand__logo { width: 44px; height: 44px; object-fit: contain; }
+/* Drache im dunklen Footer hell darstellen */
+.site-footer .brand__logo { filter: brightness(0) invert(1); opacity: .92; }
 .brand__name { font-size: 1.05rem; letter-spacing: -.01em; }
 .brand__name small { display: block; font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--text-soft); }
 
@@ -189,7 +191,7 @@ button { font: inherit; cursor: pointer; }
   filter: blur(70px); opacity: .55;
 }
 .hero__glow--a { background: var(--accent); top: -160px; right: -120px; }
-.hero__glow--b { background: var(--mat); bottom: -220px; left: -140px; opacity: .4; }
+.hero__glow--b { background: var(--accent-dark); bottom: -220px; left: -140px; opacity: .45; }
 .hero__inner { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; padding-block: clamp(58px, 9vw, 104px); }
 .hero h1 { font-size: clamp(2.3rem, 6vw, 4rem); }
 .hero h1 .hl { color: var(--gold); }
@@ -367,8 +369,8 @@ button { font: inherit; cursor: pointer; }
   background: var(--mist); transition: border-color .2s, background .2s, box-shadow .2s;
 }
 .field input:focus, .field select:focus, .field textarea:focus {
-  outline: none; border-color: var(--indigo-2); background: #fff;
-  box-shadow: 0 0 0 4px rgba(59, 64, 160, .12);
+  outline: none; border-color: var(--accent); background: #fff;
+  box-shadow: 0 0 0 4px rgba(227, 20, 27, .13);
 }
 .field textarea { resize: vertical; min-height: 130px; }
 .field--error input, .field--error select, .field--error textarea { border-color: var(--accent); background: rgba(255, 84, 54, .05); }
@@ -459,6 +461,24 @@ button { font: inherit; cursor: pointer; }
 .socials svg { width: 20px; height: 20px; color: #fff; }
 .footer-bottom { border-top: 1px solid rgba(255, 255, 255, .1); padding-block: 22px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; font-size: .85rem; }
 .footer-bottom a:hover { color: var(--gold); }
+
+/* ----------  Drache als Wasserzeichen  ---------- */
+.hero__dragon {
+  position: absolute; z-index: -1; pointer-events: none; user-select: none;
+  right: clamp(-80px, -4vw, -20px); bottom: -40px;
+  width: min(58vw, 640px); opacity: .08;
+  filter: drop-shadow(0 0 40px rgba(227, 20, 27, .5));
+}
+.page-hero__dragon {
+  position: absolute; z-index: -1; pointer-events: none; user-select: none;
+  right: -60px; top: 50%; transform: translateY(-50%);
+  width: min(46vw, 440px); opacity: .07;
+  filter: drop-shadow(0 0 30px rgba(227, 20, 27, .45));
+}
+@media (max-width: 700px) {
+  .hero__dragon { width: 80vw; opacity: .06; bottom: -20px; right: -20vw; }
+  .page-hero__dragon { display: none; }
+}
 
 /* ----------  Reveal-Animation  ---------- */
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); }

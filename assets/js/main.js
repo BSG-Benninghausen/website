@@ -76,10 +76,10 @@ const BSG = {
   /** Deko-SVG für News/Medien-Platzhalter (variiert per Seed) */
   placeholderSVG(seed) {
     const palettes = [
-      ["#2b2f77", "#ff5436"],
-      ["#1f7a5a", "#f6c453"],
-      ["#3b40a0", "#f6c453"],
-      ["#0d1030", "#ff5436"],
+      ["#0d0d12", "#e3141b"],
+      ["#1a1a22", "#f6c453"],
+      ["#2c1015", "#ff5a2a"],
+      ["#23232e", "#e3141b"],
     ];
     const [a, b] = palettes[Math.abs(seed) % palettes.length];
     return `
