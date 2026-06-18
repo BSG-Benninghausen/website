@@ -193,6 +193,19 @@ Zur Laufzeit: `BSGApi.setMode('real'|'hybrid'|'mock')`, `BSGApi.setLive([...])`.
 weiter gegen den Mock, während reife Endpunkte einzeln „scharf geschaltet" werden. Am übrigen
 Frontend-Code ändert sich nichts; der `mock-api.js`-Tag bleibt (er ist Mock **und** Router).
 
+### Contract-Tests
+
+Im Ordner `tests/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die dieselben
+Prüfungen wahlweise gegen den Mock oder ein echtes Backend laufen lässt:
+
+```bash
+node tests/run.mjs                                   # Mock (Default)
+TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
+```
+
+So bleiben Mock und Backend vertraglich in Sync. Details und die Backend-Anforderungen stehen
+in `tests/README.md`.
+
 ## Inhalte pflegen
 
 - **News:** `assets/data/news.json` bearbeiten (neueste werden automatisch zuerst angezeigt).

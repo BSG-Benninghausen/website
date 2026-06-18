@@ -18,7 +18,7 @@ contract on both sides; the frontend code never changes.
 
 ## Commands
 
-There is **no build/lint/test toolchain**. Verification is done by hand:
+There is **no build step and no dependencies** — but there is a committed, zero-dep test suite:
 
 ```bash
 # Local preview (must be over HTTP, not file://, because pages fetch JSON)
@@ -26,26 +26,23 @@ python3 -m http.server 8000      # then open http://localhost:8000
 
 # Syntax-check any JS you changed
 node --check assets/js/<file>.js
+
+# Contract tests (run from repo root) — exits non-zero on failure
+node tests/run.mjs                       # mock mode (default)
+node tests/run.mjs tournaments payouts   # filter by filename substring
+TEST_BASE=http://localhost:3000 node tests/run.mjs   # against a real backend
 ```
 
-**Tests** are throwaway Node harnesses (not committed; the sandbox cannot reach the deployed
-site). They load `mock-api.js` into a stubbed environment and call routes directly. Recreate one
-with this bootstrap, then assert against route responses:
-
-```js
-import { readFileSync } from 'fs';
-class Response { constructor(b,i={}){this._b=b;this.status=i.status||200;this.ok=this.status>=200&&this.status<300;} async json(){return JSON.parse(this._b);} }
-const store={}; global.localStorage={getItem:k=>(k in store?store[k]:null),setItem:(k,v)=>{store[k]=String(v)},removeItem:k=>{delete store[k]}};
-global.Response=Response; global.URL=URL; global.setTimeout=fn=>fn();
-const win={location:{origin:'http://localhost'},fetch:async u=>new Response(readFileSync(u,'utf8'),{status:200})};
-global.window=win;
-new Function('window','localStorage','Response','URL','setTimeout','console',readFileSync('assets/js/mock-api.js','utf8'))
-  (win,global.localStorage,Response,URL,global.setTimeout,{info(){}});
-const post=(p,b)=>win.fetch(p,{method:'POST',body:JSON.stringify(b)}), get=p=>win.fetch(p);
-// login(email) via request-code -> devCode -> /api/auth/login; seeded admin: admin@bsg-benninghausen.de
-```
-
-Run with `node harness.mjs`. The stub serves `assets/data/*.json` straight from disk, so seed-on-read works.
+**Contract-test suite (`tests/`).** Same assertions validate either the in-process mock OR a real
+backend (selected by `TEST_BASE`) — this is what keeps the mock contract and a future backend in
+sync. `tests/harness.mjs` exposes `createClient({mode,base})` with API-only helpers (`login`,
+`newUser`, `me`, `asAdmin`, `setHousehold`, `email`); mock mode loads `mock-api.js` into an
+**isolated sandbox** (per-suite fresh `window`/`localStorage`, seed JSON from disk), real mode does
+HTTP with a cookie jar. Each `tests/*.test.mjs` is one domain suite (`export const name`,
+`export default async (api, ck) => …`; `export const mockOnly = true` for dispatcher-only suites
+like `api-switch`). Tests never touch `localStorage` directly and use per-run unique emails so they
+can run against a persistent backend. When you add/change a route, add or update a suite. See
+`tests/README.md` for the backend contract a real implementation must satisfy.
 
 ## Critical conventions
 
