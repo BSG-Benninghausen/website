@@ -36,6 +36,7 @@
     training: "bsg_training",
     team: "bsg_team",
     site: "bsg_site",
+    payouts: "bsg_payouts",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -56,6 +57,7 @@
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
+    { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
@@ -99,6 +101,17 @@
     const ownShare = Math.max(0, num(body.ownShare));
     if (ownShare > fee) errors.ownShare = "Eigenanteil darf die Gebühr nicht übersteigen.";
     return { fee, ownShare };
+  }
+  // Veranstalter-Daten (für Turnier/Meisterschaft): Name + IBAN; IBAN nur prüfen, wenn angegeben
+  function eventOrganizer(body, errors) {
+    const organizerName = norm(body.organizerName);
+    const rawIban = norm(body.organizerIban);
+    let organizerIban = "";
+    if (rawIban) {
+      if (!isIban(rawIban)) errors.organizerIban = "Bitte gültige IBAN des Veranstalters angeben.";
+      else organizerIban = fmtIban(rawIban);
+    }
+    return { organizerName, organizerIban };
   }
   function newsErrors(b) {
     const e = {};
@@ -292,9 +305,9 @@
 
   /* Seed: Standardrollen + Admin-Konto (idempotent) */
   const EXAMPLE_ROLES = [
-    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_team", "manage_site", "manage_memberships", "view_members", "view_finance"], system: false },
+    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_team", "manage_site", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
     { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
-    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance"], system: false },
+    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false },
     { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
   ];
 
@@ -320,6 +333,16 @@
       grant("pressewart", ["manage_site"]);
       grant("trainer", ["manage_training"]);
       setStore(KEYS.seedVersion, 3);
+    }
+    // Migration v4: Auszahlungs-Recht an Vorstand & Kassenwart
+    if (seedVersion < 4) {
+      const grant = (id, perms) => {
+        const r = roles.find((x) => x.id === id);
+        if (r) perms.forEach((p) => { if (!(r.permissions || (r.permissions = [])).includes(p)) r.permissions.push(p); });
+      };
+      grant("vorstand", ["manage_payouts"]);
+      grant("kassenwart", ["manage_payouts"]);
+      setStore(KEYS.seedVersion, 4);
     }
     setRoles(roles);
 
@@ -512,6 +535,7 @@
       if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const errors = eventErrors(body);
       const money = eventMoney(body, errors);
+      const org = eventOrganizer(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const cfg = await loadData("age-classes.json");
       const valid = allAgeClassLabels(cfg);
@@ -520,6 +544,7 @@
         type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location),
         ageClasses: Array.isArray(body.ageClasses) ? body.ageClasses.filter((c) => valid.includes(c)) : [],
         fee: money.fee, ownShare: money.ownShare,
+        organizerName: org.organizerName, organizerIban: org.organizerIban,
       };
       const items = await ensureEvents();
       items.push(item); setStore(KEYS.events, items);
@@ -530,6 +555,7 @@
       if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const errors = eventErrors(body);
       const money = eventMoney(body, errors);
+      const org = eventOrganizer(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const items = await ensureEvents();
       const idx = items.findIndex((ev) => ev.id === body.id);
@@ -541,6 +567,7 @@
         type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location),
         ageClasses: Array.isArray(body.ageClasses) ? body.ageClasses.filter((c) => valid.includes(c)) : [],
         fee: money.fee, ownShare: money.ownShare,
+        organizerName: org.organizerName, organizerIban: org.organizerIban,
       };
       setStore(KEYS.events, items);
       return json({ ok: true, item: items[idx], message: "Termin gespeichert." });
@@ -913,7 +940,8 @@
 
     "GET /api/admin/registrations": async () => {
       const user = currentUser();
-      if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const canView = hasPerm(user, "manage_events") || hasPerm(user, "manage_payouts");
+      if (!canView) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const acfg = await loadData("age-classes.json");
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const events = (await ensureEvents())
@@ -922,6 +950,7 @@
       const members = getStore(KEYS.memberships, []);
       const usersById = {}; getUsers().forEach((u) => { usersById[u.id] = u; });
       const regs = getStore(KEYS.registrations, []);
+      const payouts = getStore(KEYS.payouts, []);
       const items = events.map((e) => {
         const registrations = regs.filter((r) => r.eventId === e.id).map((r) => {
           const m = members.find((x) => x.id === r.membershipId) || {};
@@ -932,9 +961,58 @@
             ownerName: owner.name || "—", ownerEmail: owner.email || "—", registeredAt: r.registeredAt,
           };
         });
-        return { id: e.id, title: e.title, date: e.date, type: e.type, ageClasses: e.ageClasses || [], fee: e.fee || 0, ownShare: e.ownShare || 0, registrations };
+        const fee = e.fee || 0, ownShare = Math.min(fee, e.ownShare || 0), count = registrations.length;
+        return {
+          id: e.id, title: e.title, date: e.date, type: e.type, ageClasses: e.ageClasses || [],
+          fee, ownShare, count,
+          payTotal: fee * count, ownTotal: ownShare * count, clubTotal: (fee - ownShare) * count,
+          organizerName: e.organizerName || "", organizerIban: e.organizerIban || "",
+          payout: payouts.find((p) => p.eventId === e.id) || null,
+          registrations,
+        };
       });
       return json({ ok: true, items });
+    },
+
+    /* ---------- Auszahlungen (Teilnahmegebühren an Veranstalter) ---------- */
+    "GET /api/payouts": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_payouts")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const events = await ensureEvents();
+      const byId = {}; events.forEach((e) => { byId[e.id] = e; });
+      const items = getStore(KEYS.payouts, [])
+        .map((p) => ({ ...p, eventTitle: (byId[p.eventId] || {}).title || "—", eventDate: (byId[p.eventId] || {}).date || "" }))
+        .sort((a, b) => new Date(b.initiatedAt) - new Date(a.initiatedAt));
+      return json({ ok: true, items });
+    },
+    "POST /api/payouts": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_payouts")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const events = await ensureEvents();
+      const ev = events.find((e) => e.id === body.eventId && TOURNAMENT_TYPES.includes(e.type));
+      if (!ev) return json({ ok: false, message: "Turnier nicht gefunden." }, 404);
+      if (!ev.organizerIban || !isIban(ev.organizerIban)) return json({ ok: false, message: "Keine gültige Veranstalter-IBAN am Termin hinterlegt." }, 422);
+      const count = getStore(KEYS.registrations, []).filter((r) => r.eventId === ev.id).length;
+      if (count < 1) return json({ ok: false, message: "Keine Anmeldungen vorhanden." }, 422);
+      const payouts = getStore(KEYS.payouts, []);
+      if (payouts.some((p) => p.eventId === ev.id)) return json({ ok: false, message: "Für dieses Turnier wurde bereits eine Überweisung veranlasst." }, 409);
+      const fee = ev.fee || 0;
+      const payout = {
+        id: genId("pay"), eventId: ev.id, organizerName: ev.organizerName || "", organizerIban: ev.organizerIban,
+        feePerHead: fee, count, amount: fee * count, reference: norm(body.reference),
+        initiatedByUserId: user.id, initiatedByName: user.name, initiatedAt: new Date().toISOString(),
+        status: "veranlasst",
+      };
+      payouts.push(payout); setStore(KEYS.payouts, payouts);
+      return json({ ok: true, payout, message: "Überweisung über " + (fee * count) + " € an " + (ev.organizerName || "den Veranstalter") + " veranlasst." }, 201);
+    },
+    "POST /api/payouts/cancel": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_payouts")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const payouts = getStore(KEYS.payouts, []);
+      if (!payouts.some((p) => p.id === body.id)) return json({ ok: false, message: "Auszahlung nicht gefunden." }, 404);
+      setStore(KEYS.payouts, payouts.filter((p) => p.id !== body.id));
+      return json({ ok: true, message: "Überweisung storniert." });
     },
   };
 

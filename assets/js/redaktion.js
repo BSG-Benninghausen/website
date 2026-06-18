@@ -8,6 +8,7 @@
   "use strict";
 
   const $ = (s) => document.querySelector(s);
+  let CAN_PAYOUTS = false;
 
   async function postJSON(url, data) {
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -145,7 +146,9 @@
     const canTraining = can("manage_training");
     const canTeam = can("manage_team");
     const canSite = can("manage_site");
-    if (!canNews && !canEvents && !canTraining && !canTeam && !canSite) { location.href = "konto.html"; return; }
+    const canPayouts = can("manage_payouts");
+    CAN_PAYOUTS = canPayouts;
+    if (!canNews && !canEvents && !canTraining && !canTeam && !canSite && !canPayouts) { location.href = "konto.html"; return; }
 
     $("#red-loading").hidden = true; $("#red").hidden = false;
 
@@ -163,6 +166,7 @@
     if (canEvents) {
       const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
       const acField = $("#event-ageclasses-field");
+      const orgField = $("#event-organizer-field");
       const acBox = $("#event-ageclasses");
       const typeSel = $("#e-type");
       let labels = [];
@@ -170,7 +174,7 @@
       acBox.innerHTML = labels.map((l) =>
         '<label class="perm-item"><input type="checkbox" name="ageClasses" value="' + BSG.escape(l) + '"><span>' + BSG.escape(l) + "</span></label>"
       ).join("");
-      const toggleAc = () => { acField.hidden = !TOURNAMENT_TYPES.includes(typeSel.value); };
+      const toggleAc = () => { const isT = TOURNAMENT_TYPES.includes(typeSel.value); acField.hidden = !isT; orgField.hidden = !isT; };
       typeSel.addEventListener("change", toggleAc);
       const setChecks = (vals) => {
         const set = new Set(vals || []);
@@ -189,8 +193,13 @@
       });
       await ed.load(); $("#events-section").hidden = false;
       toggleAc();
+    }
 
+    if (canEvents || canPayouts) {
       await loadRegistrations();
+    }
+    if (canPayouts) {
+      await loadPayouts();
     }
 
     if (canTraining) {
@@ -234,6 +243,36 @@
     $("#site-section").hidden = false;
   }
 
+  function payoutPanel(e) {
+    const fee = Number(e.fee) || 0;
+    if (fee <= 0) return "";
+    const payTotal = Number(e.payTotal) || 0;
+    const ownTotal = Number(e.ownTotal) || 0, clubTotal = Number(e.clubTotal) || 0;
+    const head = '<div class="payout"><div class="payout__sum"><span>Teilnahmegebühren gesamt</span><strong>' + fmtEuro(payTotal) + " €</strong></div>" +
+      '<p class="muted-note">Geb&uuml;hr ' + fmtEuro(fee) + " € × " + (e.count || 0) + " Anmeldung(en)" +
+      (ownTotal || clubTotal ? " · davon Eigenanteile " + fmtEuro(ownTotal) + " €, Verein tr&auml;gt " + fmtEuro(clubTotal) + " €" : "") + "</p>";
+    let action;
+    if (e.payout) {
+      const p = e.payout;
+      action = '<div class="payout__done"><span class="badge badge--aktiv">&uuml;berwiesen</span> ' +
+        fmtEuro(p.amount) + " € an " + BSG.escape(p.organizerName || "Veranstalter") + " (" + BSG.escape(p.organizerIban || "") + ")<br>" +
+        '<span class="muted-note">veranlasst am ' + BSG.formatDate(p.initiatedAt) + " durch " + BSG.escape(p.initiatedByName || "—") +
+        (p.reference ? " · Verwendungszweck: " + BSG.escape(p.reference) : "") + "</span>" +
+        (CAN_PAYOUTS ? '<div style="margin-top:8px"><button class="btn btn--outline btn--sm" data-payout-cancel="' + p.id + '">Storno</button></div>' : "") +
+        "</div>";
+    } else if (!CAN_PAYOUTS) {
+      action = "";
+    } else if (!e.organizerIban) {
+      action = '<p class="muted-note">Bitte Veranstalter-IBAN im Termin hinterlegen, um die &Uuml;berweisung zu veranlassen.</p>';
+    } else if (!e.count) {
+      action = '<p class="muted-note">Noch keine Anmeldungen &ndash; nichts zu &uuml;berweisen.</p>';
+    } else {
+      action = '<div class="payout__to muted-note">An ' + BSG.escape(e.organizerName || "Veranstalter") + " · " + BSG.escape(e.organizerIban) + "</div>" +
+        '<button class="btn btn--primary btn--sm" data-payout="' + e.id + '">&Uuml;berweisung veranlassen</button>';
+    }
+    return head + action + "</div>";
+  }
+
   function regRow(e) {
     const acls = (e.ageClasses && e.ageClasses.length)
       ? ' · ' + e.ageClasses.map((c) => '<span class="ac-badge">' + BSG.escape(c) + "</span>").join("")
@@ -251,7 +290,7 @@
     return '<div class="adm-role"><div class="adm-role__head"><div><b>' + BSG.escape(e.title) + "</b> " +
       '<span class="badge">' + BSG.escape(e.type) + "</span>" + acls + "<br>" +
       '<span class="muted-note">' + BSG.formatDate(e.date) + "</span>" + money +
-      "</div><div><b>" + (e.registrations ? e.registrations.length : 0) + "</b></div></div>" + rows + "</div>";
+      "</div><div><b>" + (e.registrations ? e.registrations.length : 0) + "</b></div></div>" + rows + payoutPanel(e) + "</div>";
   }
 
   async function loadRegistrations() {
@@ -259,8 +298,46 @@
     try { data = await (await fetch("/api/admin/registrations")).json(); } catch (e) { return; }
     if (!data || !data.ok) return;
     const items = data.items || [];
-    $("#registrations-list").innerHTML = items.length ? items.map(regRow).join("") : '<p class="muted-note">Keine kommenden Turniere oder Meisterschaften.</p>';
+    const listEl = $("#registrations-list");
+    listEl.innerHTML = items.length ? items.map(regRow).join("") : '<p class="muted-note">Keine kommenden Turniere oder Meisterschaften.</p>';
     $("#registrations-section").hidden = false;
+    if (!listEl.dataset.wired) {
+      listEl.dataset.wired = "1";
+      listEl.addEventListener("click", async (ev) => {
+        const pay = ev.target.closest("[data-payout]");
+        const cancel = ev.target.closest("[data-payout-cancel]");
+        if (pay) {
+          const reference = prompt("Verwendungszweck (optional):", "Teilnahmegebühren");
+          if (reference === null) return;
+          const btn = pay; btn.setAttribute("aria-busy", "true");
+          const { res, data: d } = await postJSON("/api/payouts", { eventId: pay.getAttribute("data-payout"), reference });
+          if (res.ok && d.ok) { toast("ok", d.message); await loadRegistrations(); await loadPayouts(); }
+          else { btn.removeAttribute("aria-busy"); toast("err", d.message || "Fehler."); }
+        }
+        if (cancel) {
+          if (!confirm("Diese Überweisung wirklich stornieren?")) return;
+          const { res, data: d } = await postJSON("/api/payouts/cancel", { id: cancel.getAttribute("data-payout-cancel") });
+          if (res.ok && d.ok) { toast("ok", d.message); await loadRegistrations(); await loadPayouts(); }
+          else toast("err", d.message || "Fehler.");
+        }
+      });
+    }
+  }
+
+  async function loadPayouts() {
+    let data;
+    try { data = await (await fetch("/api/payouts")).json(); } catch (e) { return; }
+    if (!data || !data.ok) return;
+    const items = data.items || [];
+    $("#payouts-list").innerHTML = items.length
+      ? items.map((p) =>
+          '<div class="adm-role"><div class="adm-role__head"><div><b>' + fmtEuro(p.amount) + " € · " + BSG.escape(p.eventTitle) + "</b><br>" +
+          '<span class="muted-note">an ' + BSG.escape(p.organizerName || "Veranstalter") + " · " + BSG.escape(p.organizerIban || "") +
+          " · veranlasst am " + BSG.formatDate(p.initiatedAt) + " durch " + BSG.escape(p.initiatedByName || "—") + "</span></div>" +
+          '<span class="badge badge--aktiv">überwiesen</span></div></div>'
+        ).join("")
+      : '<p class="muted-note">Noch keine Überweisungen veranlasst.</p>';
+    $("#payouts-section").hidden = false;
   }
 
   init();

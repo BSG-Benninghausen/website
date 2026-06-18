@@ -79,7 +79,8 @@ Bereitgestellte Endpunkte:
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
-| `GET /api/admin/registrations` | Anmeldungen je Turnier (Recht `manage_events`) |
+| `GET /api/admin/registrations` | Anmeldungen je Turnier inkl. Gebührensummen & Veranstalter (Recht `manage_events` **oder** `manage_payouts`) |
+| `GET /api/payouts` · `POST /api/payouts` · `POST /api/payouts/cancel` | Überweisungen der Teilnahmegebühren an den Veranstalter (Recht `manage_payouts`) |
 
 > Es findet **kein echter Datenversand** statt. Formulareingaben werden nur lokal im
 > Browser gespeichert (Demo-Zweck).
@@ -110,7 +111,7 @@ Bereitgestellte Endpunkte:
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`, `bsg_team`,
-  `bsg_site`, `bsg_seed_version`, `bsg_pass_counter`.
+  `bsg_site`, `bsg_payouts`, `bsg_seed_version`, `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
 
@@ -118,7 +119,8 @@ Bereitgestellte Endpunkte:
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
-  `manage_team`, `manage_site`, `manage_memberships`, `view_members`, `view_finance`.
+  `manage_team`, `manage_site`, `manage_memberships`, `view_members`, `view_finance`,
+  `manage_payouts`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
   Team, Startseiten-Texte) ist einzeln zuweisbar.
 - **Seed-Admin & Beispiel-Rollen:** Beim ersten Laden legt der Mock die System-Rollen
@@ -146,8 +148,16 @@ Bereitgestellte Endpunkte:
   `[data-site="key"]` auf der Startseite; Felder-Schema `SITE_FIELDS` in `mock-api.js`).
   Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu
   **Wettkampf-Altersklassen** (leer = offen für alle) sowie **Gebühr** und **Eigenanteil**;
-  die Differenz (`Gebühr − Eigenanteil`) trägt der Verein. Organisatoren sehen unter
+  die Differenz (`Gebühr − Eigenanteil`) trägt der Verein. Bei Turnieren/Meisterschaften lassen
+  sich **Veranstalter** und **Veranstalter-IBAN** hinterlegen. Organisatoren sehen unter
   „Turnier-Anmeldungen" je Turnier alle angemeldeten Mitglieder.
+- **Teilnahmegebühren überweisen** (Recht `manage_payouts`, z. B. *Kassenwart*): In der
+  Redaktion zeigt „Turnier-Anmeldungen" je Turnier die **Gesamtsumme der Teilnahmegebühren**
+  (`Gebühr × Anzahl Anmeldungen`, plus informativ Eigenanteile/Vereinsanteil) und das
+  Überweisungsziel (Veranstalter-IBAN). Per Klick wird die **Überweisung veranlasst** – im
+  Mock wird sie lokal erfasst (Betrag, IBAN, Datum, Auslöser, optional Verwendungszweck) und
+  als „überwiesen" markiert; ein **Storno** ist möglich. Eine kleine Historie listet alle
+  veranlassten Überweisungen. **Es findet keine echte Zahlung statt.**
 - **Turniere & Meisterschaften im Dashboard** (`konto.html`): Kontoinhaber sehen je kommendem
   Turnier nur die **passenden eigenen Mitglieder** (Altersklasse schneidet sich mit der des
   Turniers) und melden sie an/ab. Gebühr/Eigenanteil werden ausgewiesen. Im **Kalender**

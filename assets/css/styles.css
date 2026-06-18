@@ -584,3 +584,10 @@ button { font: inherit; cursor: pointer; }
 .tournament__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .tournament__member { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line, rgba(20,20,26,.08)); flex-wrap: wrap; }
 .tournament__member:first-of-type { border-top: 0; }
+
+/* Auszahlungs-Panel (Teilnahmegebühren an Veranstalter) */
+.payout { margin-top: 12px; padding: 14px; border-radius: 12px; background: var(--mist, rgba(20,20,26,.04)); border: 1px solid var(--line, rgba(20,20,26,.08)); }
+.payout__sum { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.payout__sum strong { font-family: var(--font-display); font-size: 1.15rem; }
+.payout__to { margin: 6px 0 8px; }
+.payout__done { margin-top: 4px; font-size: .92rem; }

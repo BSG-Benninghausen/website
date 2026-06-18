@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=17">
+  <link rel="stylesheet" href="assets/css/styles.css?v=18">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -176,6 +176,17 @@
                 <label>Altersklassen <span class="muted-note">(leer = offen für alle)</span></label>
                 <fieldset id="event-ageclasses" class="perm-grid" style="border:0;padding:0;margin:0"></fieldset>
               </div>
+              <div class="field-row" id="event-organizer-field" hidden>
+                <div class="field">
+                  <label for="e-org-name">Veranstalter</label>
+                  <input id="e-org-name" name="organizerName" type="text" placeholder="z. B. JC Lippstadt">
+                </div>
+                <div class="field">
+                  <label for="e-org-iban">Veranstalter-IBAN <span class="muted-note">(für die Überweisung der Teilnahmegebühren)</span></label>
+                  <input id="e-org-iban" name="organizerIban" type="text" autocomplete="off" placeholder="DE…">
+                  <p class="field__error"></p>
+                </div>
+              </div>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
                 <button type="submit" class="btn btn--primary"><span class="spinner" aria-hidden="true"></span>Speichern</button>
                 <button type="button" id="event-reset" class="btn btn--outline" hidden>Abbrechen</button>
@@ -189,6 +200,13 @@
             <span class="eyebrow">Wettkampf</span>
             <h2 style="font-size:1.3rem;margin:6px 0 16px">Turnier-Anmeldungen</h2>
             <div id="registrations-list" class="adm-roles"></div>
+          </div>
+
+          <!-- Auszahlungs-Historie -->
+          <div id="payouts-section" class="card" style="margin-top:24px" hidden>
+            <span class="eyebrow">Finanzen</span>
+            <h2 style="font-size:1.3rem;margin:6px 0 16px">Veranlasste Überweisungen</h2>
+            <div id="payouts-list" class="adm-roles"></div>
           </div>
 
           <!-- Trainingszeiten -->
@@ -341,8 +359,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=17" defer></script>
-  <script src="assets/js/main.js?v=17" defer></script>
-  <script src="assets/js/redaktion.js?v=17" defer></script>
+  <script src="assets/js/mock-api.js?v=18" defer></script>
+  <script src="assets/js/main.js?v=18" defer></script>
+  <script src="assets/js/redaktion.js?v=18" defer></script>
 </body>
 </html>
