@@ -10,10 +10,13 @@
 
   function cardHTML(item, i) {
     const date = BSG.formatDate(item.date);
+    const media = item.image
+      ? `<img class="news-card__img" src="${BSG.escape(item.image)}" alt="" loading="lazy">`
+      : BSG.placeholderSVG(i + (item.title ? item.title.length : 0));
     return `
       <article class="news-card reveal">
         <div class="news-card__media">
-          ${BSG.placeholderSVG(i + (item.title ? item.title.length : 0))}
+          ${media}
           <span class="news-card__tag">${BSG.escape(item.tag)}</span>
         </div>
         <div class="news-card__body">

@@ -73,6 +73,9 @@ Bereitgestellte Endpunkte:
 | `GET /api/memberships` · `POST /api/memberships` | Mitgliedschaften lesen · abschließen |
 | `POST /api/memberships/cancel` | Mitgliedschaft kündigen |
 | `GET /api/age-classes` | Auswählbare Wettkampf-Altersklassen (für den Termin-Editor) |
+| `GET /api/training` · `POST /api/training`(`/update`,`/delete`) | Trainingszeiten lesen (öffentlich) · pflegen (`manage_training`) |
+| `GET /api/team` · `POST /api/team`(`/update`,`/delete`) | Team & Vorstand lesen (öffentlich) · pflegen (`manage_team`) |
+| `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
 | `GET /api/admin/registrations` | Anmeldungen je Turnier (Recht `manage_events`) |
@@ -100,15 +103,18 @@ Bereitgestellte Endpunkte:
   Die Zuordnung ist als anpassbare Vorlage in **`assets/data/age-classes.json`** hinterlegt
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
-  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_seed_version`, `bsg_pass_counter`.
+  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`, `bsg_team`,
+  `bsg_site`, `bsg_seed_version`, `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
 
 - **Rollen & Berechtigungen** (`admin.html`, `assets/js/admin.js`): Benutzer mit der Rolle
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
-  `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_memberships`,
-  `view_members`, `view_finance`.
+  `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
+  `manage_team`, `manage_site`, `manage_memberships`, `view_members`, `view_finance`.
+  Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
+  Team, Startseiten-Texte) ist einzeln zuweisbar.
 - **Seed-Admin & Beispiel-Rollen:** Beim ersten Laden legt der Mock die System-Rollen
   *Administrator*/*Mitglied*, ein Admin-Konto **`admin@bsg-benninghausen.de`** sowie
   bearbeitbare Beispiel-Rollen **Vorstand, Pressewart, Kassenwart, Trainer** an. Anmeldung
@@ -125,7 +131,14 @@ Bereitgestellte Endpunkte:
   `aktuelles.html`, der Startseite und `kalender.html`. Beim ersten Zugriff werden News/Termine
   aus `assets/data/news.json` bzw. `events.json` in den Store übernommen (Seed-on-read) und
   sind danach editierbar. Endpunkte: `GET /api/news`, `POST /api/news`(`/update`,`/delete`),
-  analog `…/events`. Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu
+  analog `…/events`. Newsmeldungen können ein **optionales Bild** tragen (clientseitig
+  verkleinert, als Data-URL gespeichert; ohne Bild erscheint ein Platzhalter-Muster).
+  Weitere editierbare Bereiche mit jeweils **eigenem Recht**:
+  **Trainingszeiten** (`manage_training`, `assets/data/trainingszeiten.json` → `trainingszeiten.html`,
+  Startseiten-Teaser, Hero-Mini), **Team & Vorstand** (`manage_team`, `assets/data/team.json` →
+  `team.html`) und **Startseiten-Texte** (`manage_site`, `assets/data/site.json` → per
+  `[data-site="key"]` auf der Startseite; Felder-Schema `SITE_FIELDS` in `mock-api.js`).
+  Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu
   **Wettkampf-Altersklassen** (leer = offen für alle) sowie **Gebühr** und **Eigenanteil**;
   die Differenz (`Gebühr − Eigenanteil`) trägt der Verein. Organisatoren sehen unter
   „Turnier-Anmeldungen" je Turnier alle angemeldeten Mitglieder.

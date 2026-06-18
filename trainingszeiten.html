@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=15">
+  <link rel="stylesheet" href="assets/css/styles.css?v=16">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -60,22 +60,8 @@
           <h2>Drei Trainingsgruppen</h2>
           <p>Die Zeiten gelten an unseren Trainingstagen (Mi/Fr). Komm bitte ein paar Minuten früher.</p>
         </div>
-        <div class="schedule">
-          <div class="slot reveal">
-            <div class="slot__time">17:00<span>– 18:00 Uhr</span></div>
-            <div><h3>Kinder</h3><p>Spielerischer Einstieg, Falltechnik und erste Würfe – mit ganz viel Spaß.</p></div>
-            <span class="slot__age">ab 5 Jahre</span>
-          </div>
-          <div class="slot reveal">
-            <div class="slot__time">18:00<span>– 19:30 Uhr</span></div>
-            <div><h3>Judoka</h3><p>Technik, Randori und Wettkampfvorbereitung für Fortgeschrittene.</p></div>
-            <span class="slot__age">ab Gelb-Gurt / ca. 8 J.</span>
-          </div>
-          <div class="slot reveal">
-            <div class="slot__time">18:15<span>– 19:45 Uhr</span></div>
-            <div><h3>Judo &amp; Fitness für Erwachsene</h3><p>Technik, Kondition und Selbstverteidigung – für Einsteiger und Wiedereinsteiger.</p></div>
-            <span class="slot__age">Erwachsene</span>
-          </div>
+        <div class="schedule" data-training>
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
         </div>
 
         <div class="notice notice--mock" style="margin-top:26px">
@@ -166,7 +152,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=15" defer></script>
-  <script src="assets/js/main.js?v=15" defer></script>
+  <script src="assets/js/mock-api.js?v=16" defer></script>
+  <script src="assets/js/main.js?v=16" defer></script>
+  <script src="assets/js/trainingszeiten.js?v=16" defer></script>
 </body>
 </html>

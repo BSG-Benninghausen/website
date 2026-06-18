@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=15">
+  <link rel="stylesheet" href="assets/css/styles.css?v=16">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -50,9 +50,9 @@
       <img class="hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
       <div class="wrap hero__inner">
         <div>
-          <span class="eyebrow eyebrow--invert">Judo in Benninghausen</span>
-          <h1>Stark auf der Matte. <span class="hl">Stark im Leben.</span></h1>
-          <p class="hero__lead">Judo für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
+          <span class="eyebrow eyebrow--invert" data-site="hero_eyebrow">Judo in Benninghausen</span>
+          <h1><span data-site="hero_title">Stark auf der Matte.</span> <span class="hl" data-site="hero_title_hl">Stark im Leben.</span></h1>
+          <p class="hero__lead" data-site="hero_subtitle">Judo für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
           <div class="hero__cta">
             <a href="anmeldung.html" class="btn btn--gold btn--lg">
               Kostenloses Probetraining
@@ -67,9 +67,9 @@
           </div>
         </div>
         <aside class="hero__card" aria-label="Nächstes Training">
-          <h3>Nächstes Training</h3>
-          <p class="muted">Mittwochs &amp; freitags · Sporthalle Grundschule Benninghausen</p>
-          <ul class="train-mini">
+          <h3 data-site="hero_card_title">Nächstes Training</h3>
+          <p class="muted" data-site="hero_card_note">Mittwochs &amp; freitags · Sporthalle Grundschule Benninghausen</p>
+          <ul class="train-mini" data-training-mini>
             <li><div><b>Kinder</b><br><span>ab 5 Jahre</span></div><time>17:00–18:00</time></li>
             <li><div><b>Judoka</b><br><span>ab Gelb-Gurt / ca. 8 J.</span></div><time>18:00–19:30</time></li>
             <li><div><b>Erwachsene</b><br><span>Judo &amp; Fitness</span></div><time>18:15–19:45</time></li>
@@ -94,9 +94,9 @@
           </div>
         </div>
         <div class="reveal">
-          <span class="eyebrow">Über uns</span>
-          <h2>Mehr als ein Sport – eine Gemeinschaft</h2>
-          <p>Bei der BSG Benninghausen e.V. dreht sich alles um Judo – den „sanften Weg“. Wir stärken Kinder auf ihrem Weg, vermitteln Werte und zeigen, dass wahre Größe nichts mit Körpergröße zu tun hat.</p>
+          <span class="eyebrow" data-site="about_eyebrow">Über uns</span>
+          <h2 data-site="about_title">Mehr als ein Sport – eine Gemeinschaft</h2>
+          <p data-site="about_text">Bei der BSG Benninghausen e.V. dreht sich alles um Judo – den „sanften Weg“. Wir stärken Kinder auf ihrem Weg, vermitteln Werte und zeigen, dass wahre Größe nichts mit Körpergröße zu tun hat.</p>
           <ul class="checklist">
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Werte, die bleiben.</b> Freundschaft, Respekt und Rücksichtnahme sind die Basis unseres Trainings.</span></li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Selbstvertrauen.</b> Wir begleiten die Persönlichkeitsentwicklung jedes Kindes.</span></li>
@@ -144,22 +144,8 @@
     <section class="section">
       <div class="wrap split split--reverse">
         <div class="split__media reveal">
-          <div class="schedule">
-            <div class="slot">
-              <div class="slot__time">17:00<span>– 18:00</span></div>
-              <div><h3>Kinder</h3><p>Spielerischer Einstieg ins Judo</p></div>
-              <span class="slot__age">ab 5 Jahre</span>
-            </div>
-            <div class="slot">
-              <div class="slot__time">18:00<span>– 19:30</span></div>
-              <div><h3>Judoka</h3><p>Technik &amp; Wettkampfvorbereitung</p></div>
-              <span class="slot__age">ab Gelb / ca. 8 J.</span>
-            </div>
-            <div class="slot">
-              <div class="slot__time">18:15<span>– 19:45</span></div>
-              <div><h3>Erwachsene</h3><p>Judo &amp; Fitness für jedes Level</p></div>
-              <span class="slot__age">Erwachsene</span>
-            </div>
+          <div class="schedule" data-training-teaser>
+            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
           </div>
         </div>
         <div class="reveal">
@@ -198,8 +184,8 @@
         <div class="cta-band reveal">
           <span class="cta-band__glow" aria-hidden="true"></span>
           <span class="eyebrow eyebrow--invert" style="justify-content:center">Mach mit</span>
-          <h2>Deine erste Judo-Stunde wartet</h2>
-          <p>Probier Judo kostenlos und unverbindlich aus. Wir freuen uns auf dich auf der Matte!</p>
+          <h2 data-site="cta_title">Deine erste Judo-Stunde wartet</h2>
+          <p data-site="cta_text">Probier Judo kostenlos und unverbindlich aus. Wir freuen uns auf dich auf der Matte!</p>
           <div class="hero__cta">
             <a href="anmeldung.html" class="btn btn--gold btn--lg">Jetzt zum Probetraining anmelden</a>
             <a href="kontakt.html" class="btn btn--ghost btn--lg">Frag uns etwas</a>
@@ -257,8 +243,9 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=15" defer></script>
-  <script src="assets/js/main.js?v=15" defer></script>
-  <script src="assets/js/news.js?v=15" defer></script>
+  <script src="assets/js/mock-api.js?v=16" defer></script>
+  <script src="assets/js/main.js?v=16" defer></script>
+  <script src="assets/js/news.js?v=16" defer></script>
+  <script src="assets/js/trainingszeiten.js?v=16" defer></script>
 </body>
 </html>

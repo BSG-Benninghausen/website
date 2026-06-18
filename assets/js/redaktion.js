@@ -1,6 +1,8 @@
 /* =====================================================================
-   redaktion.js – News- & Termine-Editor (dynamischer Content)
-   Zugriff: manage_news (News) und/oder manage_events (Termine).
+   redaktion.js – Redaktions-Editor (dynamischer Content)
+   Bereiche je nach Recht: News (manage_news), Termine (manage_events),
+   Trainingszeiten (manage_training), Team (manage_team), Startseiten-
+   Texte (manage_site). Jede Sektion wird nur bei vorhandenem Recht gezeigt.
    ===================================================================== */
 (function () {
   "use strict";
@@ -67,6 +69,32 @@
     }
     return html;
   }
+  const trainingRow = (t) => adminRow(t.title, t.start + (t.end ? "–" + t.end : "") + " Uhr" + (t.ageGroup ? " · " + t.ageGroup : ""), t.id);
+  const GROUP_LABEL = { vorstand: "Vorstand", trainer: "Trainerteam" };
+  const teamRow = (m) => adminRow(m.name, (GROUP_LABEL[m.group] || m.group) + " · " + (m.role || ""), m.id);
+
+  /* Optionaler Bild-Upload (News): Vorschau + Verkleinern via BSG.readAndResize */
+  function makeImageInput(o) {
+    let current = "";
+    const input = $(o.input), prev = $(o.preview), ph = $(o.ph), clear = $(o.clear), field = $(o.field);
+    function render() {
+      if (current) { prev.src = current; prev.hidden = false; if (ph) ph.hidden = true; if (clear) clear.hidden = false; }
+      else { prev.removeAttribute("src"); prev.hidden = true; if (ph) ph.hidden = false; if (clear) clear.hidden = true; }
+    }
+    input.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (field) field.classList.remove("field--error");
+      try { current = await BSG.readAndResize(file, 480); render(); }
+      catch (err) { if (field) { field.classList.add("field--error"); const p = field.querySelector(".field__error"); if (p) p.textContent = err.message; } }
+    });
+    if (clear) clear.addEventListener("click", () => { current = ""; input.value = ""; render(); });
+    return {
+      get: () => current,
+      set: (v) => { current = v || ""; input.value = ""; render(); },
+      reset: () => { current = ""; input.value = ""; render(); },
+    };
+  }
 
   function setupEditor(o) {
     let items = [];
@@ -111,14 +139,25 @@
     try { const r = await fetch("/api/auth/me"); me = await r.json(); if (!r.ok || !me.ok) { location.href = "login.html"; return; } }
     catch (e) { location.href = "login.html"; return; }
 
-    const canNews = me.isAdmin || me.permissions.includes("manage_news");
-    const canEvents = me.isAdmin || me.permissions.includes("manage_events");
-    if (!canNews && !canEvents) { location.href = "konto.html"; return; }
+    const can = (p) => me.isAdmin || me.permissions.includes(p);
+    const canNews = can("manage_news");
+    const canEvents = can("manage_events");
+    const canTraining = can("manage_training");
+    const canTeam = can("manage_team");
+    const canSite = can("manage_site");
+    if (!canNews && !canEvents && !canTraining && !canTeam && !canSite) { location.href = "konto.html"; return; }
 
     $("#red-loading").hidden = true; $("#red").hidden = false;
 
     if (canNews) {
-      const ed = setupEditor({ listEl: $("#news-list"), form: $("#news-form"), resetBtn: $("#news-reset"), formTitle: $("#news-form-title"), api: "/api/news", newTitle: "Neue Meldung", editTitle: "Meldung bearbeiten", render: newsRow });
+      const img = makeImageInput({ input: "#n-image", preview: "#n-image-preview", ph: "#n-image-ph", clear: "#n-image-clear", field: "[data-news-image-field]" });
+      const ed = setupEditor({
+        listEl: $("#news-list"), form: $("#news-form"), resetBtn: $("#news-reset"), formTitle: $("#news-form-title"),
+        api: "/api/news", newTitle: "Neue Meldung", editTitle: "Meldung bearbeiten", render: newsRow,
+        collect: (fd) => { fd.image = img.get(); },
+        onFill: (it) => { img.set(it.image || ""); },
+        onReset: () => { img.reset(); },
+      });
       await ed.load(); $("#news-section").hidden = false;
     }
     if (canEvents) {
@@ -153,6 +192,46 @@
 
       await loadRegistrations();
     }
+
+    if (canTraining) {
+      const ed = setupEditor({ listEl: $("#training-list"), form: $("#training-form"), resetBtn: $("#training-reset"), formTitle: $("#training-form-title"), api: "/api/training", newTitle: "Neue Trainingszeit", editTitle: "Trainingszeit bearbeiten", render: trainingRow });
+      await ed.load(); $("#training-section").hidden = false;
+    }
+
+    if (canTeam) {
+      const ed = setupEditor({ listEl: $("#team-list"), form: $("#team-form"), resetBtn: $("#team-reset"), formTitle: $("#team-form-title"), api: "/api/team", newTitle: "Neuer Eintrag", editTitle: "Eintrag bearbeiten", render: teamRow });
+      await ed.load(); $("#team-section").hidden = false;
+    }
+
+    if (canSite) {
+      await setupSiteEditor();
+    }
+  }
+
+  /* Startseiten-Texte: dynamisches Formular aus /api/site */
+  async function setupSiteEditor() {
+    const form = $("#site-form"); const wrap = $("#site-fields");
+    let data;
+    try { data = await (await fetch("/api/site")).json(); } catch (e) { return; }
+    if (!data || !data.ok) return;
+    const fields = data.fields || [];
+    wrap.innerHTML = fields.map((f) => {
+      const v = BSG.escape((data.values && data.values[f.key]) || "");
+      const ctrl = f.type === "textarea"
+        ? '<textarea id="site-' + f.key + '" name="' + f.key + '">' + v + "</textarea>"
+        : '<input id="site-' + f.key + '" name="' + f.key + '" type="text" value="' + v + '">';
+      return '<div class="field"><label for="site-' + f.key + '">' + BSG.escape(f.label) + "</label>" + ctrl + "</div>";
+    }).join("");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const values = Object.fromEntries(new FormData(form).entries());
+      const btn = form.querySelector("[type=submit]"); btn.setAttribute("aria-busy", "true");
+      const { res, data: d } = await postJSON("/api/site", { values });
+      btn.removeAttribute("aria-busy");
+      if (res.ok && d.ok) { status(form, "ok", d.message); toast("ok", d.message); }
+      else status(form, "err", d.message || "Fehler.");
+    });
+    $("#site-section").hidden = false;
   }
 
   function regRow(e) {

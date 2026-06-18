@@ -68,8 +68,24 @@
         const has = (p) => d.isAdmin || (d.permissions && d.permissions.includes(p));
         const reveal = (sel) => document.querySelectorAll(sel).forEach((a) => { a.hidden = false; });
         if (has("manage_roles") || has("manage_users")) reveal("[data-admin-link]");
-        if (has("manage_news") || has("manage_events")) reveal("[data-redaktion-link]");
+        if (has("manage_news") || has("manage_events") || has("manage_training") || has("manage_team") || has("manage_site")) reveal("[data-redaktion-link]");
         if (has("view_members")) reveal("[data-members-link]");
+      })
+      .catch(() => {});
+  }
+
+  /* ----- Editierbare Startseiten-Texte anwenden ([data-site="key"]) ----- */
+  const siteEls = document.querySelectorAll("[data-site]");
+  if (siteEls.length) {
+    fetch("/api/site")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || !d.ok || !d.values) return;
+        siteEls.forEach((el) => {
+          const key = el.getAttribute("data-site");
+          const val = d.values[key];
+          if (typeof val === "string" && val.trim()) el.textContent = val;
+        });
       })
       .catch(() => {});
   }
@@ -94,6 +110,30 @@ const BSG = {
     const div = document.createElement("div");
     div.textContent = str == null ? "" : String(str);
     return div.innerHTML;
+  },
+  /** Bild clientseitig auf maxEdge verkleinern -> JPEG-Data-URL (Promise) */
+  readAndResize(file, maxEdge = 400) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error("Keine Datei"));
+      if (!/^image\//.test(file.type)) return reject(new Error("Bitte ein Bild wählen."));
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Bild konnte nicht geladen werden."));
+        img.onload = () => {
+          let { width, height } = img;
+          const scale = Math.min(1, maxEdge / Math.max(width, height));
+          width = Math.round(width * scale); height = Math.round(height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
   },
   /** Deko-SVG für News/Medien-Platzhalter (variiert per Seed) */
   placeholderSVG(seed) {

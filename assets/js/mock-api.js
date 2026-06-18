@@ -33,6 +33,9 @@
     seedVersion: "bsg_seed_version",
     passCounter: "bsg_pass_counter",
     registrations: "bsg_registrations",
+    training: "bsg_training",
+    team: "bsg_team",
+    site: "bsg_site",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -47,6 +50,9 @@
     { key: "manage_users", label: "Benutzer & Rollenzuweisung verwalten" },
     { key: "manage_news", label: "Newsmeldungen schreiben & bearbeiten" },
     { key: "manage_events", label: "Termine pflegen" },
+    { key: "manage_training", label: "Trainingszeiten bearbeiten" },
+    { key: "manage_team", label: "Team & Vorstand bearbeiten" },
+    { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
@@ -107,6 +113,44 @@
     if (!norm(b.date)) e.date = "Bitte ein Datum angeben.";
     return e;
   }
+  function trainingErrors(b) {
+    const e = {};
+    if (norm(b.title).length < 2) e.title = "Bitte einen Titel angeben.";
+    if (!norm(b.start)) e.start = "Bitte eine Startzeit angeben.";
+    return e;
+  }
+  const trainingFields = (b) => ({
+    title: norm(b.title), start: norm(b.start), end: norm(b.end),
+    ageGroup: norm(b.ageGroup), description: norm(b.description),
+  });
+  const TEAM_GROUPS = ["vorstand", "trainer"];
+  function teamErrors(b) {
+    const e = {};
+    if (norm(b.name).length < 2) e.name = "Bitte einen Namen angeben.";
+    if (!norm(b.role)) e.role = "Bitte eine Funktion/Rolle angeben.";
+    if (!TEAM_GROUPS.includes(b.group)) e.group = "Bitte eine gültige Gruppe wählen.";
+    return e;
+  }
+  const teamFields = (b) => ({
+    group: TEAM_GROUPS.includes(b.group) ? b.group : "vorstand",
+    name: norm(b.name), role: norm(b.role), description: norm(b.description),
+  });
+
+  /* ----- Startseiten-Texte: Schema (editierbare Felder) ----- */
+  const SITE_FIELDS = [
+    { key: "hero_eyebrow", label: "Hero · Eyebrow (kleine Überschrift)", type: "text" },
+    { key: "hero_title", label: "Hero · Titel (erster Teil)", type: "text" },
+    { key: "hero_title_hl", label: "Hero · Titel (hervorgehobener Teil)", type: "text" },
+    { key: "hero_subtitle", label: "Hero · Untertitel/Text", type: "textarea" },
+    { key: "hero_card_title", label: "Hero-Karte · Überschrift", type: "text" },
+    { key: "hero_card_note", label: "Hero-Karte · Hinweis", type: "text" },
+    { key: "about_eyebrow", label: "Über uns · Eyebrow", type: "text" },
+    { key: "about_title", label: "Über uns · Überschrift", type: "text" },
+    { key: "about_text", label: "Über uns · Text", type: "textarea" },
+    { key: "cta_title", label: "Call-to-Action · Überschrift", type: "text" },
+    { key: "cta_text", label: "Call-to-Action · Text", type: "textarea" },
+  ];
+  const SITE_KEYS = SITE_FIELDS.map((f) => f.key);
 
   /* ----- IBAN-Prüfung inkl. Mod-97 ----- */
   function isIban(v) {
@@ -234,10 +278,10 @@
 
   /* Seed: Standardrollen + Admin-Konto (idempotent) */
   const EXAMPLE_ROLES = [
-    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_memberships", "view_members", "view_finance"], system: false },
-    { id: "pressewart", label: "Pressewart", permissions: ["manage_news"], system: false },
+    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_team", "manage_site", "manage_memberships", "view_members", "view_finance"], system: false },
+    { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
     { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance"], system: false },
-    { id: "trainer", label: "Trainer", permissions: ["view_members"], system: false },
+    { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
   ];
 
   function seed() {
@@ -251,6 +295,17 @@
     if (seedVersion < 2) {
       EXAMPLE_ROLES.forEach((ex) => { if (!roles.some((r) => r.id === ex.id)) roles.push({ ...ex, permissions: ex.permissions.slice() }); });
       setStore(KEYS.seedVersion, 2);
+    }
+    // Migration v3: neue Content-Rechte additiv an bestehende Beispiel-Rollen vergeben
+    if (seedVersion < 3) {
+      const grant = (id, perms) => {
+        const r = roles.find((x) => x.id === id);
+        if (r) perms.forEach((p) => { if (!(r.permissions || (r.permissions = [])).includes(p)) r.permissions.push(p); });
+      };
+      grant("vorstand", ["manage_training", "manage_team", "manage_site"]);
+      grant("pressewart", ["manage_site"]);
+      grant("trainer", ["manage_training"]);
+      setStore(KEYS.seedVersion, 3);
     }
     setRoles(roles);
 
@@ -280,6 +335,21 @@
     if (!items) { items = await loadData("events.json"); setStore(KEYS.events, items); }
     return items;
   }
+  async function ensureTraining() {
+    let items = getStore(KEYS.training, null);
+    if (!items) { items = await loadData("trainingszeiten.json"); setStore(KEYS.training, items); }
+    return items;
+  }
+  async function ensureTeam() {
+    let items = getStore(KEYS.team, null);
+    if (!items) { items = await loadData("team.json"); setStore(KEYS.team, items); }
+    return items;
+  }
+  async function ensureSite() {
+    let values = getStore(KEYS.site, null);
+    if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
+    return values;
+  }
 
   /* ----- Route-Handler ----- */
   const routes = {
@@ -294,7 +364,7 @@
       const errors = newsErrors(body);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const items = await ensureNews();
-      const item = { id: genId("news"), date: norm(body.date), tag: norm(body.tag) || "Verein", title: norm(body.title), excerpt: norm(body.excerpt), body: norm(body.body) };
+      const item = { id: genId("news"), date: norm(body.date), tag: norm(body.tag) || "Verein", title: norm(body.title), excerpt: norm(body.excerpt), body: norm(body.body), image: isPhoto(body.image) ? body.image : "" };
       items.push(item); setStore(KEYS.news, items);
       return json({ ok: true, item, message: "Newsmeldung veröffentlicht." }, 201);
     },
@@ -306,7 +376,8 @@
       const items = await ensureNews();
       const idx = items.findIndex((n) => n.id === body.id);
       if (idx === -1) return json({ ok: false, message: "Newsmeldung nicht gefunden." }, 404);
-      items[idx] = { ...items[idx], date: norm(body.date), tag: norm(body.tag) || "Verein", title: norm(body.title), excerpt: norm(body.excerpt), body: norm(body.body) };
+      const image = body.image === "" ? "" : (isPhoto(body.image) ? body.image : (items[idx].image || ""));
+      items[idx] = { ...items[idx], date: norm(body.date), tag: norm(body.tag) || "Verein", title: norm(body.title), excerpt: norm(body.excerpt), body: norm(body.body), image };
       setStore(KEYS.news, items);
       return json({ ok: true, item: items[idx], message: "Newsmeldung gespeichert." });
     },
@@ -322,6 +393,95 @@
     "GET /api/age-classes": async () => {
       const cfg = await loadData("age-classes.json");
       return json({ ok: true, items: allAgeClassLabels(cfg) });
+    },
+
+    /* ---------- Trainingszeiten ---------- */
+    "GET /api/training": async () => {
+      return json({ ok: true, items: await ensureTraining() });
+    },
+    "POST /api/training": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_training")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = trainingErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureTraining();
+      const item = { id: genId("ts"), ...trainingFields(body) };
+      items.push(item); setStore(KEYS.training, items);
+      return json({ ok: true, item, message: "Trainingszeit angelegt." }, 201);
+    },
+    "POST /api/training/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_training")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = trainingErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureTraining();
+      const idx = items.findIndex((t) => t.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Trainingszeit nicht gefunden." }, 404);
+      items[idx] = { ...items[idx], ...trainingFields(body) };
+      setStore(KEYS.training, items);
+      return json({ ok: true, item: items[idx], message: "Trainingszeit gespeichert." });
+    },
+    "POST /api/training/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_training")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = await ensureTraining();
+      if (!items.some((t) => t.id === body.id)) return json({ ok: false, message: "Trainingszeit nicht gefunden." }, 404);
+      setStore(KEYS.training, items.filter((t) => t.id !== body.id));
+      return json({ ok: true, message: "Trainingszeit gelöscht." });
+    },
+
+    /* ---------- Team & Vorstand ---------- */
+    "GET /api/team": async () => {
+      return json({ ok: true, items: await ensureTeam() });
+    },
+    "POST /api/team": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = teamErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureTeam();
+      const item = { id: genId("team"), ...teamFields(body) };
+      items.push(item); setStore(KEYS.team, items);
+      return json({ ok: true, item, message: "Eintrag angelegt." }, 201);
+    },
+    "POST /api/team/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = teamErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureTeam();
+      const idx = items.findIndex((t) => t.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Eintrag nicht gefunden." }, 404);
+      items[idx] = { ...items[idx], ...teamFields(body) };
+      setStore(KEYS.team, items);
+      return json({ ok: true, item: items[idx], message: "Eintrag gespeichert." });
+    },
+    "POST /api/team/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = await ensureTeam();
+      if (!items.some((t) => t.id === body.id)) return json({ ok: false, message: "Eintrag nicht gefunden." }, 404);
+      setStore(KEYS.team, items.filter((t) => t.id !== body.id));
+      return json({ ok: true, message: "Eintrag gelöscht." });
+    },
+
+    /* ---------- Startseiten-Texte ---------- */
+    "GET /api/site": async () => {
+      const stored = await ensureSite();
+      const values = {};
+      SITE_FIELDS.forEach((f) => { values[f.key] = norm(stored[f.key]); });
+      return json({ ok: true, fields: SITE_FIELDS, values });
+    },
+    "POST /api/site": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_site")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const stored = await ensureSite();
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      SITE_KEYS.forEach((k) => { if (k in values) stored[k] = norm(values[k]); });
+      setStore(KEYS.site, stored);
+      const out = {};
+      SITE_FIELDS.forEach((f) => { out[f.key] = norm(stored[f.key]); });
+      return json({ ok: true, values: out, message: "Startseiten-Texte gespeichert." });
     },
 
     "GET /api/events": async () => {

@@ -13,30 +13,8 @@
 
   const $ = (sel) => document.querySelector(sel);
 
-  /* Foto clientseitig verkleinern -> Data-URL (JPEG) */
-  function readAndResize(file, maxEdge = 360) {
-    return new Promise((resolve, reject) => {
-      if (!file) return reject(new Error("Keine Datei"));
-      if (!/^image\//.test(file.type)) return reject(new Error("Bitte ein Bild wählen."));
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
-      reader.onload = () => {
-        const img = new Image();
-        img.onerror = () => reject(new Error("Bild konnte nicht geladen werden."));
-        img.onload = () => {
-          let { width, height } = img;
-          const scale = Math.min(1, maxEdge / Math.max(width, height));
-          width = Math.round(width * scale); height = Math.round(height * scale);
-          const canvas = document.createElement("canvas");
-          canvas.width = width; canvas.height = height;
-          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.82));
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
+  /* Foto clientseitig verkleinern -> Data-URL (JPEG); gemeinsame Logik in BSG.readAndResize */
+  const readAndResize = (file, maxEdge = 360) => BSG.readAndResize(file, maxEdge);
   function setPhoto(dataUrl) {
     currentPhoto = dataUrl || "";
     const prev = $("#m-photo-preview"); const ph = $("#m-photo-ph");
