@@ -32,7 +32,9 @@
     events: "bsg_events",
     seedVersion: "bsg_seed_version",
     passCounter: "bsg_pass_counter",
+    registrations: "bsg_registrations",
   };
+  const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
   const BELTS = ["", "Weißgurt", "Weiß-Gelb", "Gelbgurt", "Gelb-Orange", "Orangegurt", "Orange-Grün", "Grüngurt", "Blaugurt", "Braungurt", "1. Dan (Schwarzgurt)", "2. Dan", "3. Dan", "4. Dan", "5. Dan"];
   const GENDERS = ["", "männlich", "weiblich", "divers"];
@@ -84,7 +86,14 @@
   const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
   /* ----- Content-Validierung (News & Termine) ----- */
-  const EVENT_TYPES = ["Training", "Turnier", "Prüfung", "Event"];
+  const EVENT_TYPES = ["Training", "Turnier", "Prüfung", "Event", "Meisterschaft"];
+  const num = (v) => { const n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return isNaN(n) ? 0 : n; };
+  function eventMoney(body, errors) {
+    const fee = Math.max(0, num(body.fee));
+    const ownShare = Math.max(0, num(body.ownShare));
+    if (ownShare > fee) errors.ownShare = "Eigenanteil darf die Gebühr nicht übersteigen.";
+    return { fee, ownShare };
+  }
   function newsErrors(b) {
     const e = {};
     if (norm(b.title).length < 3) e.title = "Bitte einen Titel angeben.";
@@ -151,6 +160,13 @@
     });
     return out;
   }
+  function allAgeClassLabels(cfg) {
+    if (!cfg) return [];
+    const out = (cfg.classes || []).map((c) => c.label);
+    (cfg.veterans || []).forEach((v) => { if (v.male) out.push(v.male); if (v.female) out.push(v.female); });
+    return out;
+  }
+  const overlaps = (a, b) => Array.isArray(a) && Array.isArray(b) && a.some((x) => b.includes(x));
 
   /* ----- Judopass-Felder: Foto, Passnummer, Profilfelder ----- */
   const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
@@ -303,6 +319,11 @@
       return json({ ok: true, message: "Newsmeldung gelöscht." });
     },
 
+    "GET /api/age-classes": async () => {
+      const cfg = await loadData("age-classes.json");
+      return json({ ok: true, items: allAgeClassLabels(cfg) });
+    },
+
     "GET /api/events": async () => {
       const events = (await ensureEvents()).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
       return json({ ok: true, items: events });
@@ -311,9 +332,17 @@
       const user = currentUser();
       if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const errors = eventErrors(body);
+      const money = eventMoney(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const cfg = await loadData("age-classes.json");
+      const valid = allAgeClassLabels(cfg);
+      const item = {
+        id: genId("ev"), date: norm(body.date), time: norm(body.time),
+        type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location),
+        ageClasses: Array.isArray(body.ageClasses) ? body.ageClasses.filter((c) => valid.includes(c)) : [],
+        fee: money.fee, ownShare: money.ownShare,
+      };
       const items = await ensureEvents();
-      const item = { id: genId("ev"), date: norm(body.date), time: norm(body.time), type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location) };
       items.push(item); setStore(KEYS.events, items);
       return json({ ok: true, item, message: "Termin angelegt." }, 201);
     },
@@ -321,11 +350,19 @@
       const user = currentUser();
       if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const errors = eventErrors(body);
+      const money = eventMoney(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const items = await ensureEvents();
       const idx = items.findIndex((ev) => ev.id === body.id);
       if (idx === -1) return json({ ok: false, message: "Termin nicht gefunden." }, 404);
-      items[idx] = { ...items[idx], date: norm(body.date), time: norm(body.time), type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location) };
+      const cfg = await loadData("age-classes.json");
+      const valid = allAgeClassLabels(cfg);
+      items[idx] = {
+        ...items[idx], date: norm(body.date), time: norm(body.time),
+        type: EVENT_TYPES.includes(body.type) ? body.type : "Event", title: norm(body.title), location: norm(body.location),
+        ageClasses: Array.isArray(body.ageClasses) ? body.ageClasses.filter((c) => valid.includes(c)) : [],
+        fee: money.fee, ownShare: money.ownShare,
+      };
       setStore(KEYS.events, items);
       return json({ ok: true, item: items[idx], message: "Termin gespeichert." });
     },
@@ -635,6 +672,86 @@
       list[idx].cancelledAt = new Date().toISOString();
       setStore(KEYS.memberships, list);
       return json({ ok: true, membership: list[idx], message: "Mitgliedschaft gekündigt." });
+    },
+
+    /* ---------- Turniere & Meisterschaften: Anmeldung ---------- */
+    "GET /api/tournaments": async () => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const acfg = await loadData("age-classes.json");
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const events = (await ensureEvents())
+        .filter((e) => TOURNAMENT_TYPES.includes(e.type) && new Date(e.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const myMembers = getStore(KEYS.memberships, []).filter((m) => m.userId === user.id && m.status === "aktiv");
+      const regs = getStore(KEYS.registrations, []);
+      const items = events.map((e) => {
+        const open = !e.ageClasses || e.ageClasses.length === 0;
+        const eligibleMembers = myMembers
+          .map((m) => ({ m, classes: classesForAge(ageInYear(m.birthdate), m.gender, acfg) }))
+          .filter((x) => open || overlaps(x.classes, e.ageClasses))
+          .map((x) => ({
+            membershipId: x.m.id, name: x.m.firstName + " " + x.m.lastName, competitionClasses: x.classes,
+            registered: regs.some((r) => r.eventId === e.id && r.membershipId === x.m.id),
+          }));
+        return { ...e, eligibleMembers };
+      });
+      return json({ ok: true, items });
+    },
+
+    "POST /api/tournaments/register": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const events = await ensureEvents();
+      const ev = events.find((e) => e.id === body.eventId && TOURNAMENT_TYPES.includes(e.type));
+      if (!ev) return json({ ok: false, message: "Turnier nicht gefunden." }, 404);
+      const m = getStore(KEYS.memberships, []).find((x) => x.id === body.membershipId && x.userId === user.id);
+      if (!m) return json({ ok: false, message: "Mitglied nicht gefunden." }, 404);
+      const acfg = await loadData("age-classes.json");
+      const classes = classesForAge(ageInYear(m.birthdate), m.gender, acfg);
+      const open = !ev.ageClasses || ev.ageClasses.length === 0;
+      if (!open && !overlaps(classes, ev.ageClasses)) return json({ ok: false, message: "Dieses Mitglied passt nicht in die Altersklassen dieses Turniers." }, 422);
+      const regs = getStore(KEYS.registrations, []);
+      if (regs.some((r) => r.eventId === ev.id && r.membershipId === m.id)) return json({ ok: false, message: "Bereits angemeldet." }, 409);
+      const reg = { id: genId("reg"), eventId: ev.id, membershipId: m.id, userId: user.id, registeredAt: new Date().toISOString() };
+      regs.push(reg); setStore(KEYS.registrations, regs);
+      return json({ ok: true, registration: reg, message: m.firstName + " wurde angemeldet." }, 201);
+    },
+
+    "POST /api/tournaments/unregister": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const regs = getStore(KEYS.registrations, []);
+      const exists = regs.some((r) => r.eventId === body.eventId && r.membershipId === body.membershipId && r.userId === user.id);
+      if (!exists) return json({ ok: false, message: "Anmeldung nicht gefunden." }, 404);
+      setStore(KEYS.registrations, regs.filter((r) => !(r.eventId === body.eventId && r.membershipId === body.membershipId && r.userId === user.id)));
+      return json({ ok: true, message: "Abgemeldet." });
+    },
+
+    "GET /api/admin/registrations": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_events")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const acfg = await loadData("age-classes.json");
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const events = (await ensureEvents())
+        .filter((e) => TOURNAMENT_TYPES.includes(e.type) && new Date(e.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const members = getStore(KEYS.memberships, []);
+      const usersById = {}; getUsers().forEach((u) => { usersById[u.id] = u; });
+      const regs = getStore(KEYS.registrations, []);
+      const items = events.map((e) => {
+        const registrations = regs.filter((r) => r.eventId === e.id).map((r) => {
+          const m = members.find((x) => x.id === r.membershipId) || {};
+          const owner = usersById[r.userId] || {};
+          return {
+            membershipId: r.membershipId, firstName: m.firstName || "—", lastName: m.lastName || "",
+            competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, acfg),
+            ownerName: owner.name || "—", ownerEmail: owner.email || "—", registeredAt: r.registeredAt,
+          };
+        });
+        return { id: e.id, title: e.title, date: e.date, type: e.type, ageClasses: e.ageClasses || [], fee: e.fee || 0, ownShare: e.ownShare || 0, registrations };
+      });
+      return json({ ok: true, items });
     },
   };
 

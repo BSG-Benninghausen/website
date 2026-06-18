@@ -72,6 +72,10 @@ Bereitgestellte Endpunkte:
 | `POST /api/account/update` | Adresse und/oder IBAN ändern (IBAN-Prüfung inkl. Mod-97) |
 | `GET /api/memberships` · `POST /api/memberships` | Mitgliedschaften lesen · abschließen |
 | `POST /api/memberships/cancel` | Mitgliedschaft kündigen |
+| `GET /api/age-classes` | Auswählbare Wettkampf-Altersklassen (für den Termin-Editor) |
+| `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
+| `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
+| `GET /api/admin/registrations` | Anmeldungen je Turnier (Recht `manage_events`) |
 
 > Es findet **kein echter Datenversand** statt. Formulareingaben werden nur lokal im
 > Browser gespeichert (Demo-Zweck).
@@ -96,7 +100,7 @@ Bereitgestellte Endpunkte:
   Die Zuordnung ist als anpassbare Vorlage in **`assets/data/age-classes.json`** hinterlegt
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
-  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_seed_version`, `bsg_pass_counter`.
+  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_seed_version`, `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
 
@@ -121,7 +125,14 @@ Bereitgestellte Endpunkte:
   `aktuelles.html`, der Startseite und `kalender.html`. Beim ersten Zugriff werden News/Termine
   aus `assets/data/news.json` bzw. `events.json` in den Store übernommen (Seed-on-read) und
   sind danach editierbar. Endpunkte: `GET /api/news`, `POST /api/news`(`/update`,`/delete`),
-  analog `…/events`.
+  analog `…/events`. Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu
+  **Wettkampf-Altersklassen** (leer = offen für alle) sowie **Gebühr** und **Eigenanteil**;
+  die Differenz (`Gebühr − Eigenanteil`) trägt der Verein. Organisatoren sehen unter
+  „Turnier-Anmeldungen" je Turnier alle angemeldeten Mitglieder.
+- **Turniere & Meisterschaften im Dashboard** (`konto.html`): Kontoinhaber sehen je kommendem
+  Turnier nur die **passenden eigenen Mitglieder** (Altersklasse schneidet sich mit der des
+  Turniers) und melden sie an/ab. Gebühr/Eigenanteil werden ausgewiesen. Im **Kalender**
+  erscheinen die Altersklassen als Badges samt Eigenanteil-Hinweis.
 - **Mitgliederübersicht** (`mitglieder.html`, `assets/js/mitglieder.js`, Recht `view_members`):
   **lesende** Liste aller Mitglieder. IBAN, Beiträge und Haushalts-Summen nur mit zusätzlichem
   Recht `view_finance` (z. B. *Kassenwart*). Endpunkt: `GET /api/admin/members`.

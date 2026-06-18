@@ -10,6 +10,16 @@
   function eventHTML(item) {
     const dm = BSG.dayMonth(item.date);
     const weekday = BSG.formatDate(item.date, { weekday: "long" });
+    const acls = (item.ageClasses && item.ageClasses.length)
+      ? `<div class="ac-badges" style="margin-top:8px">${item.ageClasses.map((c) => `<span class="ac-badge">${BSG.escape(c)}</span>`).join("")}</div>`
+      : "";
+    const fee = Number(item.fee) || 0;
+    let money = "";
+    if (fee > 0) {
+      const own = Math.min(fee, Number(item.ownShare) || 0);
+      const club = fee - own;
+      money = `<p class="muted-note" style="margin-top:6px">Eigenanteil ${own.toLocaleString("de-DE")} €${club > 0 ? ` <span class="muted-note">(Verein trägt ${club.toLocaleString("de-DE")} €)</span>` : ""}</p>`;
+    }
     return `
       <article class="event reveal">
         <div class="event__date">
@@ -19,6 +29,8 @@
         <div>
           <h3>${BSG.escape(item.title)}</h3>
           <p>${BSG.escape(weekday)} · ${BSG.escape(item.time)} · ${BSG.escape(item.location)}</p>
+          ${acls}
+          ${money}
         </div>
         <span class="event__type" data-type="${BSG.escape(item.type)}">${BSG.escape(item.type)}</span>
       </article>`;

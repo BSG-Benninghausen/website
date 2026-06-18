@@ -98,6 +98,7 @@
 
     fillAccountForms();
     await loadMemberships();
+    await loadTournaments();
     wireEvents();
     $("#dash").hidden = false;
     $("#dash-loading").hidden = true;
@@ -197,8 +198,79 @@
     );
   }
 
+  /* ---------- Turniere & Meisterschaften ---------- */
+  const euro = (v) => (Number(v) || 0).toLocaleString("de-DE");
+
+  function tournamentCard(e) {
+    const acls = (e.ageClasses && e.ageClasses.length)
+      ? e.ageClasses.map((c) => '<span class="ac-badge">' + BSG.escape(c) + "</span>").join("")
+      : '<span class="muted-note">offen für alle Altersklassen</span>';
+    const fee = Number(e.fee) || 0;
+    let money = "";
+    if (fee > 0) {
+      const own = Math.min(fee, Number(e.ownShare) || 0);
+      const club = fee - own;
+      money = '<p class="muted-note" style="margin:4px 0 0">Eigenanteil <b>' + euro(own) + " €</b>" + (club > 0 ? " · Verein trägt " + euro(club) + " €" : "") + "</p>";
+    }
+    const members = (e.eligibleMembers || []);
+    const memberRows = members.length
+      ? members.map((m) =>
+          '<div class="tournament__member">' +
+            "<div><b>" + BSG.escape(m.name) + "</b> " +
+            (m.competitionClasses || []).map((c) => '<span class="ac-badge">' + BSG.escape(c) + "</span>").join("") +
+            "</div>" +
+            (m.registered
+              ? '<div style="display:flex;align-items:center;gap:10px"><span class="badge badge--aktiv">angemeldet</span>' +
+                '<button class="btn btn--outline btn--sm" data-unregister="' + e.id + '" data-member="' + m.membershipId + '">Abmelden</button></div>'
+              : '<button class="btn btn--primary btn--sm" data-register="' + e.id + '" data-member="' + m.membershipId + '">Anmelden</button>') +
+          "</div>"
+        ).join("")
+      : '<p class="muted-note" style="margin-top:10px">Keine deiner Mitglieder passt in die Altersklassen dieses Turniers.</p>';
+    return (
+      '<div class="tournament">' +
+        '<div class="tournament__head">' +
+          "<div><b>" + BSG.escape(e.title) + '</b> <span class="event__type" data-type="' + BSG.escape(e.type) + '">' + BSG.escape(e.type) + "</span>" +
+            '<br><span class="muted-note">' + BSG.formatDate(e.date) + (e.time ? " · " + BSG.escape(e.time) : "") + (e.location ? " · " + BSG.escape(e.location) : "") + "</span>" +
+            money +
+          "</div>" +
+          '<div class="ac-badges">' + acls + "</div>" +
+        "</div>" +
+        memberRows +
+      "</div>"
+    );
+  }
+
+  async function loadTournaments() {
+    const sec = $("#tournaments-section");
+    const list = $("#tournaments-list");
+    if (!sec || !list) return;
+    let data;
+    try { data = await (await fetch("/api/tournaments")).json(); }
+    catch (e) { return; }
+    if (!data || !data.ok) return;
+    const items = data.items || [];
+    if (!items.length) { sec.hidden = true; return; }
+    list.innerHTML = items.map(tournamentCard).join("");
+    sec.hidden = false;
+  }
+
   /* ---------- Events ---------- */
   function wireEvents() {
+    // Turnier-Anmeldung / -Abmeldung (Delegation)
+    $("#tournaments-list").addEventListener("click", async (e) => {
+      const reg = e.target.closest("[data-register]");
+      const unreg = e.target.closest("[data-unregister]");
+      const btn = reg || unreg;
+      if (!btn) return;
+      btn.setAttribute("aria-busy", "true");
+      const url = reg ? "/api/tournaments/register" : "/api/tournaments/unregister";
+      const eventId = btn.getAttribute(reg ? "data-register" : "data-unregister");
+      const membershipId = btn.getAttribute("data-member");
+      const { res, data } = await postJSON(url, { eventId, membershipId });
+      if (res.ok && data.ok) await loadTournaments();
+      else { btn.removeAttribute("aria-busy"); alert(data.message || "Fehler."); }
+    });
+
     // Abmelden
     $("#logout").addEventListener("click", async () => {
       await fetch("/api/auth/logout", { method: "POST" });
