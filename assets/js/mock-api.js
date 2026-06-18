@@ -133,6 +133,25 @@
     };
   }
 
+  /* ----- Wettkampf-Altersklassen (Jahrgangsprinzip) ----- */
+  function ageInYear(birthdate) {
+    const y = new Date(birthdate).getFullYear();
+    if (isNaN(y)) return null;
+    return new Date().getFullYear() - y;
+  }
+  function classesForAge(j, gender, cfg) {
+    if (j == null || !cfg) return [];
+    const out = [];
+    (cfg.classes || []).forEach((c) => { if (j >= c.minAge && j <= c.maxAge) out.push(c.label); });
+    (cfg.veterans || []).forEach((v) => {
+      if (j >= v.minAge && j <= v.maxAge) {
+        const code = gender === "männlich" ? v.male : gender === "weiblich" ? v.female : (v.male + "/" + v.female);
+        if (code) out.push(code);
+      }
+    });
+    return out;
+  }
+
   /* ----- Judopass-Felder: Foto, Passnummer, Profilfelder ----- */
   const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
   function nextPassNumber() {
@@ -324,6 +343,7 @@
       if (!hasPerm(user, "view_members")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const fin = hasPerm(user, "view_finance");
       const cfg = await loadData("membership-types.json");
+      const acfg = await loadData("age-classes.json");
       const users = getUsers();
       const byId = {}; users.forEach((u) => { byId[u.id] = u; });
       const memberships = getStore(KEYS.memberships, []);
@@ -334,6 +354,7 @@
           categoryLabel: m.categoryLabel || "", individualFee: m.individualFee || 0,
           status: m.status, startedAt: m.startedAt,
           photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weightClass: m.weightClass || "",
+          competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, acfg),
           ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
         };
         if (fin) row.iban = owner.iban || null;
@@ -546,8 +567,10 @@
     "GET /api/memberships": async () => {
       const user = currentUser();
       if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
-      const items = getStore(KEYS.memberships, []).filter((m) => m.userId === user.id);
+      const stored = getStore(KEYS.memberships, []).filter((m) => m.userId === user.id);
       const cfg = await loadData("membership-types.json");
+      const acfg = await loadData("age-classes.json");
+      const items = stored.map((m) => ({ ...m, competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, acfg) }));
       const active = items.filter((m) => m.status === "aktiv");
       return json({ ok: true, items, summary: billingSummary(active, cfg.familyFlatMonthly) });
     },

@@ -176,12 +176,16 @@
             '<span class="badge badge--' + (active ? "aktiv" : "gekuendigt") + '">' + BSG.escape(m.status) + "</span>" +
             '<div class="judopass__grid">' +
               row("Geboren", BSG.escape(birth)) +
-              row("Klasse", BSG.escape(label)) +
+              row("Beitragsklasse", BSG.escape(label)) +
               row("Gürtel", BSG.escape(m.belt || "—")) +
               row("Gewichtsklasse", m.weightClass ? BSG.escape(m.weightClass) : "—") +
               row("Beitrag", fee + " €/Mon.") +
               row("Mitglied seit", BSG.escape(since)) +
             "</div>" +
+            ((m.competitionClasses && m.competitionClasses.length)
+              ? '<div class="judopass__classes"><span class="judopass__classes-label">Altersklasse</span>' +
+                m.competitionClasses.map((c) => '<span class="ac-badge">' + BSG.escape(c) + "</span>").join("") + "</div>"
+              : "") +
           "</div>" +
         "</div>" +
         (m.photo ? "" : '<p class="judopass__warn">Foto fehlt – bitte über „Bearbeiten" ergänzen (Pflicht für den Judopass).</p>') +

@@ -91,6 +91,10 @@ Bereitgestellte Endpunkte:
   (`POST /api/memberships/update`, nur Eigentümer) und wird als kleiner **Judopass** angezeigt.
   Pflicht-**Foto** (clientseitig verkleinert, als Data-URL gespeichert) plus optional Gewichtsklasse,
   Gürtel/Graduierung, Geschlecht, Nationalität; automatische **Passnummer** (`bsg_pass_counter`).
+- **Wettkampf-Altersklassen** (U9…U21/Senioren, Veteranen M1…/F1…) werden je Mitglied aus dem
+  Geburtsjahrgang berechnet und als Badges angezeigt – inkl. Übergangsjahrgängen (mehrere Klassen).
+  Die Zuordnung ist als anpassbare Vorlage in **`assets/data/age-classes.json`** hinterlegt
+  (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_seed_version`, `bsg_pass_counter`.
 
