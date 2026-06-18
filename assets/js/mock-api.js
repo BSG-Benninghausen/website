@@ -27,7 +27,19 @@
     memberships: "bsg_memberships",
     session: "bsg_session",
     codes: "bsg_login_codes",
+    roles: "bsg_roles",
   };
+
+  /* Berechtigungs-Katalog (vom Admin auf Rollen verteilbar) */
+  const PERMISSIONS = [
+    { key: "manage_roles", label: "Rollen & Berechtigungen verwalten" },
+    { key: "manage_users", label: "Benutzer & Rollenzuweisung verwalten" },
+    { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
+    { key: "manage_content", label: "News & Termine pflegen" },
+    { key: "view_members", label: "Mitgliederliste einsehen" },
+  ];
+  const ALL_PERMS = PERMISSIONS.map((p) => p.key);
+  const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
 
   const realFetch = window.fetch.bind(window);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -101,7 +113,7 @@
   const getUserById = (id) => getUsers().find((u) => u.id === id);
   function publicUser(u) {
     if (!u) return null;
-    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, createdAt: u.createdAt };
+    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, roles: u.roles || ["member"], createdAt: u.createdAt };
   }
   const getSession = () => getStore(KEYS.session, null);
   const setSession = (userId) => setStore(KEYS.session, { token: genId("tok"), userId });
@@ -110,6 +122,42 @@
     const s = getSession();
     return s ? getUserById(s.userId) : null;
   }
+
+  /* ----- Rollen & Berechtigungen ----- */
+  const getRoles = () => getStore(KEYS.roles, []);
+  const setRoles = (r) => setStore(KEYS.roles, r);
+  function userPermissions(user) {
+    if (!user) return [];
+    const roleIds = user.roles || ["member"];
+    if (roleIds.includes("admin")) return ALL_PERMS.slice();
+    const roles = getRoles();
+    const set = new Set();
+    roleIds.forEach((rid) => {
+      const r = roles.find((x) => x.id === rid);
+      if (r) (r.permissions || []).forEach((p) => set.add(p));
+    });
+    return [...set];
+  }
+  const isAdmin = (user) => !!user && (user.roles || []).includes("admin");
+  const hasPerm = (user, perm) => isAdmin(user) || userPermissions(user).includes(perm);
+
+  /* Seed: Standardrollen + Admin-Konto (idempotent) */
+  function seed() {
+    let roles = getStore(KEYS.roles, null);
+    if (!roles) {
+      roles = [
+        { id: "admin", label: "Administrator", permissions: ALL_PERMS.slice(), system: true },
+        { id: "member", label: "Mitglied", permissions: [], system: true },
+      ];
+      setRoles(roles);
+    }
+    const users = getUsers();
+    if (!users.some((u) => u.email === ADMIN_EMAIL)) {
+      users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
+      setUsers(users);
+    }
+  }
+  seed();
 
   /* ----- Datenquellen laden (statische JSON-Dateien) ----- */
   async function loadData(file) {
@@ -178,7 +226,7 @@
       if (findUserByEmail(body.email)) {
         return json({ ok: false, message: "Für diese E-Mail existiert bereits ein Konto. Bitte einloggen.", errors: { email: "E-Mail bereits registriert." } }, 409);
       }
-      const user = { id: genId("usr"), name: norm(body.name), email: lc(body.email), address: null, iban: null, createdAt: new Date().toISOString() };
+      const user = { id: genId("usr"), name: norm(body.name), email: lc(body.email), address: null, iban: null, roles: ["member"], createdAt: new Date().toISOString() };
       const users = getUsers(); users.push(user); setUsers(users);
       setSession(user.id);
       return json({ ok: true, user: publicUser(user), message: "Willkommen, " + user.name.split(" ")[0] + "! Dein Konto wurde erstellt." }, 201);
@@ -213,9 +261,88 @@
     },
 
     "GET /api/auth/me": async () => {
+      const me = currentUser();
+      if (!me) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      return json({ ok: true, user: publicUser(me), permissions: userPermissions(me), isAdmin: isAdmin(me) });
+    },
+
+    "GET /api/permissions": async () => {
       const user = currentUser();
-      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
-      return json({ ok: true, user: publicUser(user) });
+      if (!hasPerm(user, "manage_roles")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      return json({ ok: true, items: PERMISSIONS });
+    },
+
+    "GET /api/roles": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_roles") && !hasPerm(user, "manage_users")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      return json({ ok: true, items: getRoles() });
+    },
+
+    "POST /api/roles": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_roles")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const label = norm(body.label);
+      if (label.length < 2) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { label: "Bitte Rollennamen angeben." } }, 422);
+      const perms = (body.permissions || []).filter((p) => ALL_PERMS.includes(p));
+      const roles = getRoles();
+      const id = "role-" + label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Math.random().toString(36).slice(2, 5);
+      const role = { id, label, permissions: perms, system: false };
+      roles.push(role); setRoles(roles);
+      return json({ ok: true, role, message: "Rolle „" + label + "“ angelegt." }, 201);
+    },
+
+    "POST /api/roles/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_roles")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const roles = getRoles();
+      const idx = roles.findIndex((r) => r.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Rolle nicht gefunden." }, 404);
+      if (roles[idx].id === "admin") return json({ ok: false, message: "Die Administrator-Rolle besitzt immer alle Berechtigungen und kann nicht eingeschränkt werden." }, 409);
+      if (body.label !== undefined && norm(body.label).length >= 2) roles[idx].label = norm(body.label);
+      if (Array.isArray(body.permissions)) roles[idx].permissions = body.permissions.filter((p) => ALL_PERMS.includes(p));
+      setRoles(roles);
+      return json({ ok: true, role: roles[idx], message: "Rolle gespeichert." });
+    },
+
+    "POST /api/roles/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_roles")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const roles = getRoles();
+      const role = roles.find((r) => r.id === body.id);
+      if (!role) return json({ ok: false, message: "Rolle nicht gefunden." }, 404);
+      if (role.system) return json({ ok: false, message: "System-Rollen können nicht gelöscht werden." }, 409);
+      setRoles(roles.filter((r) => r.id !== body.id));
+      // Rolle von allen Nutzern entfernen
+      const users = getUsers();
+      users.forEach((u) => { if (u.roles) u.roles = u.roles.filter((rid) => rid !== body.id); });
+      setUsers(users);
+      return json({ ok: true, message: "Rolle gelöscht." });
+    },
+
+    "GET /api/users": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_users")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = getUsers().map((u) => ({ id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"] }));
+      return json({ ok: true, items });
+    },
+
+    "POST /api/users/roles": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_users")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const users = getUsers();
+      const idx = users.findIndex((u) => u.id === body.userId);
+      if (idx === -1) return json({ ok: false, message: "Benutzer nicht gefunden." }, 404);
+      const validIds = getRoles().map((r) => r.id);
+      const newRoles = (body.roles || []).filter((r) => validIds.includes(r));
+      // Schutz: mindestens ein Administrator muss bestehen bleiben
+      const removingAdmin = (users[idx].roles || []).includes("admin") && !newRoles.includes("admin");
+      if (removingAdmin) {
+        const otherAdmins = users.filter((u, i) => i !== idx && (u.roles || []).includes("admin")).length;
+        if (otherAdmins === 0) return json({ ok: false, message: "Es muss mindestens ein Administrator bestehen bleiben." }, 409);
+      }
+      users[idx].roles = newRoles.length ? newRoles : ["member"];
+      setUsers(users);
+      return json({ ok: true, user: { id: users[idx].id, name: users[idx].name, email: users[idx].email, roles: users[idx].roles }, message: "Rollen aktualisiert." });
     },
 
     /* ---------- Konto: Adresse & IBAN ---------- */

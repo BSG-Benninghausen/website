@@ -512,3 +512,15 @@ button { font: inherit; cursor: pointer; }
 .billing-summary__total strong { font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); }
 .billing-summary .muted-note { margin-top: 6px; }
 .billing-summary__total .muted-note { margin-top: 0; }
+
+/* ----------  Administration  ---------- */
+.adm-roles, .adm-users { display: grid; gap: 14px; margin-bottom: 22px; }
+.adm-role, .adm-user { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; background: var(--mist); }
+.adm-role__head { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 10px; }
+.adm-user__id { margin-bottom: 10px; }
+.adm-user__id b { display: block; }
+.adm-user__id span { color: var(--text-soft); font-size: .9rem; }
+.perm-grid { border: 0; padding: 0; margin: 6px 0 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px 16px; }
+.perm-legend { font-family: var(--font-display); font-weight: 600; font-size: .92rem; margin-bottom: 8px; padding: 0; }
+.perm-check { display: flex; gap: 9px; align-items: flex-start; font-size: .92rem; color: var(--text); }
+.perm-check input { margin-top: 3px; }

@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Team &amp; Vorstand – BSG Benninghausen e.V.</title>
-  <meta name="description" content="Vorstand und Trainerteam der BSG Benninghausen e.V. – die Menschen hinter dem Judo in Benninghausen.">
+  <title>Administration – BSG Benninghausen e.V.</title>
+  <meta name="description" content="Administration: Rollen, Berechtigungen und Benutzer der BSG Benninghausen e.V. verwalten.">
+  <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,91 +45,50 @@
       <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
       <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
       <div class="wrap page-hero__inner">
-        <p class="crumbs"><a href="index.html">Start</a> · Team</p>
-        <span class="eyebrow eyebrow--invert">Die Menschen dahinter</span>
-        <h1>Unser Team</h1>
-        <p>Ein engagierter Vorstand und erfahrene Trainer:innen sorgen dafür, dass Judo bei uns Spaß macht und voranbringt.</p>
+        <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Administration</p>
+        <span class="eyebrow eyebrow--invert">Administration</span>
+        <h1>Rollen &amp; Berechtigungen</h1>
+        <p>Lege Rollen an, setze Berechtigungen und weise sie Benutzern zu.</p>
       </div>
     </section>
 
     <section class="section">
       <div class="wrap">
-        <div class="section-head">
-          <span class="eyebrow">Vorstand</span>
-          <h2>Der Vorstand</h2>
-          <p>Ehrenamtlich im Einsatz für den Verein.</p>
-        </div>
-        <div class="grid grid--4">
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#1a1a22,#3a3340)">LZ</div>
-            <h3>Lukas Zientek</h3>
-            <p class="role">1. Vorsitzender</p>
-            <p>Vereinsleitung &amp; Organisation</p>
-          </article>
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#7a1015,#e3141b)">CM</div>
-            <h3>Christopher Masjosthusmann</h3>
-            <p class="role">2. Vorsitzender</p>
-            <p>Stellvertretende Leitung</p>
-          </article>
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#e3141b,#f3b836)">SI</div>
-            <h3>Salvatore Infantino</h3>
-            <p class="role">Kassenwart &amp; Abteilungsleitung Judo</p>
-            <p>Finanzen &amp; sportliche Leitung</p>
-          </article>
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#23232e,#e3141b)">SZ</div>
-            <h3>Sarah Zientek</h3>
-            <p class="role">Pressewartin</p>
-            <p>Öffentlichkeitsarbeit &amp; Social Media</p>
-          </article>
-        </div>
-      </div>
-    </section>
+        <p id="admin-loading" class="center" style="color:var(--text-soft)">Lade Administration …</p>
 
-    <section class="section section--sand">
-      <div class="wrap">
-        <div class="section-head">
-          <span class="eyebrow">Auf der Matte</span>
-          <h2>Trainerteam</h2>
-          <p>Sie bringen euch Judo bei – mit Geduld, Erfahrung und Begeisterung.</p>
-        </div>
-        <div class="grid grid--3">
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#0d0d12,#2c1015)">SI</div>
-            <h3>Salvatore Infantino</h3>
-            <p class="role">Abteilungsleitung &amp; Trainer</p>
-            <p>Technik, Wettkampf &amp; Nachwuchs</p>
-          </article>
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#e3141b,#f3b836)">AE</div>
-            <h3>Atilla Erten</h3>
-            <p class="role">Trainer</p>
-            <p>Training &amp; Wettkampfbetreuung</p>
-          </article>
-          <article class="card member reveal">
-            <div class="member__avatar" style="background:linear-gradient(135deg,#b8860b,#f3b836)">JB</div>
-            <h3>Julian Becker</h3>
-            <p class="role">Trainer</p>
-            <p>Training &amp; Nachwuchsförderung</p>
-          </article>
-        </div>
+        <div id="admin" hidden>
+          <div id="admin-status" class="form-status" role="status" aria-live="polite"></div>
 
-        <div class="notice notice--mock" style="margin-top:30px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          <p>Du möchtest dich engagieren oder unser Team verstärken? <a href="kontakt.html">Sprich uns gerne an.</a></p>
-        </div>
-      </div>
-    </section>
+          <!-- Rollen -->
+          <div id="roles-section" class="card" style="margin-bottom:24px" hidden>
+            <span class="eyebrow">Rollen</span>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px">Rollen &amp; Berechtigungen</h2>
+            <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Die Administrator-Rolle besitzt immer alle Berechtigungen. System-Rollen können nicht gelöscht werden.</p>
+            <div id="roles-list" class="adm-roles"></div>
 
-    <section class="section--tight">
-      <div class="wrap">
-        <div class="cta-band reveal">
-          <span class="cta-band__glow" aria-hidden="true"></span>
-          <h2>Lust, Teil des Teams zu werden?</h2>
-          <p>Komm zum kostenlosen Probetraining und lerne uns persönlich kennen.</p>
-          <div class="hero__cta"><a href="anmeldung.html" class="btn btn--gold btn--lg">Probetraining anfragen</a></div>
+            <form id="role-create-form" class="sub-form" novalidate>
+              <h3 style="font-size:1.1rem;margin-bottom:14px">Neue Rolle anlegen</h3>
+              <div class="field">
+                <label for="role-label">Rollenname <span class="req">*</span></label>
+                <input id="role-label" name="label" type="text" placeholder="z. B. Trainer, Kassenwart">
+                <p class="field__error"></p>
+              </div>
+              <fieldset id="role-perms" class="perm-grid"></fieldset>
+              <button type="submit" class="btn btn--primary">
+                <span class="spinner" aria-hidden="true"></span>
+                Rolle anlegen
+              </button>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+
+          <!-- Benutzer -->
+          <div id="users-section" class="card" hidden>
+            <span class="eyebrow">Benutzer</span>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px">Benutzer &amp; Rollenzuweisung</h2>
+            <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Weise jedem Benutzer eine oder mehrere Rollen zu.</p>
+            <div id="users-list" class="adm-users"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -159,11 +119,11 @@
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Mitmachen</h4>
+          <h4>Konto</h4>
           <ul>
-            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
-            <li><a href="anmeldung.html">Probetraining</a></li>
-            <li><a href="kontakt.html">Kontakt</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="registrieren.html">Konto erstellen</a></li>
+            <li><a href="konto.html">Mein Konto</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -184,5 +144,6 @@
 
   <script src="assets/js/mock-api.js?v=9" defer></script>
   <script src="assets/js/main.js?v=9" defer></script>
+  <script src="assets/js/admin.js?v=9" defer></script>
 </body>
 </html>

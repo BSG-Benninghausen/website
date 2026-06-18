@@ -87,7 +87,21 @@ Bereitgestellte Endpunkte:
 - **Beitrag automatisch:** Der Mitgliedschaftstyp ergibt sich aus dem **Alter** (Altersbänder
   in `assets/data/membership-types.json`). Ist der **Familien-Pauschalbeitrag günstiger** als
   die Summe der Einzelbeiträge, wird er automatisch angesetzt (Beitragsübersicht im Dashboard).
-- **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`.
+- **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`, `bsg_roles`.
+
+### Rollen, Berechtigungen & Admin
+
+- **Rollen & Berechtigungen** (`admin.html`, `assets/js/admin.js`): Benutzer mit der Rolle
+  **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
+  zuweisen. Berechtigungs-Katalog: `manage_roles`, `manage_users`, `manage_memberships`,
+  `manage_content`, `view_members` (in `assets/js/mock-api.js`, Konstante `PERMISSIONS`).
+- **Seed-Admin:** Beim ersten Laden legt der Mock automatisch die Rollen *Administrator*/
+  *Mitglied* sowie ein Admin-Konto **`admin@bsg-benninghausen.de`** an. Anmeldung wie üblich
+  passwordlos per Code (im Demo angezeigt). Neue Konten erhalten die Rolle *Mitglied*.
+- Endpunkte: `GET /api/permissions`, `GET/POST /api/roles`, `POST /api/roles/update`,
+  `POST /api/roles/delete`, `GET /api/users`, `POST /api/users/roles`. Schutz: System-Rollen
+  sind nicht löschbar, die Admin-Rolle behält immer alle Rechte, und es muss stets mindestens
+  ein Administrator bestehen bleiben.
 
 ### Auf ein echtes Backend umstellen
 

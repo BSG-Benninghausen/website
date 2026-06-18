@@ -54,17 +54,19 @@
 
   /* ----- Konto-Link in der Navigation aktualisieren ----- */
   const accountLinks = document.querySelectorAll("[data-account-link]");
-  if (accountLinks.length) {
+  const adminLinks = document.querySelectorAll("[data-admin-link]");
+  if (accountLinks.length || adminLinks.length) {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
-        if (d && d.ok && d.user) {
-          accountLinks.forEach((a) => {
-            a.textContent = "Mein Konto";
-            a.setAttribute("href", "konto.html");
-            a.classList.add("nav__account--in");
-          });
-        }
+        if (!d || !d.ok || !d.user) return;
+        accountLinks.forEach((a) => {
+          a.textContent = "Mein Konto";
+          a.setAttribute("href", "konto.html");
+          a.classList.add("nav__account--in");
+        });
+        const canAdmin = d.isAdmin || (d.permissions && (d.permissions.includes("manage_roles") || d.permissions.includes("manage_users")));
+        if (canAdmin) adminLinks.forEach((a) => { a.hidden = false; });
       })
       .catch(() => {});
   }
