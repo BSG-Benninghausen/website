@@ -1,0 +1,15 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BSG Benninghausen Logo">
+  <defs>
+    <linearGradient id="lg" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2b2f77"/>
+      <stop offset="1" stop-color="#0d1030"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#lg)"/>
+  <!-- Gürtel-Knoten als stilisiertes Judo-Symbol -->
+  <path d="M10 30c5-3 9-3 14 0s9 3 14 0" stroke="#f6c453" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M24 30l-4 8M24 30l4 8" stroke="#f6c453" stroke-width="3" stroke-linecap="round"/>
+  <!-- Judoka-Kopf/Schultern -->
+  <circle cx="24" cy="15" r="4.4" fill="#ff5436"/>
+  <path d="M16 28c0-5 3.6-8 8-8s8 3 8 8" stroke="#ff5436" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

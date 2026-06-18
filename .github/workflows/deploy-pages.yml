@@ -1,0 +1,46 @@
+name: Deploy zu GitHub Pages
+
+# Veröffentlicht die statische Website auf GitHub Pages.
+# Läuft beim Push auf den Redesign-Branch sowie auf main (für später nach dem Merge).
+on:
+  push:
+    branches:
+      - main
+      - claude/bsg-website-redesign-dio9co
+  workflow_dispatch:
+
+# Rechte, die der Deploy benötigt
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nur ein Deployment gleichzeitig
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: GitHub Pages konfigurieren (aktiviert Pages bei Bedarf)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Statische Dateien als Artefakt hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Die Seite liegt im Repo-Root (rein statisch, kein Build nötig)
+          path: "."
+
+      - name: Auf GitHub Pages deployen
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,15 @@
+<svg width="100%" height="100%" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <pattern id="tatami" width="64" height="64" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
+      <rect width="64" height="64" fill="none"/>
+      <path d="M0 0h64v64H0z" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+      <circle cx="0" cy="0" r="1.5" fill="rgba(246,196,83,0.18)"/>
+      <circle cx="64" cy="64" r="1.5" fill="rgba(246,196,83,0.18)"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="600" fill="url(#tatami)"/>
+  <g opacity="0.5" stroke="rgba(255,84,54,0.25)" stroke-width="2" fill="none">
+    <path d="M-50 480 C 200 380, 400 560, 650 440 S 1050 380, 1280 470"/>
+    <path d="M-50 540 C 250 460, 450 600, 700 500 S 1080 460, 1280 540"/>
+  </g>
+</svg>
