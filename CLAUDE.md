@@ -7,9 +7,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A **purely static** website for the Judo club *BSG Benninghausen e.V.* (German-language UI).
 No build step, no framework, no dependencies — just HTML, CSS, and vanilla JS. All "server"
 behavior is **mocked in the browser**: `assets/js/mock-api.js` patches `window.fetch`, answers
-every `/api/*` request locally, and persists data in `localStorage`. The whole app is designed
-so a real backend can later replace the mock by serving the same `/api/*` routes (and removing
-the `mock-api.js` script tags) without touching the rest of the frontend.
+every `/api/*` request locally, and persists data in `localStorage`. The dispatcher is also a
+**mock⇄real router**: `assets/js/api-config.js` (loaded before `mock-api.js`) sets
+`window.BSG_API = { mode: "mock"|"real"|"hybrid", base, live }`, and the patched `fetch` forwards
+"live" routes to a real backend (`base + path`, `credentials:"include"`) while the rest stay
+mocked. Default is `mock`. Switch via `?api=real|hybrid|mock`, `localStorage.bsg_api_mode`, the
+`api-config.js` deploy default, or `BSGApi.setMode()/setLive()` at runtime — so UI features are
+built against the mock and mature backend endpoints get promoted one at a time. Same `/api/*`
+contract on both sides; the frontend code never changes.
 
 ## Commands
 

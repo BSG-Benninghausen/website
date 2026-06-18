@@ -1008,17 +1008,42 @@
     },
   };
 
-  /* ----- fetch abfangen ----- */
+  /* ----- Modus-Auflösung (Mock vs. echtes Backend) ----- */
+  function apiCfg() {
+    const c = (window.BSG_API && typeof window.BSG_API === "object") ? window.BSG_API : null;
+    return { mode: (c && c.mode) || "mock", base: (c && c.base) || "", live: (c && Array.isArray(c.live)) ? c.live : [] };
+  }
+  function routeIsLive(cfg, key, path) {
+    if (cfg.mode === "real") return true;
+    if (cfg.mode !== "hybrid") return false;
+    return (cfg.live || []).some((p) => {
+      if (typeof p !== "string" || !p) return false;
+      if (p.indexOf(" ") > -1) return key === p || key.indexOf(p) === 0;   // "GET /api/news" (exakt/Präfix)
+      const pre = p.replace(/\*$/, "");
+      return path === pre || path.indexOf(pre) === 0;                       // "/api/team" (Pfad-Präfix)
+    });
+  }
+
+  /* ----- fetch abfangen: je Route Mock ODER echtes Backend ----- */
   window.fetch = async function (input, init = {}) {
     const url = typeof input === "string" ? input : input.url;
     const method = (init.method || (typeof input === "object" && input.method) || "GET").toUpperCase();
 
-    let path;
-    try { path = new URL(url, window.location.origin).pathname; }
+    let path, search = "";
+    try { const u = new URL(url, window.location.origin); path = u.pathname; search = u.search; }
     catch (e) { path = url; }
 
     if (!path.startsWith("/api/")) return realFetch(input, init);
 
+    const cfg = apiCfg();
+    // Echtes Backend (real / passende hybrid-Route): unverändert weiterreichen.
+    if (routeIsLive(cfg, method + " " + path, path)) {
+      const target = (cfg.base || "") + path + search;
+      const fwd = Object.assign({}, init, { credentials: init.credentials || "include" });
+      return realFetch(target, fwd);
+    }
+
+    // Mock-Pfad (Default): lokale Route-Handler mit simulierter Latenz.
     const handler = routes[method + " " + path];
     await wait(rnd(LATENCY));
     if (!handler) return json({ ok: false, message: "Endpoint nicht gefunden (Mock)." }, 404);
@@ -1030,9 +1055,33 @@
     catch (err) { return json({ ok: false, message: "Mock-Serverfehler: " + err.message }, 500); }
   };
 
+  /* ----- Laufzeit-Schalter (Konsole/Dev): BSGApi.setMode('real'|'hybrid'|'mock') ----- */
+  window.BSGApi = {
+    getMode: () => apiCfg().mode,
+    getConfig: () => apiCfg(),
+    setMode(m) {
+      if (["mock", "real", "hybrid"].indexOf(m) === -1) return apiCfg().mode;
+      try { localStorage.setItem("bsg_api_mode", m); } catch (e) {}
+      window.BSG_API = Object.assign(apiCfg(), { mode: m });
+      return m;
+    },
+    setBase(b) { try { localStorage.setItem("bsg_api_base", String(b)); } catch (e) {} window.BSG_API = Object.assign(apiCfg(), { base: String(b) }); },
+    setLive(arr) {
+      const v = Array.isArray(arr) ? arr : [];
+      try { localStorage.setItem("bsg_api_live", JSON.stringify(v)); } catch (e) {}
+      window.BSG_API = Object.assign(apiCfg(), { live: v });
+    },
+    isLive: (methodPath) => routeIsLive(apiCfg(), methodPath, methodPath.split(" ").pop() || methodPath),
+  };
+
+  const _mode = apiCfg().mode;
   console.info(
-    "%c BSG Mock-Server aktiv ",
-    "background:#e3141b;color:#fff;border-radius:4px;padding:2px 6px",
-    "– /api/* Anfragen werden lokal simuliert (kein echtes Backend)."
+    "%c BSG API: " + _mode + " ",
+    "background:" + (_mode === "real" ? "#1f7a5a" : _mode === "hybrid" ? "#b8860b" : "#e3141b") + ";color:#fff;border-radius:4px;padding:2px 6px",
+    _mode === "mock"
+      ? "– /api/* wird lokal simuliert (kein echtes Backend)."
+      : _mode === "real"
+        ? "– /api/* geht an das echte Backend (" + (apiCfg().base || "same-origin") + ")."
+        : "– hybrid: ausgewählte Routen ans Backend, Rest Mock. BSGApi.setMode('mock') zum Zurückschalten."
   );
 })();

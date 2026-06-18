@@ -175,15 +175,23 @@ Bereitgestellte Endpunkte:
 - Die rechtebasierten Navigationslinks **Mitglieder/Redaktion/Admin** werden nur eingeblendet,
   wenn der angemeldete Benutzer die nötigen Rechte hat (`assets/js/main.js`).
 
-### Auf ein echtes Backend umstellen
+### Mock ⇄ echtes Backend umschalten
 
-Der gesamte Frontend-Code spricht ganz normal per `fetch('/api/...')`. Um später ein
-echtes Backend anzubinden, genügt es,
+Der gesamte Frontend-Code spricht ganz normal per `fetch('/api/...')`. Der Dispatcher in
+`assets/js/mock-api.js` entscheidet **pro Anfrage**, ob sie lokal (Mock) beantwortet oder an ein
+echtes Backend weitergereicht wird. Gesteuert wird das über `assets/js/api-config.js` (vor
+`mock-api.js` eingebunden), das `window.BSG_API` setzt:
 
-1. die Zeile `<script src="assets/js/mock-api.js" ...>` aus den HTML-Seiten zu entfernen und
-2. die `/api/*`-Endpunkte serverseitig bereitzustellen (gleiche Pfade & JSON-Antworten).
+- **`mode`**: `"mock"` (Default, alles lokal) · `"real"` (alle `/api/*` ans Backend) ·
+  `"hybrid"` (nur die in `live` gelisteten Routen ans Backend, Rest Mock – für **Feature-Reife**).
+- **`base`**: Backend-URL (`""` = same-origin `/api`, sonst absolute URL inkl. CORS).
+- **`live`**: Muster wie `"GET /api/news"` (Methode+Pfad) oder `"/api/team"` (Pfad-Präfix).
 
-Am übrigen Code muss nichts geändert werden.
+Auflösung (stark → schwach): URL-Query `?api=real|mock|hybrid` (+ `?apibase=…`) → localStorage
+(`bsg_api_mode`/`bsg_api_base`/`bsg_api_live`) → Deploy-Default in `api-config.js` → Fallback `mock`.
+Zur Laufzeit: `BSGApi.setMode('real'|'hybrid'|'mock')`, `BSGApi.setLive([...])`. So entwickelt die UI
+weiter gegen den Mock, während reife Endpunkte einzeln „scharf geschaltet" werden. Am übrigen
+Frontend-Code ändert sich nichts; der `mock-api.js`-Tag bleibt (er ist Mock **und** Router).
 
 ## Inhalte pflegen
 
