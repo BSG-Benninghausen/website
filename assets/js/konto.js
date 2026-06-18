@@ -82,7 +82,7 @@
       const res = await fetch("/api/memberships");
       const d = await res.json();
       if (!d.items.length) {
-        wrap.innerHTML = '<p class="muted-note">Noch keine Mitglieder angemeldet. Melde dich selbst oder ein Familienmitglied an – der Beitrag ergibt sich automatisch aus dem Alter.</p>';
+        wrap.innerHTML = '<p class="muted-note">Noch keine Mitglieder angemeldet. Melde die Mitglieder deines Haushalts an – der Beitrag ergibt sich automatisch aus dem Alter.</p>';
       } else {
         wrap.innerHTML = d.items.map(membershipCard).join("");
       }
@@ -111,7 +111,6 @@
 
   function membershipCard(m) {
     const since = BSG.formatDate(m.startedAt);
-    const rel = m.relation === "self" ? "Ich selbst" : "Familienmitglied";
     const active = m.status === "aktiv";
     const label = m.categoryLabel || m.typeLabel || "Mitglied";
     const fee = m.individualFee != null ? m.individualFee : m.feeMonthly;
@@ -119,7 +118,7 @@
       '<article class="membership">' +
         '<div class="membership__main">' +
           "<h3>" + BSG.escape(m.firstName) + " " + BSG.escape(m.lastName) + "</h3>" +
-          "<p>" + BSG.escape(label) + " · " + fee + " €/Monat · " + rel + "</p>" +
+          "<p>" + BSG.escape(label) + " · " + fee + " €/Monat</p>" +
           '<p class="membership__meta">seit ' + since + "</p>" +
         "</div>" +
         '<div class="membership__side">' +
@@ -181,7 +180,7 @@
       e.preventDefault();
       clearErrors(mForm);
       const fd = Object.fromEntries(new FormData(mForm).entries());
-      const payload = { firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate, relation: fd.relation };
+      const payload = { firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate };
       const btn = mForm.querySelector("[type=submit]");
       btn.setAttribute("aria-busy", "true");
       const { res, data } = await postJSON("/api/memberships", payload);

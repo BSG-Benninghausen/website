@@ -398,21 +398,14 @@
       const age = ageFromBirthdate(body.birthdate);
       if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
       else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
-      if (!["self", "family"].includes(body.relation)) errors.relation = "Bitte auswählen.";
-
-      const all = getStore(KEYS.memberships, []);
-      const mine = all.filter((m) => m.userId === user.id);
-      if (body.relation === "self" && mine.some((m) => m.relation === "self" && m.status === "aktiv")) {
-        errors.relation = "Für dich selbst besteht bereits eine aktive Mitgliedschaft.";
-      }
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
 
+      const all = getStore(KEYS.memberships, []);
       // Beitrag/Klasse automatisch aus dem Alter ableiten
       const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
       const membership = {
         id: genId("mem"), userId: user.id,
         firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
-        relation: body.relation,
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
         status: "aktiv", startedAt: new Date().toISOString(),
       };
