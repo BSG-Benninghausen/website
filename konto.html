@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mein Konto – BSG Benninghausen e.V.</title>
+  <meta name="description" content="Dein Dashboard bei der BSG Benninghausen e.V. – Mitgliedschaften, Adresse und Kontoverbindung verwalten.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="site-header">
+    <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    <nav class="nav wrap" aria-label="Hauptnavigation">
+      <a href="index.html" class="brand">
+        <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42">
+        <span class="brand__name">BSG Benninghausen<small>Judo · Benninghausen</small></span>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
+      <div class="nav__menu" id="nav-menu">
+        <ul class="nav__links">
+          <li><a href="index.html">Start</a></li>
+          <li><a href="trainingszeiten.html">Training</a></li>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="aktuelles.html">Aktuelles</a></li>
+          <li><a href="kalender.html">Termine</a></li>
+          <li><a href="kontakt.html">Kontakt</a></li>
+          <li><a href="login.html" data-account-link>Login</a></li>
+        </ul>
+        <div class="nav__cta"><a href="anmeldung.html" class="btn btn--primary">Probetraining</a></div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+      <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+      <div class="wrap page-hero__inner">
+        <p class="crumbs"><a href="index.html">Start</a> · Mein Konto</p>
+        <span class="eyebrow eyebrow--invert">Dashboard</span>
+        <h1>Hallo <span id="greet-name">…</span></h1>
+        <p>Verwalte hier deine Vereinsmitgliedschaften, deine Anschrift und deine Kontoverbindung.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <p id="dash-loading" class="center" style="color:var(--text-soft)">Lade dein Konto …</p>
+
+        <div id="dash" hidden>
+          <!-- Konto-Kopf -->
+          <div class="card dash-account">
+            <div>
+              <span class="eyebrow">Angemeldet als</span>
+              <h2 id="acc-name" style="font-size:1.3rem;margin-top:6px">…</h2>
+              <p id="acc-email" style="color:var(--text-soft)"></p>
+            </div>
+            <button id="logout" class="btn btn--outline">Abmelden</button>
+          </div>
+
+          <div class="notice notice--mock" style="margin:22px 0 30px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            <p><b>Demo:</b> Alle Daten (Konto, Mitgliedschaften, Adresse, IBAN) werden von einem simulierten Server ausschließlich lokal in deinem Browser gespeichert – es findet keine echte Übertragung oder Zahlung statt.</p>
+          </div>
+
+          <!-- Mitgliedschaften -->
+          <div class="card" style="margin-bottom:24px">
+            <div class="dash-head">
+              <div>
+                <span class="eyebrow">Mitgliedschaften</span>
+                <h2 style="font-size:1.3rem;margin-top:6px">Meine Mitgliedschaften</h2>
+              </div>
+              <button id="add-membership-btn" class="btn btn--primary">+ Mitgliedschaft abschließen</button>
+            </div>
+
+            <div id="memberships" class="memberships" style="margin-top:18px"></div>
+
+            <!-- Abschluss-Formular -->
+            <form id="membership-form" class="sub-form" hidden novalidate>
+              <h3 style="font-size:1.1rem;margin-bottom:4px">Neue Mitgliedschaft</h3>
+              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Für den Abschluss benötigen wir Person, Mitgliedschaftstyp sowie Anschrift und IBAN für den Beitragseinzug.</p>
+              <div class="field-row">
+                <div class="field">
+                  <label for="m-first">Vorname <span class="req">*</span></label>
+                  <input id="m-first" name="firstName" type="text" required>
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="m-last">Nachname <span class="req">*</span></label>
+                  <input id="m-last" name="lastName" type="text" required>
+                  <p class="field__error"></p>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="m-birth">Geburtsdatum <span class="req">*</span></label>
+                  <input id="m-birth" name="birthdate" type="date" required>
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="m-relation">Für wen? <span class="req">*</span></label>
+                  <select id="m-relation" name="relation" required>
+                    <option value="self">Mich selbst</option>
+                    <option value="family">Familienmitglied</option>
+                  </select>
+                  <p class="field__error"></p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="m-type">Mitgliedschaftstyp <span class="req">*</span></label>
+                <select id="m-type" name="type" required>
+                  <option value="">Bitte wählen…</option>
+                </select>
+                <p class="field__error"></p>
+              </div>
+
+              <h4 style="font-family:var(--font-display);margin:18px 0 12px;font-size:1rem">Anschrift &amp; Kontoverbindung</h4>
+              <div class="field">
+                <label for="m-street">Straße &amp; Hausnummer <span class="req">*</span></label>
+                <input id="m-street" name="street" type="text" autocomplete="street-address" required>
+                <p class="field__error"></p>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="m-zip">PLZ <span class="req">*</span></label>
+                  <input id="m-zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code" required>
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="m-city">Ort <span class="req">*</span></label>
+                  <input id="m-city" name="city" type="text" autocomplete="address-level2" required>
+                  <p class="field__error"></p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="m-iban">IBAN <span class="req">*</span></label>
+                <input id="m-iban" name="iban" type="text" autocomplete="off" placeholder="DE00 0000 0000 0000 0000 00">
+                <p class="field__error"></p>
+              </div>
+
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
+                <button type="submit" class="btn btn--primary">
+                  <span class="spinner" aria-hidden="true"></span>
+                  Mitgliedschaft abschließen
+                </button>
+                <button type="button" id="membership-cancel" class="btn btn--outline">Abbrechen</button>
+              </div>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+
+          <!-- Adresse & Konto -->
+          <div class="grid grid--2">
+            <form id="address-form" class="card" novalidate>
+              <span class="eyebrow">Persönliche Daten</span>
+              <h2 style="font-size:1.2rem;margin:6px 0 18px">Anschrift</h2>
+              <div class="field">
+                <label for="a-street">Straße &amp; Hausnummer</label>
+                <input id="a-street" name="street" type="text" autocomplete="street-address">
+                <p class="field__error"></p>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="a-zip">PLZ</label>
+                  <input id="a-zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code">
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="a-city">Ort</label>
+                  <input id="a-city" name="city" type="text" autocomplete="address-level2">
+                  <p class="field__error"></p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn--primary">Adresse speichern</button>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </form>
+
+            <form id="bank-form" class="card" novalidate>
+              <span class="eyebrow">Zahlung</span>
+              <h2 style="font-size:1.2rem;margin:6px 0 18px">Kontoverbindung</h2>
+              <div class="field">
+                <label for="b-iban">IBAN</label>
+                <input id="b-iban" name="iban" type="text" autocomplete="off" placeholder="DE00 0000 0000 0000 0000 00">
+                <p class="field__error"></p>
+              </div>
+              <p style="color:var(--text-soft);font-size:.86rem;margin-bottom:16px">Wird für den Einzug des Mitgliedsbeitrags verwendet (in dieser Demo nur lokal gespeichert).</p>
+              <button type="submit" class="btn btn--primary">Kontoverbindung speichern</button>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-about">
+          <a href="index.html" class="brand">
+            <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42">
+            <span class="brand__name">BSG Benninghausen<small>Judo · Benninghausen</small></span>
+          </a>
+          <p>Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
+          <div class="socials">
+            <a href="https://www.instagram.com/bsg_benninghausen/" aria-label="Instagram" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Verein</h4>
+          <ul>
+            <li><a href="index.html">Start</a></li>
+            <li><a href="team.html">Team &amp; Vorstand</a></li>
+            <li><a href="aktuelles.html">Aktuelles</a></li>
+            <li><a href="kalender.html">Termine</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Konto</h4>
+          <ul>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="registrieren.html">Konto erstellen</a></li>
+            <li><a href="konto.html">Mein Konto</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Training</h4>
+          <ul>
+            <li>Sporthalle Grundschule Benninghausen</li>
+            <li>Im Brühl 29, 59556 Lippstadt</li>
+            <li>Mittwochs &amp; freitags</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> BSG Benninghausen e.V. · Judo in Benninghausen</span>
+        <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/mock-api.js" defer></script>
+  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/konto.js" defer></script>
+</body>
+</html>

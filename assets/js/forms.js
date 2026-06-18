@@ -62,6 +62,12 @@
         const result = await res.json();
 
         if (res.ok && result.ok) {
+          const redirect = form.getAttribute("data-redirect");
+          if (redirect) {
+            setStatus("ok", BSG.escape(result.message || "Erfolgreich."));
+            setTimeout(() => { window.location.href = redirect; }, 700);
+            return;
+          }
           form.reset();
           setStatus("ok", BSG.escape(result.message));
           if (status) status.scrollIntoView({ behavior: "smooth", block: "center" });

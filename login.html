@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Termine &amp; Kalender – BSG Benninghausen e.V.</title>
-  <meta name="description" content="Kommende Termine der BSG Benninghausen: Training, Turniere, Gürtelprüfungen und Vereinsfeste.">
+  <title>Login – BSG Benninghausen e.V.</title>
+  <meta name="description" content="Melde dich in deinem Benutzerkonto der BSG Benninghausen e.V. an – ohne Passwort, per E-Mail-Code.">
+  <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,29 +44,52 @@
       <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
       <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
       <div class="wrap page-hero__inner">
-        <p class="crumbs"><a href="index.html">Start</a> · Termine</p>
-        <span class="eyebrow eyebrow--invert">Kalender</span>
-        <h1>Kommende Termine</h1>
-        <p>Training, Turniere, Prüfungen und Feste – alle wichtigen Termine auf einen Blick.</p>
+        <p class="crumbs"><a href="index.html">Start</a> · Login</p>
+        <span class="eyebrow eyebrow--invert">Anmelden</span>
+        <h1>Login</h1>
+        <p>Melde dich ohne Passwort an – wir schicken dir einen kurzen Anmeldecode per E-Mail.</p>
       </div>
     </section>
 
     <section class="section">
-      <div class="wrap">
-        <div class="section-head">
-          <span class="eyebrow">Demnächst</span>
-          <h2>Das steht an</h2>
-          <p>Es werden nur Termine ab heute angezeigt – sortiert nach Datum.</p>
-        </div>
-        <div class="events" data-events>
-          <div class="skeleton" style="min-height:84px"></div>
-          <div class="skeleton" style="min-height:84px"></div>
-          <div class="skeleton" style="min-height:84px"></div>
-        </div>
+      <div class="wrap" style="max-width:520px">
+        <div class="form-card reveal">
+          <!-- Schritt 1: E-Mail -->
+          <form id="req-form" novalidate>
+            <h2 style="font-size:1.4rem;margin-bottom:6px">Anmelden</h2>
+            <p style="color:var(--text-soft);margin-bottom:22px;font-size:.95rem">Gib deine E-Mail-Adresse ein, um einen Anmeldecode zu erhalten.</p>
+            <div class="field">
+              <label for="email">E-Mail <span class="req">*</span></label>
+              <input id="email" name="email" type="email" autocomplete="email" required>
+              <p class="field__error"></p>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+              <span class="spinner" aria-hidden="true"></span>
+              Anmeldecode anfordern
+            </button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
 
-        <div class="notice notice--mock" style="margin-top:30px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v14H4zM4 9h16M9 13h7M9 16h4"/></svg>
-          <p><b>Hinweis:</b> Die Termine stammen in dieser Demo aus einer simulierten API (<code>/api/events</code>) und lassen sich in <code>assets/data/events.json</code> pflegen.</p>
+          <!-- Schritt 2: Code -->
+          <form id="verify-form" novalidate hidden>
+            <div id="step-2">
+              <hr style="border:none;border-top:1px solid var(--line);margin:26px 0">
+              <p style="color:var(--text-soft);margin-bottom:18px;font-size:.95rem">Wir haben einen Code an <b id="email-echo"></b> geschickt. Gib ihn hier ein.</p>
+              <div class="field">
+                <label for="code">Anmeldecode <span class="req">*</span></label>
+                <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" class="code-input" maxlength="6" required>
+                <p class="field__error"></p>
+              </div>
+              <p id="dev-code-note" class="dev-note"></p>
+              <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+                <span class="spinner" aria-hidden="true"></span>
+                Einloggen
+              </button>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </div>
+          </form>
+
+          <p style="margin-top:18px;font-size:.92rem;color:var(--text-soft)">Noch kein Konto? <a href="registrieren.html">Jetzt registrieren</a></p>
         </div>
       </div>
     </section>
@@ -96,11 +120,11 @@
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Mitmachen</h4>
+          <h4>Konto</h4>
           <ul>
-            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
-            <li><a href="anmeldung.html">Probetraining</a></li>
-            <li><a href="kontakt.html">Kontakt</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="registrieren.html">Konto erstellen</a></li>
+            <li><a href="konto.html">Mein Konto</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -121,6 +145,6 @@
 
   <script src="assets/js/mock-api.js" defer></script>
   <script src="assets/js/main.js" defer></script>
-  <script src="assets/js/kalender.js" defer></script>
+  <script src="assets/js/auth.js" defer></script>
 </body>
 </html>

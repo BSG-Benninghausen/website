@@ -51,6 +51,23 @@
   } else {
     items.forEach((el) => el.classList.add("is-in"));
   }
+
+  /* ----- Konto-Link in der Navigation aktualisieren ----- */
+  const accountLinks = document.querySelectorAll("[data-account-link]");
+  if (accountLinks.length) {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && d.ok && d.user) {
+          accountLinks.forEach((a) => {
+            a.textContent = "Mein Konto";
+            a.setAttribute("href", "konto.html");
+            a.classList.add("nav__account--in");
+          });
+        }
+      })
+      .catch(() => {});
+  }
 })();
 
 /* ----- gemeinsame Helfer (global) ----- */

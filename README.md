@@ -64,9 +64,28 @@ Bereitgestellte Endpunkte:
 | `GET /api/events` | Termine aus `assets/data/events.json` |
 | `POST /api/anmeldung` | Probetraining-Anmeldung (Validierung, Speicherung in `localStorage`) |
 | `POST /api/kontakt` | Kontaktnachricht (Validierung, Speicherung in `localStorage`) |
+| `GET /api/membership-types` | Beitragstypen aus `assets/data/membership-types.json` |
+| `POST /api/auth/register` | Konto anlegen (Name + E-Mail), setzt Session |
+| `POST /api/auth/request-code` | Anmeldecode anfordern (Mock liefert `devCode` zurück) |
+| `POST /api/auth/login` | Login mit E-Mail + Code |
+| `POST /api/auth/logout` · `GET /api/auth/me` | Abmelden · aktuelles Konto |
+| `POST /api/account/update` | Adresse und/oder IBAN ändern (IBAN-Prüfung inkl. Mod-97) |
+| `GET /api/memberships` · `POST /api/memberships` | Mitgliedschaften lesen · abschließen |
+| `POST /api/memberships/cancel` | Mitgliedschaft kündigen |
 
 > Es findet **kein echter Datenversand** statt. Formulareingaben werden nur lokal im
 > Browser gespeichert (Demo-Zweck).
+
+### Benutzerkonten, Login & Dashboard
+
+- **Registrierung** (`registrieren.html`): nur Name + E-Mail.
+- **Login** (`login.html`): passwordlos – E-Mail eingeben, Anmeldecode wird (mangels echtem
+  E-Mail-Versand) im Mock direkt angezeigt und automatisch eingetragen, dann einloggen.
+- **Dashboard** (`konto.html`, login-geschützt): Vereinsmitgliedschaften für sich und
+  Familienmitglieder abschließen/kündigen, Adresse und IBAN pflegen. Für den Abschluss
+  einer Mitgliedschaft sind **Anschrift + IBAN** Pflicht.
+- **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`.
+- Beitragstypen/-höhen sind Platzhalter und in `assets/data/membership-types.json` anpassbar.
 
 ### Auf ein echtes Backend umstellen
 

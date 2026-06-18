@@ -484,3 +484,24 @@ button { font: inherit; cursor: pointer; }
 /* ----------  Reveal-Animation  ---------- */
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
 .reveal.is-in { opacity: 1; transform: none; }
+
+/* ----------  Konto / Dashboard  ---------- */
+.dash-account { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; }
+.dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.memberships { display: grid; gap: 14px; }
+.membership {
+  display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; background: var(--mist);
+}
+.membership__main h3 { font-size: 1.1rem; }
+.membership__main p { color: var(--text-soft); font-size: .94rem; }
+.membership__meta { font-size: .84rem; }
+.membership__side { display: flex; align-items: center; gap: 12px; }
+.badge { font-family: var(--font-display); font-weight: 600; font-size: .78rem; padding: 6px 13px; border-radius: 999px; text-transform: capitalize; }
+.badge--aktiv { background: rgba(31, 122, 90, .12); color: #14624a; }
+.badge--gekuendigt { background: rgba(20, 20, 26, .07); color: var(--text-soft); }
+.btn--sm { padding: 9px 16px; font-size: .88rem; }
+.sub-form { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--line); }
+.muted-note { color: var(--text-soft); }
+.code-input { letter-spacing: .4em; font-size: 1.3rem; font-family: var(--font-display); text-align: center; }
+.dev-note { font-size: .82rem; color: var(--accent-dark); background: rgba(227, 20, 27, .06); border: 1px dashed rgba(227, 20, 27, .3); border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; }

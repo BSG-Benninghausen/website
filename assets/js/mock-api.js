@@ -2,24 +2,31 @@
    MOCK-SERVER  ·  BSG Benninghausen
    ---------------------------------------------------------------------
    Diese Website ist rein statisch. Wo normalerweise ein Server nötig wäre
-   (Formulare absenden, News & Termine laden), simuliert dieses Modul ein
-   Backend, indem es `window.fetch` für Routen unter `/api/...` abfängt.
+   (Formulare, News & Termine, Benutzerkonten, Mitgliedschaften), simuliert
+   dieses Modul ein Backend, indem es `window.fetch` für Routen unter
+   `/api/...` abfängt.
 
    So bleibt der restliche Frontend-Code "echt": er ruft ganz normal
    `fetch('/api/...')` auf. Möchte der Verein später ein richtiges Backend
    anbinden, genügt es, dieses Script zu entfernen und die /api-Endpunkte
    serverseitig bereitzustellen – am Frontend ändert sich nichts.
 
-   KEIN echter Datenversand. Eingaben werden nur lokal im Browser
-   (localStorage) abgelegt, damit man die Funktion demonstrieren kann.
+   KEIN echtes Backend, kein echter E-Mail-Versand, keine Zahlungsabwicklung.
+   Alle Daten (Konten, Mitgliedschaften, Sessions) liegen ausschließlich
+   lokal im Browser (localStorage). Der Login-Code wird zu Demozwecken in
+   der Antwort mitgeliefert, weil keine echten E-Mails verschickt werden.
    ===================================================================== */
 (function () {
   "use strict";
 
   const LATENCY = [280, 620];           // simulierte Antwortzeit (ms)
-  const STORE_KEYS = {
+  const KEYS = {
     anmeldung: "bsg_mock_anmeldungen",
     kontakt: "bsg_mock_kontakte",
+    users: "bsg_users",
+    memberships: "bsg_memberships",
+    session: "bsg_session",
+    codes: "bsg_login_codes",
   };
 
   const realFetch = window.fetch.bind(window);
@@ -33,21 +40,57 @@
     });
   }
 
+  /* ----- generische Storage-Helfer ----- */
+  function getStore(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch (e) { return fallback; }
+  }
+  function setStore(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* ignore */ }
+  }
   function saveLocal(key, entry) {
-    try {
-      const list = JSON.parse(localStorage.getItem(key) || "[]");
-      list.push(entry);
-      localStorage.setItem(key, JSON.stringify(list));
-    } catch (e) {
-      /* localStorage evtl. deaktiviert – für die Demo unkritisch */
-    }
+    const list = getStore(key, []);
+    list.push(entry);
+    setStore(key, list);
   }
 
   const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+  const norm = (v) => String(v || "").trim();
+  const lc = (v) => norm(v).toLowerCase();
+  const genId = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
+  /* ----- IBAN-Prüfung inkl. Mod-97 ----- */
+  function isIban(v) {
+    const s = String(v || "").replace(/\s+/g, "").toUpperCase();
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(s)) return false;
+    const re = s.slice(4) + s.slice(0, 4);
+    const num = re.replace(/[A-Z]/g, (c) => (c.charCodeAt(0) - 55).toString());
+    let rem = 0;
+    for (let i = 0; i < num.length; i++) rem = (rem * 10 + (num.charCodeAt(i) - 48)) % 97;
+    return rem === 1;
+  }
+  const fmtIban = (v) => String(v || "").replace(/\s+/g, "").toUpperCase().replace(/(.{4})/g, "$1 ").trim();
+
+  /* ----- Benutzer / Session ----- */
+  const getUsers = () => getStore(KEYS.users, []);
+  const setUsers = (u) => setStore(KEYS.users, u);
+  const findUserByEmail = (email) => getUsers().find((u) => u.email === lc(email));
+  const getUserById = (id) => getUsers().find((u) => u.id === id);
+  function publicUser(u) {
+    if (!u) return null;
+    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, createdAt: u.createdAt };
+  }
+  const getSession = () => getStore(KEYS.session, null);
+  const setSession = (userId) => setStore(KEYS.session, { token: genId("tok"), userId });
+  const clearSession = () => { try { localStorage.removeItem(KEYS.session); } catch (e) {} };
+  function currentUser() {
+    const s = getSession();
+    return s ? getUserById(s.userId) : null;
+  }
 
   /* ----- Datenquellen laden (statische JSON-Dateien) ----- */
   async function loadData(file) {
-    // bewusst der ECHTE fetch, damit wir uns nicht selbst abfangen
     const res = await realFetch("assets/data/" + file, { cache: "no-cache" });
     if (!res.ok) throw new Error("Konnte " + file + " nicht laden");
     return res.json();
@@ -55,6 +98,7 @@
 
   /* ----- Route-Handler ----- */
   const routes = {
+    /* ---------- News & Termine ---------- */
     "GET /api/news": async () => {
       const news = await loadData("news.json");
       news.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -67,22 +111,24 @@
       return json({ ok: true, items: events });
     },
 
+    "GET /api/membership-types": async () => {
+      const types = await loadData("membership-types.json");
+      return json({ ok: true, items: types });
+    },
+
+    /* ---------- Probetraining & Kontakt ---------- */
     "POST /api/anmeldung": async (body) => {
       const errors = {};
-      if (!body.name || body.name.trim().length < 2) errors.name = "Bitte Namen angeben.";
+      if (norm(body.name).length < 2) errors.name = "Bitte Namen angeben.";
       if (!isEmail(body.email)) errors.email = "Bitte gültige E-Mail-Adresse angeben.";
       if (!body.group) errors.group = "Bitte eine Trainingsgruppe wählen.";
       if (!body.privacy) errors.privacy = "Bitte der Datenverarbeitung zustimmen.";
-      if (Object.keys(errors).length) {
-        return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
-      }
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const entry = { ...body, id: "ANM-" + Date.now(), receivedAt: new Date().toISOString() };
-      saveLocal(STORE_KEYS.anmeldung, entry);
+      saveLocal(KEYS.anmeldung, entry);
       return json({
-        ok: true,
-        id: entry.id,
-        message:
-          "Vielen Dank, " + body.name.trim().split(" ")[0] +
+        ok: true, id: entry.id,
+        message: "Vielen Dank, " + norm(body.name).split(" ")[0] +
           "! Deine Anmeldung zum Probetraining ist eingegangen. Wir melden uns in Kürze. " +
           "Du kannst auch einfach spontan zum nächsten Training vorbeikommen.",
       }, 201);
@@ -90,20 +136,149 @@
 
     "POST /api/kontakt": async (body) => {
       const errors = {};
-      if (!body.name || body.name.trim().length < 2) errors.name = "Bitte Namen angeben.";
+      if (norm(body.name).length < 2) errors.name = "Bitte Namen angeben.";
       if (!isEmail(body.email)) errors.email = "Bitte gültige E-Mail-Adresse angeben.";
-      if (!body.message || body.message.trim().length < 10) errors.message = "Bitte eine etwas ausführlichere Nachricht (min. 10 Zeichen).";
+      if (norm(body.message).length < 10) errors.message = "Bitte eine etwas ausführlichere Nachricht (min. 10 Zeichen).";
       if (!body.privacy) errors.privacy = "Bitte der Datenverarbeitung zustimmen.";
-      if (Object.keys(errors).length) {
-        return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
-      }
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const entry = { ...body, id: "MSG-" + Date.now(), receivedAt: new Date().toISOString() };
-      saveLocal(STORE_KEYS.kontakt, entry);
-      return json({
-        ok: true,
-        id: entry.id,
-        message: "Danke für deine Nachricht! Wir haben sie erhalten und melden uns so schnell wie möglich.",
-      });
+      saveLocal(KEYS.kontakt, entry);
+      return json({ ok: true, id: entry.id, message: "Danke für deine Nachricht! Wir haben sie erhalten und melden uns so schnell wie möglich." });
+    },
+
+    /* ---------- Auth (passwordless) ---------- */
+    "POST /api/auth/register": async (body) => {
+      const errors = {};
+      if (norm(body.name).length < 2) errors.name = "Bitte Namen angeben.";
+      if (!isEmail(body.email)) errors.email = "Bitte gültige E-Mail-Adresse angeben.";
+      if (!body.privacy) errors.privacy = "Bitte der Datenverarbeitung zustimmen.";
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      if (findUserByEmail(body.email)) {
+        return json({ ok: false, message: "Für diese E-Mail existiert bereits ein Konto. Bitte einloggen.", errors: { email: "E-Mail bereits registriert." } }, 409);
+      }
+      const user = { id: genId("usr"), name: norm(body.name), email: lc(body.email), address: null, iban: null, createdAt: new Date().toISOString() };
+      const users = getUsers(); users.push(user); setUsers(users);
+      setSession(user.id);
+      return json({ ok: true, user: publicUser(user), message: "Willkommen, " + user.name.split(" ")[0] + "! Dein Konto wurde erstellt." }, 201);
+    },
+
+    "POST /api/auth/request-code": async (body) => {
+      if (!isEmail(body.email)) return json({ ok: false, message: "Bitte gültige E-Mail-Adresse angeben.", errors: { email: "Ungültige E-Mail." } }, 422);
+      const user = findUserByEmail(body.email);
+      if (!user) return json({ ok: false, message: "Kein Konto mit dieser E-Mail gefunden. Bitte zuerst registrieren.", errors: { email: "Unbekannte E-Mail." } }, 404);
+      const codes = getStore(KEYS.codes, {});
+      const code = genCode();
+      codes[user.email] = code;
+      setStore(KEYS.codes, codes);
+      // devCode wird nur mitgeliefert, weil im Mock keine echte E-Mail verschickt wird:
+      return json({ ok: true, message: "Wir haben dir einen Anmeldecode geschickt.", devCode: code });
+    },
+
+    "POST /api/auth/login": async (body) => {
+      const user = findUserByEmail(body.email);
+      const codes = getStore(KEYS.codes, {});
+      if (!user || !codes[user.email] || norm(body.code) !== codes[user.email]) {
+        return json({ ok: false, message: "Code ungültig oder abgelaufen. Bitte erneut anfordern.", errors: { code: "Falscher Code." } }, 401);
+      }
+      delete codes[user.email]; setStore(KEYS.codes, codes);
+      setSession(user.id);
+      return json({ ok: true, user: publicUser(user), message: "Willkommen zurück, " + user.name.split(" ")[0] + "!" });
+    },
+
+    "POST /api/auth/logout": async () => {
+      clearSession();
+      return json({ ok: true });
+    },
+
+    "GET /api/auth/me": async () => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      return json({ ok: true, user: publicUser(user) });
+    },
+
+    /* ---------- Konto: Adresse & IBAN ---------- */
+    "POST /api/account/update": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const errors = {};
+      const patch = {};
+      if (body.address) {
+        const a = body.address;
+        if (norm(a.street).length < 3) errors.street = "Bitte Straße & Hausnummer angeben.";
+        if (!/^\d{4,5}$/.test(norm(a.zip))) errors.zip = "Bitte gültige PLZ angeben.";
+        if (norm(a.city).length < 2) errors.city = "Bitte Ort angeben.";
+        if (!errors.street && !errors.zip && !errors.city) {
+          patch.address = { street: norm(a.street), zip: norm(a.zip), city: norm(a.city) };
+        }
+      }
+      if (body.iban !== undefined) {
+        if (!isIban(body.iban)) errors.iban = "Bitte gültige IBAN angeben.";
+        else patch.iban = fmtIban(body.iban);
+      }
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const users = getUsers();
+      const idx = users.findIndex((u) => u.id === user.id);
+      users[idx] = { ...users[idx], ...patch };
+      setUsers(users);
+      return json({ ok: true, user: publicUser(users[idx]), message: "Daten gespeichert." });
+    },
+
+    /* ---------- Mitgliedschaften ---------- */
+    "GET /api/memberships": async () => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const items = getStore(KEYS.memberships, []).filter((m) => m.userId === user.id);
+      return json({ ok: true, items });
+    },
+
+    "POST /api/memberships": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+
+      const types = await loadData("membership-types.json");
+      const type = types.find((t) => t.id === body.type);
+      const errors = {};
+      if (norm(body.firstName).length < 2) errors.firstName = "Bitte Vornamen angeben.";
+      if (norm(body.lastName).length < 2) errors.lastName = "Bitte Nachnamen angeben.";
+      if (!norm(body.birthdate)) errors.birthdate = "Bitte Geburtsdatum angeben.";
+      if (!["self", "family"].includes(body.relation)) errors.relation = "Bitte auswählen.";
+      if (!type) errors.type = "Bitte Mitgliedschaftstyp wählen.";
+
+      // Pflicht beim Mitgliedschaftsabschluss: Anschrift + IBAN
+      const a = body.address || {};
+      if (norm(a.street).length < 3) errors.street = "Bitte Straße & Hausnummer angeben.";
+      if (!/^\d{4,5}$/.test(norm(a.zip))) errors.zip = "Bitte gültige PLZ angeben.";
+      if (norm(a.city).length < 2) errors.city = "Bitte Ort angeben.";
+      if (!isIban(body.iban)) errors.iban = "Bitte gültige IBAN angeben.";
+
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+
+      // Adresse + IBAN am Konto hinterlegen (Wiederverwendung)
+      const users = getUsers();
+      const idx = users.findIndex((u) => u.id === user.id);
+      users[idx] = { ...users[idx], address: { street: norm(a.street), zip: norm(a.zip), city: norm(a.city) }, iban: fmtIban(body.iban) };
+      setUsers(users);
+
+      const membership = {
+        id: genId("mem"), userId: user.id,
+        firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
+        relation: body.relation, type: type.id, typeLabel: type.label, feeMonthly: type.feeMonthly,
+        status: "aktiv", startedAt: new Date().toISOString(),
+      };
+      saveLocal(KEYS.memberships, membership);
+      return json({ ok: true, membership, message: "Mitgliedschaft für " + membership.firstName + " wurde abgeschlossen." }, 201);
+    },
+
+    "POST /api/memberships/cancel": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const list = getStore(KEYS.memberships, []);
+      const idx = list.findIndex((m) => m.id === body.id && m.userId === user.id);
+      if (idx === -1) return json({ ok: false, message: "Mitgliedschaft nicht gefunden." }, 404);
+      list[idx].status = "gekündigt";
+      list[idx].cancelledAt = new Date().toISOString();
+      setStore(KEYS.memberships, list);
+      return json({ ok: true, membership: list[idx], message: "Mitgliedschaft gekündigt." });
     },
   };
 
@@ -112,42 +287,26 @@
     const url = typeof input === "string" ? input : input.url;
     const method = (init.method || (typeof input === "object" && input.method) || "GET").toUpperCase();
 
-    // Pfad normalisieren: nur /api/... wird gemockt
     let path;
-    try {
-      path = new URL(url, window.location.origin).pathname;
-    } catch (e) {
-      path = url;
-    }
+    try { path = new URL(url, window.location.origin).pathname; }
+    catch (e) { path = url; }
 
-    if (!path.startsWith("/api/")) {
-      return realFetch(input, init);
-    }
+    if (!path.startsWith("/api/")) return realFetch(input, init);
 
-    const key = method + " " + path;
-    const handler = routes[key];
-
-    await wait(rnd(LATENCY)); // realistische Latenz
-
-    if (!handler) {
-      return json({ ok: false, message: "Endpoint nicht gefunden (Mock)." }, 404);
-    }
+    const handler = routes[method + " " + path];
+    await wait(rnd(LATENCY));
+    if (!handler) return json({ ok: false, message: "Endpoint nicht gefunden (Mock)." }, 404);
 
     let body = {};
-    if (init.body) {
-      try { body = JSON.parse(init.body); } catch (e) { body = {}; }
-    }
+    if (init.body) { try { body = JSON.parse(init.body); } catch (e) { body = {}; } }
 
-    try {
-      return await handler(body);
-    } catch (err) {
-      return json({ ok: false, message: "Mock-Serverfehler: " + err.message }, 500);
-    }
+    try { return await handler(body); }
+    catch (err) { return json({ ok: false, message: "Mock-Serverfehler: " + err.message }, 500); }
   };
 
   console.info(
     "%c BSG Mock-Server aktiv ",
-    "background:#3b40a0;color:#fff;border-radius:4px;padding:2px 6px",
+    "background:#e3141b;color:#fff;border-radius:4px;padding:2px 6px",
     "– /api/* Anfragen werden lokal simuliert (kein echtes Backend)."
   );
 })();
