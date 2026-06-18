@@ -1,8 +1,9 @@
 /* =====================================================================
    redaktion.js – Redaktions-Editor (dynamischer Content)
    Bereiche je nach Recht: News (manage_news), Termine (manage_events),
-   Trainingszeiten (manage_training), Team (manage_team), Startseiten-
-   Texte (manage_site). Jede Sektion wird nur bei vorhandenem Recht gezeigt.
+   Trainingszeiten (manage_training), Startseiten-Texte (manage_site),
+   Auszahlungen (manage_payouts). Jede Sektion nur bei vorhandenem Recht.
+   (Team/Vorstand wird automatisch aus Rollen erzeugt – siehe Admin.)
    ===================================================================== */
 (function () {
   "use strict";
@@ -71,8 +72,6 @@
     return html;
   }
   const trainingRow = (t) => adminRow(t.title, t.start + (t.end ? "–" + t.end : "") + " Uhr" + (t.ageGroup ? " · " + t.ageGroup : ""), t.id);
-  const GROUP_LABEL = { vorstand: "Vorstand", trainer: "Trainerteam" };
-  const teamRow = (m) => adminRow(m.name, (GROUP_LABEL[m.group] || m.group) + " · " + (m.role || ""), m.id);
 
   /* Optionaler Bild-Upload (News): Vorschau + Verkleinern via BSG.readAndResize */
   function makeImageInput(o) {
@@ -144,11 +143,10 @@
     const canNews = can("manage_news");
     const canEvents = can("manage_events");
     const canTraining = can("manage_training");
-    const canTeam = can("manage_team");
     const canSite = can("manage_site");
     const canPayouts = can("manage_payouts");
     CAN_PAYOUTS = canPayouts;
-    if (!canNews && !canEvents && !canTraining && !canTeam && !canSite && !canPayouts) { location.href = "konto.html"; return; }
+    if (!canNews && !canEvents && !canTraining && !canSite && !canPayouts) { location.href = "konto.html"; return; }
 
     $("#red-loading").hidden = true; $("#red").hidden = false;
 
@@ -205,11 +203,6 @@
     if (canTraining) {
       const ed = setupEditor({ listEl: $("#training-list"), form: $("#training-form"), resetBtn: $("#training-reset"), formTitle: $("#training-form-title"), api: "/api/training", newTitle: "Neue Trainingszeit", editTitle: "Trainingszeit bearbeiten", render: trainingRow });
       await ed.load(); $("#training-section").hidden = false;
-    }
-
-    if (canTeam) {
-      const ed = setupEditor({ listEl: $("#team-list"), form: $("#team-form"), resetBtn: $("#team-reset"), formTitle: $("#team-form-title"), api: "/api/team", newTitle: "Neuer Eintrag", editTitle: "Eintrag bearbeiten", render: teamRow });
-      await ed.load(); $("#team-section").hidden = false;
     }
 
     if (canSite) {

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=18">
+  <link rel="stylesheet" href="assets/css/styles.css?v=19">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -72,6 +72,25 @@
           <div class="notice notice--mock" style="margin:22px 0 30px">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
             <p><b>Demo:</b> Alle Daten (Konto, Mitgliedschaften, Adresse, IBAN) werden von einem simulierten Server ausschließlich lokal in deinem Browser gespeichert – es findet keine echte Übertragung oder Zahlung statt.</p>
+          </div>
+
+          <!-- Profilfoto -->
+          <div class="card" style="margin-bottom:24px">
+            <span class="eyebrow">Profil</span>
+            <h2 style="font-size:1.2rem;margin:6px 0 6px">Profilfoto</h2>
+            <p style="color:var(--text-soft);font-size:.9rem;margin-bottom:16px">Optional. Dein Foto wird angezeigt, wenn du im <b>Vorstand</b> oder <b>Trainerteam</b> geführt wirst.</p>
+            <div class="photo-input">
+              <img id="u-photo-preview" class="photo-input__preview" alt="" hidden>
+              <div class="photo-input__ph" id="u-photo-ph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="3.2"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+              </div>
+              <div>
+                <input id="u-photo" name="photo" type="file" accept="image/*">
+                <p style="color:var(--text-soft);font-size:.82rem;margin-top:6px">JPG/PNG, wird automatisch verkleinert.</p>
+                <button type="button" id="u-photo-remove" class="btn btn--outline btn--sm" style="margin-top:8px" hidden>Foto entfernen</button>
+              </div>
+            </div>
+            <div id="u-photo-status" class="form-status" role="status" aria-live="polite"></div>
           </div>
 
           <!-- Mitgliedschaften -->
@@ -300,8 +319,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=18" defer></script>
-  <script src="assets/js/main.js?v=18" defer></script>
-  <script src="assets/js/konto.js?v=18" defer></script>
+  <script src="assets/js/mock-api.js?v=19" defer></script>
+  <script src="assets/js/main.js?v=19" defer></script>
+  <script src="assets/js/konto.js?v=19" defer></script>
 </body>
 </html>

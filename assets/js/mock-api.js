@@ -34,7 +34,6 @@
     passCounter: "bsg_pass_counter",
     registrations: "bsg_registrations",
     training: "bsg_training",
-    team: "bsg_team",
     site: "bsg_site",
     payouts: "bsg_payouts",
   };
@@ -52,7 +51,6 @@
     { key: "manage_news", label: "Newsmeldungen schreiben & bearbeiten" },
     { key: "manage_events", label: "Termine pflegen" },
     { key: "manage_training", label: "Trainingszeiten bearbeiten" },
-    { key: "manage_team", label: "Team & Vorstand bearbeiten" },
     { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
@@ -136,18 +134,9 @@
     title: norm(b.title), start: norm(b.start), end: norm(b.end),
     ageGroup: norm(b.ageGroup), description: norm(b.description),
   });
+  // Team/Vorstand wird aus den Rollen erzeugt (siehe GET /api/team). teamGroup je Rolle.
   const TEAM_GROUPS = ["vorstand", "trainer"];
-  function teamErrors(b) {
-    const e = {};
-    if (norm(b.name).length < 2) e.name = "Bitte einen Namen angeben.";
-    if (!norm(b.role)) e.role = "Bitte eine Funktion/Rolle angeben.";
-    if (!TEAM_GROUPS.includes(b.group)) e.group = "Bitte eine gültige Gruppe wählen.";
-    return e;
-  }
-  const teamFields = (b) => ({
-    group: TEAM_GROUPS.includes(b.group) ? b.group : "vorstand",
-    name: norm(b.name), role: norm(b.role), description: norm(b.description),
-  });
+  const teamGroupOf = (v) => (TEAM_GROUPS.includes(v) ? v : "");
 
   /* ----- Startseiten-Texte: Schema (editierbare Felder) ----- */
   const SITE_FIELDS = [
@@ -275,7 +264,7 @@
   const getUserById = (id) => getUsers().find((u) => u.id === id);
   function publicUser(u) {
     if (!u) return null;
-    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, roles: u.roles || ["member"], createdAt: u.createdAt };
+    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, photo: u.photo || "", roles: u.roles || ["member"], createdAt: u.createdAt };
   }
   const getSession = () => getStore(KEYS.session, null);
   const setSession = (userId) => setStore(KEYS.session, { token: genId("tok"), userId });
@@ -305,10 +294,16 @@
 
   /* Seed: Standardrollen + Admin-Konto (idempotent) */
   const EXAMPLE_ROLES = [
-    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_team", "manage_site", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
+    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
     { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
-    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false },
-    { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
+    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false, teamGroup: "vorstand", teamOrder: 30 },
+    { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false, teamGroup: "trainer", teamOrder: 0 },
+  ];
+  // Beispiel-Funktionsrollen für den Vorstand (granulare Anzeige auf der Team-Seite)
+  const BOARD_ROLES = [
+    { id: "vorsitz1", label: "1. Vorsitzender", permissions: ["manage_users", "manage_news", "manage_events", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false, teamGroup: "vorstand", teamOrder: 10 },
+    { id: "vorsitz2", label: "2. Vorsitzender", permissions: ["manage_news", "manage_events", "view_members"], system: false, teamGroup: "vorstand", teamOrder: 20 },
+    { id: "schriftfuehrer", label: "Schriftführer", permissions: [], system: false, teamGroup: "vorstand", teamOrder: 40 },
   ];
 
   function seed() {
@@ -329,7 +324,7 @@
         const r = roles.find((x) => x.id === id);
         if (r) perms.forEach((p) => { if (!(r.permissions || (r.permissions = [])).includes(p)) r.permissions.push(p); });
       };
-      grant("vorstand", ["manage_training", "manage_team", "manage_site"]);
+      grant("vorstand", ["manage_training", "manage_site"]);
       grant("pressewart", ["manage_site"]);
       grant("trainer", ["manage_training"]);
       setStore(KEYS.seedVersion, 3);
@@ -343,6 +338,15 @@
       grant("vorstand", ["manage_payouts"]);
       grant("kassenwart", ["manage_payouts"]);
       setStore(KEYS.seedVersion, 4);
+    }
+    // Migration v5: Team-Anzeige über Rollen; manage_team entfällt
+    if (seedVersion < 5) {
+      const setTeam = (id, group, order) => { const r = roles.find((x) => x.id === id); if (r) { r.teamGroup = group; r.teamOrder = order; } };
+      setTeam("trainer", "trainer", 0);
+      setTeam("kassenwart", "vorstand", 30);
+      BOARD_ROLES.forEach((ex) => { if (!roles.some((r) => r.id === ex.id)) roles.push({ ...ex, permissions: ex.permissions.slice() }); });
+      roles.forEach((r) => { if (r.permissions) r.permissions = r.permissions.filter((p) => p !== "manage_team"); });
+      setStore(KEYS.seedVersion, 5);
     }
     setRoles(roles);
 
@@ -375,11 +379,6 @@
   async function ensureTraining() {
     let items = getStore(KEYS.training, null);
     if (!items) { items = await loadData("trainingszeiten.json"); setStore(KEYS.training, items); }
-    return items;
-  }
-  async function ensureTeam() {
-    let items = getStore(KEYS.team, null);
-    if (!items) { items = await loadData("team.json"); setStore(KEYS.team, items); }
     return items;
   }
   async function ensureSite() {
@@ -472,39 +471,24 @@
       return json({ ok: true, message: "Trainingszeit gelöscht." });
     },
 
-    /* ---------- Team & Vorstand ---------- */
+    /* ---------- Team & Vorstand (automatisch aus Rollen) ---------- */
     "GET /api/team": async () => {
-      return json({ ok: true, items: await ensureTeam() });
-    },
-    "POST /api/team": async (body) => {
-      const user = currentUser();
-      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
-      const errors = teamErrors(body);
-      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
-      const items = await ensureTeam();
-      const item = { id: genId("team"), ...teamFields(body) };
-      items.push(item); setStore(KEYS.team, items);
-      return json({ ok: true, item, message: "Eintrag angelegt." }, 201);
-    },
-    "POST /api/team/update": async (body) => {
-      const user = currentUser();
-      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
-      const errors = teamErrors(body);
-      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
-      const items = await ensureTeam();
-      const idx = items.findIndex((t) => t.id === body.id);
-      if (idx === -1) return json({ ok: false, message: "Eintrag nicht gefunden." }, 404);
-      items[idx] = { ...items[idx], ...teamFields(body) };
-      setStore(KEYS.team, items);
-      return json({ ok: true, item: items[idx], message: "Eintrag gespeichert." });
-    },
-    "POST /api/team/delete": async (body) => {
-      const user = currentUser();
-      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
-      const items = await ensureTeam();
-      if (!items.some((t) => t.id === body.id)) return json({ ok: false, message: "Eintrag nicht gefunden." }, 404);
-      setStore(KEYS.team, items.filter((t) => t.id !== body.id));
-      return json({ ok: true, message: "Eintrag gelöscht." });
+      const teamRoles = getRoles().filter((r) => TEAM_GROUPS.includes(r.teamGroup));
+      const users = getUsers();
+      const items = [];
+      teamRoles.forEach((r) => {
+        users.filter((u) => (u.roles || []).includes(r.id)).forEach((u) => {
+          items.push({
+            group: r.teamGroup,
+            label: norm(r.teamLabel) || r.label,
+            order: Number(r.teamOrder) || 0,
+            name: u.name,
+            photo: u.photo || "",
+          });
+        });
+      });
+      items.sort((a, b) => (a.order - b.order) || a.label.localeCompare(b.label, "de") || a.name.localeCompare(b.name, "de"));
+      return json({ ok: true, items });
     },
 
     /* ---------- Startseiten-Texte ---------- */
@@ -720,7 +704,7 @@
       const perms = (body.permissions || []).filter((p) => ALL_PERMS.includes(p));
       const roles = getRoles();
       const id = "role-" + label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Math.random().toString(36).slice(2, 5);
-      const role = { id, label, permissions: perms, system: false };
+      const role = { id, label, permissions: perms, system: false, teamGroup: teamGroupOf(body.teamGroup), teamLabel: norm(body.teamLabel), teamOrder: num(body.teamOrder) };
       roles.push(role); setRoles(roles);
       return json({ ok: true, role, message: "Rolle „" + label + "“ angelegt." }, 201);
     },
@@ -734,6 +718,9 @@
       if (roles[idx].id === "admin") return json({ ok: false, message: "Die Administrator-Rolle besitzt immer alle Berechtigungen und kann nicht eingeschränkt werden." }, 409);
       if (body.label !== undefined && norm(body.label).length >= 2) roles[idx].label = norm(body.label);
       if (Array.isArray(body.permissions)) roles[idx].permissions = body.permissions.filter((p) => ALL_PERMS.includes(p));
+      if (body.teamGroup !== undefined) roles[idx].teamGroup = teamGroupOf(body.teamGroup);
+      if (body.teamLabel !== undefined) roles[idx].teamLabel = norm(body.teamLabel);
+      if (body.teamOrder !== undefined) roles[idx].teamOrder = num(body.teamOrder);
       setRoles(roles);
       return json({ ok: true, role: roles[idx], message: "Rolle gespeichert." });
     },
@@ -797,6 +784,11 @@
       if (body.iban !== undefined) {
         if (!isIban(body.iban)) errors.iban = "Bitte gültige IBAN angeben.";
         else patch.iban = fmtIban(body.iban);
+      }
+      if (body.photo !== undefined) {
+        if (body.photo === "") patch.photo = "";
+        else if (isPhoto(body.photo)) patch.photo = body.photo;
+        else errors.photo = "Bitte ein gültiges Bild hochladen.";
       }
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
       const users = getUsers();

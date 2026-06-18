@@ -31,12 +31,14 @@
   }
 
   function memberHTML(m) {
+    const avatar = m.photo
+      ? `<div class="member__avatar member__avatar--photo"><img src="${esc(m.photo)}" alt=""></div>`
+      : `<div class="member__avatar" style="background:${gradientFor(m.name)}">${esc(initials(m.name))}</div>`;
     return `
       <article class="card member reveal is-in">
-        <div class="member__avatar" style="background:${gradientFor(m.id || m.name)}">${esc(initials(m.name))}</div>
+        ${avatar}
         <h3>${esc(m.name)}</h3>
-        <p class="role">${esc(m.role)}</p>
-        <p>${esc(m.description)}</p>
+        <p class="role">${esc(m.label)}</p>
       </article>`;
   }
 

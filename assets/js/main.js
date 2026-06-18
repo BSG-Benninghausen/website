@@ -68,7 +68,7 @@
         const has = (p) => d.isAdmin || (d.permissions && d.permissions.includes(p));
         const reveal = (sel) => document.querySelectorAll(sel).forEach((a) => { a.hidden = false; });
         if (has("manage_roles") || has("manage_users")) reveal("[data-admin-link]");
-        if (has("manage_news") || has("manage_events") || has("manage_training") || has("manage_team") || has("manage_site") || has("manage_payouts")) reveal("[data-redaktion-link]");
+        if (has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts")) reveal("[data-redaktion-link]");
         if (has("view_members")) reveal("[data-members-link]");
       })
       .catch(() => {});

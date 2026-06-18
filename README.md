@@ -69,13 +69,13 @@ Bereitgestellte Endpunkte:
 | `POST /api/auth/request-code` | Anmeldecode anfordern (Mock liefert `devCode` zurück) |
 | `POST /api/auth/login` | Login mit E-Mail + Code |
 | `POST /api/auth/logout` · `GET /api/auth/me` | Abmelden · aktuelles Konto |
-| `POST /api/account/update` | Adresse und/oder IBAN ändern (IBAN-Prüfung inkl. Mod-97) |
+| `POST /api/account/update` | Adresse, IBAN und/oder **Profilfoto** ändern (IBAN-Prüfung inkl. Mod-97) |
 | `GET /api/memberships` · `POST /api/memberships` | Mitgliedschaften lesen · abschließen |
 | `POST /api/memberships/cancel` | Mitgliedschaft kündigen |
 | `GET /api/age-classes` | Auswählbare Wettkampf-Altersklassen (für den Termin-Editor) |
 | `GET /api/weight-classes` | Gewichtsklassen je Altersklasse & Geschlecht (für gefilterte Auswahl) |
 | `GET /api/training` · `POST /api/training`(`/update`,`/delete`) | Trainingszeiten lesen (öffentlich) · pflegen (`manage_training`) |
-| `GET /api/team` · `POST /api/team`(`/update`,`/delete`) | Team & Vorstand lesen (öffentlich) · pflegen (`manage_team`) |
+| `GET /api/team` | Team & Vorstand – **automatisch aus den Rollen** erzeugt (öffentlich) |
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
@@ -110,7 +110,7 @@ Bereitgestellte Endpunkte:
   Die Zuordnung ist als anpassbare Vorlage in **`assets/data/age-classes.json`** hinterlegt
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
-  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`, `bsg_team`,
+  `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`,
   `bsg_site`, `bsg_payouts`, `bsg_seed_version`, `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
@@ -119,10 +119,16 @@ Bereitgestellte Endpunkte:
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
-  `manage_team`, `manage_site`, `manage_memberships`, `view_members`, `view_finance`,
-  `manage_payouts`.
+  `manage_site`, `manage_memberships`, `view_members`, `view_finance`, `manage_payouts`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
-  Team, Startseiten-Texte) ist einzeln zuweisbar.
+  Startseiten-Texte) ist einzeln zuweisbar.
+- **Team/Vorstand aus Rollen:** Rollen tragen optionale Felder `teamGroup`
+  (`vorstand`/`trainer`), `teamLabel` (Anzeige-Override, sonst Rollenname) und `teamOrder`.
+  Wer eine so markierte Rolle hat, erscheint automatisch auf `team.html` – der Vorstand
+  granular über eigene Funktionsrollen (z. B. *1. Vorsitzender*, *Kassenwart*). Konfiguriert
+  wird das im **Admin-Rolleneditor** (`manage_roles`); Name & Foto stammen aus dem Benutzerkonto.
+- **Profilfoto:** Benutzer laden ihr Foto optional selbst unter „Mein Konto" hoch
+  (`POST /api/account/update` Feld `photo`); es erscheint auf der Team-Karte (sonst Initialen).
 - **Seed-Admin & Beispiel-Rollen:** Beim ersten Laden legt der Mock die System-Rollen
   *Administrator*/*Mitglied*, ein Admin-Konto **`admin@bsg-benninghausen.de`** sowie
   bearbeitbare Beispiel-Rollen **Vorstand, Pressewart, Kassenwart, Trainer** an. Anmeldung
@@ -143,9 +149,10 @@ Bereitgestellte Endpunkte:
   verkleinert, als Data-URL gespeichert; ohne Bild erscheint ein Platzhalter-Muster).
   Weitere editierbare Bereiche mit jeweils **eigenem Recht**:
   **Trainingszeiten** (`manage_training`, `assets/data/trainingszeiten.json` → `trainingszeiten.html`,
-  Startseiten-Teaser, Hero-Mini), **Team & Vorstand** (`manage_team`, `assets/data/team.json` →
-  `team.html`) und **Startseiten-Texte** (`manage_site`, `assets/data/site.json` → per
-  `[data-site="key"]` auf der Startseite; Felder-Schema `SITE_FIELDS` in `mock-api.js`).
+  Startseiten-Teaser, Hero-Mini) und **Startseiten-Texte** (`manage_site`, `assets/data/site.json` →
+  per `[data-site="key"]` auf der Startseite; Felder-Schema `SITE_FIELDS` in `mock-api.js`).
+  **Team & Vorstand** wird nicht manuell gepflegt, sondern automatisch aus den Rollen erzeugt
+  (siehe oben).
   Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu
   **Wettkampf-Altersklassen** (leer = offen für alle) sowie **Gebühr** und **Eigenanteil**;
   die Differenz (`Gebühr − Eigenanteil`) trägt der Verein. Bei Turnieren/Meisterschaften lassen

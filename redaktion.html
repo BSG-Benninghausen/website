@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=18">
+  <link rel="stylesheet" href="assets/css/styles.css?v=19">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -50,7 +50,7 @@
         <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Redaktion</p>
         <span class="eyebrow eyebrow--invert">Redaktion</span>
         <h1>Inhalte pflegen</h1>
-        <p>News, Termine, Trainingszeiten, Team und Startseiten-Texte – je nach Berechtigung. Änderungen erscheinen sofort auf der Website.</p>
+        <p>News, Termine, Trainingszeiten und Startseiten-Texte – je nach Berechtigung. Änderungen erscheinen sofort auf der Website. (Vorstand/Trainer werden über die Rollen im Admin-Bereich gepflegt.)</p>
       </div>
     </section>
 
@@ -252,47 +252,6 @@
             </form>
           </div>
 
-          <!-- Team & Vorstand -->
-          <div id="team-section" class="card" style="margin-top:24px" hidden>
-            <span class="eyebrow">Verein</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 16px">Team &amp; Vorstand</h2>
-            <div id="team-list" class="adm-roles"></div>
-
-            <form id="team-form" class="sub-form" novalidate>
-              <input type="hidden" name="id">
-              <h3 id="team-form-title" style="font-size:1.1rem;margin-bottom:14px">Neuer Eintrag</h3>
-              <div class="field-row">
-                <div class="field">
-                  <label for="tm-name">Name <span class="req">*</span></label>
-                  <input id="tm-name" name="name" type="text">
-                  <p class="field__error"></p>
-                </div>
-                <div class="field">
-                  <label for="tm-group">Bereich</label>
-                  <select id="tm-group" name="group">
-                    <option value="vorstand">Vorstand</option>
-                    <option value="trainer">Trainerteam</option>
-                  </select>
-                  <p class="field__error"></p>
-                </div>
-              </div>
-              <div class="field">
-                <label for="tm-role">Funktion / Rolle <span class="req">*</span></label>
-                <input id="tm-role" name="role" type="text" placeholder="z. B. 1. Vorsitzender, Trainer">
-                <p class="field__error"></p>
-              </div>
-              <div class="field">
-                <label for="tm-desc">Beschreibung</label>
-                <input id="tm-desc" name="description" type="text" placeholder="z. B. Vereinsleitung & Organisation">
-              </div>
-              <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <button type="submit" class="btn btn--primary"><span class="spinner" aria-hidden="true"></span>Speichern</button>
-                <button type="button" id="team-reset" class="btn btn--outline" hidden>Abbrechen</button>
-              </div>
-              <div class="form-status" role="status" aria-live="polite"></div>
-            </form>
-          </div>
-
           <!-- Startseiten-Texte -->
           <div id="site-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Startseite</span>
@@ -359,8 +318,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=18" defer></script>
-  <script src="assets/js/main.js?v=18" defer></script>
-  <script src="assets/js/redaktion.js?v=18" defer></script>
+  <script src="assets/js/mock-api.js?v=19" defer></script>
+  <script src="assets/js/main.js?v=19" defer></script>
+  <script src="assets/js/redaktion.js?v=19" defer></script>
 </body>
 </html>

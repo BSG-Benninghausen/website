@@ -1,9 +1,0 @@
-[
-  { "id": "tm-lz", "group": "vorstand", "name": "Lukas Zientek", "role": "1. Vorsitzender", "description": "Vereinsleitung & Organisation" },
-  { "id": "tm-cm", "group": "vorstand", "name": "Christopher Masjosthusmann", "role": "2. Vorsitzender", "description": "Stellvertretende Leitung" },
-  { "id": "tm-si", "group": "vorstand", "name": "Salvatore Infantino", "role": "Kassenwart & Abteilungsleitung Judo", "description": "Finanzen & sportliche Leitung" },
-  { "id": "tm-sz", "group": "vorstand", "name": "Sarah Zientek", "role": "Pressewartin", "description": "Öffentlichkeitsarbeit & Social Media" },
-  { "id": "tr-si", "group": "trainer", "name": "Salvatore Infantino", "role": "Abteilungsleitung & Trainer", "description": "Technik, Wettkampf & Nachwuchs" },
-  { "id": "tr-ae", "group": "trainer", "name": "Atilla Erten", "role": "Trainer", "description": "Training & Wettkampfbetreuung" },
-  { "id": "tr-jb", "group": "trainer", "name": "Julian Becker", "role": "Trainer", "description": "Training & Nachwuchsförderung" }
-]

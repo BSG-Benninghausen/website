@@ -116,6 +116,37 @@
     const addr = account.address || {};
     fill($("#address-form"), { street: addr.street, zip: addr.zip, city: addr.city });
     fill($("#bank-form"), { iban: account.iban || "" });
+    renderProfilePhoto();
+  }
+
+  /* ---------- Profilfoto (Self-Service) ---------- */
+  function renderProfilePhoto() {
+    const prev = $("#u-photo-preview"), ph = $("#u-photo-ph"), rm = $("#u-photo-remove");
+    if (!prev) return;
+    const photo = account.photo || "";
+    if (photo) { prev.src = photo; prev.hidden = false; if (ph) ph.hidden = true; if (rm) rm.hidden = false; }
+    else { prev.removeAttribute("src"); prev.hidden = true; if (ph) ph.hidden = false; if (rm) rm.hidden = true; }
+  }
+  function profileStatus(type, text) {
+    const box = $("#u-photo-status"); if (!box) return;
+    box.className = "form-status is-visible form-status--" + (type === "ok" ? "ok" : "err");
+    box.innerHTML = "<span>" + BSG.escape(text) + "</span>";
+  }
+  async function saveProfilePhoto(photo) {
+    const { res, data } = await postJSON("/api/account/update", { photo });
+    if (res.ok && data.ok) { account = data.user; renderProfilePhoto(); profileStatus("ok", photo ? "Profilfoto gespeichert." : "Profilfoto entfernt."); }
+    else profileStatus("err", (data.errors && data.errors.photo) || data.message || "Fehler.");
+  }
+  function wireProfilePhoto() {
+    const input = $("#u-photo"), rm = $("#u-photo-remove");
+    if (!input) return;
+    input.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try { await saveProfilePhoto(await BSG.readAndResize(file, 480)); input.value = ""; }
+      catch (err) { profileStatus("err", err.message); }
+    });
+    if (rm) rm.addEventListener("click", () => saveProfilePhoto(""));
   }
 
   /* ---------- Mitgliedschaften ---------- */
@@ -264,6 +295,8 @@
 
   /* ---------- Events ---------- */
   function wireEvents() {
+    wireProfilePhoto();
+
     // Turnier-Anmeldung / -Abmeldung (Delegation)
     $("#tournaments-list").addEventListener("click", async (e) => {
       const reg = e.target.closest("[data-register]");

@@ -62,7 +62,7 @@ This single file is the backend. Key pieces:
 - `KEYS` — every `localStorage` key (`bsg_users`, `bsg_events`, `bsg_registrations`, `bsg_payouts`, …).
 - Helpers reused everywhere: `json(body, status)`, `getStore/setStore`, `currentUser()`,
   `hasPerm(user, perm)`, `norm()`, `genId()`, `loadData(file)` (fetches a seed JSON), and the
-  `ensureNews/ensureEvents/ensureTraining/ensureTeam/ensureSite` **seed-on-read** functions.
+  `ensureNews/ensureEvents/ensureTraining/ensureSite` **seed-on-read** functions.
 - `seed()` runs on load: guarantees system roles + admin account and applies **versioned, additive
   migrations** gated by `bsg_seed_version` (e.g. `if (seedVersion < 4) { …grant new perms…; setStore(…,4) }`).
   When you add a permission or change example-role grants, add a new migration and bump the version —
@@ -76,7 +76,9 @@ This single file is the backend. Key pieces:
 - To add a permission: add to `PERMISSIONS`; grant it to relevant `EXAMPLE_ROLES` + a seed migration;
   gate the backend routes with `hasPerm(user, key)`; reveal nav/UI in the frontend (see below). Rights
   are intentionally **fine-grained, one per content area** (`manage_news`, `manage_events`,
-  `manage_training`, `manage_team`, `manage_site`, `manage_payouts`, plus `view_*`/`manage_roles/users`).
+  `manage_training`, `manage_site`, `manage_payouts`, plus `view_*`/`manage_roles/users`).
+- Roles also carry optional `teamGroup`/`teamLabel`/`teamOrder` fields: the public **Team page is
+  computed from roles × users** (`GET /api/team`) — there is no manual team store/editor.
 
 ### Frontend wiring
 - `assets/js/main.js` defines the global `BSG.*` helpers (`escape`, `formatDate`, `dayMonth`,

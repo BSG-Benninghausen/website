@@ -71,6 +71,23 @@
       '<legend class="perm-legend">Berechtigungen</legend>' + permCheckboxes([], false);
   }
 
+  function teamControls(r) {
+    const g = r.teamGroup || "";
+    const opt = (v, t) => '<option value="' + v + '"' + (g === v ? " selected" : "") + ">" + t + "</option>";
+    return (
+      '<div class="role-team">' +
+        '<div class="field-row">' +
+          '<div class="field"><label>Auf Team-Seite anzeigen</label>' +
+            '<select data-team-group>' + opt("", "— nicht anzeigen —") + opt("vorstand", "Vorstand") + opt("trainer", "Trainerteam") + "</select></div>" +
+          '<div class="field"><label>Reihenfolge</label>' +
+            '<input type="number" step="1" data-team-order value="' + (Number(r.teamOrder) || 0) + '"></div>' +
+        "</div>" +
+        '<div class="field"><label>Funktionsname (optional)</label>' +
+          '<input type="text" data-team-label placeholder="Standard: ' + BSG.escape(r.label) + '" value="' + BSG.escape(r.teamLabel || "") + '"></div>' +
+      "</div>"
+    );
+  }
+
   function renderRoles() {
     $("#roles-list").innerHTML = roles.map((r) => {
       const isAdminRole = r.id === "admin";
@@ -84,7 +101,8 @@
           (isAdminRole
             ? '<p class="muted-note">Besitzt immer alle Berechtigungen.</p>'
             : '<fieldset class="perm-grid">' + permCheckboxes(checked, false) + "</fieldset>" +
-              '<button class="btn btn--primary btn--sm" data-save-role="' + r.id + '">Berechtigungen speichern</button>') +
+              teamControls(r) +
+              '<button class="btn btn--primary btn--sm" data-save-role="' + r.id + '">Berechtigungen &amp; Anzeige speichern</button>') +
         "</div>"
       );
     }).join("");
@@ -124,7 +142,10 @@
       createForm.querySelectorAll(".field--error").forEach((f) => f.classList.remove("field--error"));
       const label = createForm.elements.label.value;
       const permissions = checkedValues($("#role-perms"));
-      const { res, data } = await postJSON("/api/roles", { label, permissions });
+      const teamGroup = createForm.elements.teamGroup.value;
+      const teamLabel = createForm.elements.teamLabel.value;
+      const teamOrder = createForm.elements.teamOrder.value;
+      const { res, data } = await postJSON("/api/roles", { label, permissions, teamGroup, teamLabel, teamOrder });
       if (res.ok && data.ok) {
         createForm.reset();
         await loadRoles(); renderRoles();
@@ -149,7 +170,10 @@
       if (saveRole) {
         const card = saveRole.closest(".adm-role");
         const permissions = checkedValues(card.querySelector(".perm-grid"));
-        const { res, data } = await postJSON("/api/roles/update", { id: saveRole.getAttribute("data-save-role"), permissions });
+        const teamGroup = (card.querySelector("[data-team-group]") || {}).value || "";
+        const teamLabel = (card.querySelector("[data-team-label]") || {}).value || "";
+        const teamOrder = (card.querySelector("[data-team-order]") || {}).value || 0;
+        const { res, data } = await postJSON("/api/roles/update", { id: saveRole.getAttribute("data-save-role"), permissions, teamGroup, teamLabel, teamOrder });
         toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
         if (res.ok && data.ok) await loadRoles();
       }

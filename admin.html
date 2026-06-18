@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=18">
+  <link rel="stylesheet" href="assets/css/styles.css?v=19">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -76,6 +76,24 @@
                 <p class="field__error"></p>
               </div>
               <fieldset id="role-perms" class="perm-grid"></fieldset>
+              <div class="field-row">
+                <div class="field">
+                  <label for="role-teamgroup">Auf Team-Seite anzeigen</label>
+                  <select id="role-teamgroup" name="teamGroup">
+                    <option value="">— nicht anzeigen —</option>
+                    <option value="vorstand">Vorstand</option>
+                    <option value="trainer">Trainerteam</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="role-teamorder">Reihenfolge</label>
+                  <input id="role-teamorder" name="teamOrder" type="number" value="0" step="1">
+                </div>
+              </div>
+              <div class="field">
+                <label for="role-teamlabel">Funktionsname (optional)</label>
+                <input id="role-teamlabel" name="teamLabel" type="text" placeholder="Standard: Rollenname">
+              </div>
               <button type="submit" class="btn btn--primary">
                 <span class="spinner" aria-hidden="true"></span>
                 Rolle anlegen
@@ -144,8 +162,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=18" defer></script>
-  <script src="assets/js/main.js?v=18" defer></script>
-  <script src="assets/js/admin.js?v=18" defer></script>
+  <script src="assets/js/mock-api.js?v=19" defer></script>
+  <script src="assets/js/main.js?v=19" defer></script>
+  <script src="assets/js/admin.js?v=19" defer></script>
 </body>
 </html>
