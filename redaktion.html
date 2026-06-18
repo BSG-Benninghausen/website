@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20">
+  <link rel="stylesheet" href="assets/css/styles.css?v=21">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -32,11 +32,26 @@
           <li><a href="aktuelles.html">Aktuelles</a></li>
           <li><a href="kalender.html">Termine</a></li>
           <li><a href="kontakt.html">Kontakt</a></li>
-          <li><a href="login.html" data-account-link>Login</a></li>
-          <li><a href="mitglieder.html" data-members-link hidden>Mitglieder</a></li>
-          <li><a href="redaktion.html" data-redaktion-link hidden>Redaktion</a></li>
-          <li><a href="admin.html" data-admin-link hidden>Admin</a></li>
         </ul>
+
+        <!-- Konto: ausgeloggt = Login-Link, eingeloggt = Konto-Menü -->
+        <div class="nav__account">
+          <a href="login.html" class="nav__login" data-account-link>Login</a>
+          <div class="nav__user" data-account-menu hidden>
+            <button type="button" class="nav__user-btn" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu">
+              <span class="nav__avatar" data-account-avatar aria-hidden="true"></span>
+              <span class="nav__user-name" data-account-name>Mein Konto</span>
+              <svg class="nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <ul class="nav__dropdown" id="account-menu" role="menu">
+              <li role="none"><a role="menuitem" href="konto.html">Mein Konto</a></li>
+              <li role="none"><a role="menuitem" href="mitglieder.html" data-members-link hidden>Mitglieder</a></li>
+              <li role="none"><a role="menuitem" href="redaktion.html" data-redaktion-link hidden>Redaktion</a></li>
+              <li role="none"><a role="menuitem" href="admin.html" data-admin-link hidden>Admin</a></li>
+              <li role="none" class="nav__dropdown-sep"><button type="button" role="menuitem" class="nav__logout" data-logout>Abmelden</button></li>
+            </ul>
+          </div>
+        </div>
         <div class="nav__cta"><a href="anmeldung.html" class="btn btn--primary">Probetraining</a></div>
       </div>
     </nav>
@@ -318,9 +333,9 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=20" defer></script>
-  <script src="assets/js/mock-api.js?v=20" defer></script>
-  <script src="assets/js/main.js?v=20" defer></script>
-  <script src="assets/js/redaktion.js?v=20" defer></script>
+  <script src="assets/js/api-config.js?v=21" defer></script>
+  <script src="assets/js/mock-api.js?v=21" defer></script>
+  <script src="assets/js/main.js?v=21" defer></script>
+  <script src="assets/js/redaktion.js?v=21" defer></script>
 </body>
 </html>

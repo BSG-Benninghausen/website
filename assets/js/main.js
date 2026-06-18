@@ -21,9 +21,33 @@
     window.addEventListener("resize", () => { if (window.innerWidth > 900) close(); });
   }
 
+  /* ----- Konto-Dropdown ----- */
+  const userBtn = document.querySelector(".nav__user-btn");
+  const userMenu = document.querySelector(".nav__user");
+  if (userBtn && userMenu) {
+    const closeUser = () => {
+      userMenu.classList.remove("is-open");
+      userBtn.setAttribute("aria-expanded", "false");
+    };
+    userBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      userBtn.setAttribute("aria-expanded", String(userMenu.classList.toggle("is-open")));
+    });
+    document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) closeUser(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeUser(); });
+  }
+
+  /* ----- Abmelden (Navigation) ----- */
+  document.querySelectorAll("[data-logout]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
+      window.location.href = "index.html";
+    });
+  });
+
   /* ----- Aktiven Navigationspunkt markieren ----- */
   const here = location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll(".nav__links a").forEach((a) => {
+  document.querySelectorAll(".nav__links a, .nav__dropdown a").forEach((a) => {
     const target = a.getAttribute("href");
     if (target === here || (here === "index.html" && target === "index.html")) {
       a.classList.add("is-active");
@@ -52,19 +76,31 @@
     items.forEach((el) => el.classList.add("is-in"));
   }
 
-  /* ----- Konto-Link in der Navigation aktualisieren ----- */
+  /* ----- Konto-Bereich in der Navigation ----- */
   const accountLinks = document.querySelectorAll("[data-account-link]");
+  const accountMenu = document.querySelector("[data-account-menu]");
   const navHasManaged = document.querySelector("[data-admin-link], [data-redaktion-link], [data-members-link]");
-  if (accountLinks.length || navHasManaged) {
+  if (accountLinks.length || accountMenu || navHasManaged) {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
-        if (!d || !d.ok || !d.user) return;
-        accountLinks.forEach((a) => {
-          a.textContent = "Mein Konto";
-          a.setAttribute("href", "konto.html");
-          a.classList.add("nav__account--in");
-        });
+        if (!d || !d.ok || !d.user) return; // ausgeloggt: Login-Link bleibt sichtbar
+        accountLinks.forEach((a) => { a.hidden = true; });
+        if (accountMenu) {
+          accountMenu.hidden = false;
+          const name = (d.user.name || "").trim();
+          const nameEl = accountMenu.querySelector("[data-account-name]");
+          if (nameEl) nameEl.textContent = name.split(" ")[0] || "Konto";
+          const av = accountMenu.querySelector("[data-account-avatar]");
+          if (av) {
+            if (d.user.photo) {
+              av.style.backgroundImage = 'url("' + d.user.photo + '")';
+              av.classList.add("has-photo");
+            } else {
+              av.textContent = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+            }
+          }
+        }
         const has = (p) => d.isAdmin || (d.permissions && d.permissions.includes(p));
         const reveal = (sel) => document.querySelectorAll(sel).forEach((a) => { a.hidden = false; });
         if (has("manage_roles") || has("manage_users")) reveal("[data-admin-link]");

@@ -150,6 +150,59 @@ button { font: inherit; cursor: pointer; }
 .nav__links a.is-active { color: var(--indigo); background: var(--mist); }
 .nav__cta { margin-left: 10px; }
 
+/* Rechtes Cluster (Links + Konto + CTA) horizontal ausrichten */
+.nav__menu { display: flex; align-items: center; gap: 8px; }
+.nav__links { margin-right: auto; }
+
+/* Konto-Bereich: ausgeloggt = Login-Link, eingeloggt = Konto-Menü */
+.nav__account { position: relative; }
+.nav__login {
+  font-family: var(--font-display); font-weight: 500; font-size: .95rem;
+  padding: 9px 14px; border-radius: 999px; color: var(--text-soft);
+  transition: color .2s, background .2s;
+}
+.nav__login:hover { color: var(--indigo); background: var(--mist); }
+
+.nav__user { position: relative; }
+.nav__user-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 10px 5px 6px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; cursor: pointer;
+  font-family: var(--font-display); font-weight: 500; font-size: .92rem; color: var(--text);
+  transition: background .2s, border-color .2s;
+}
+.nav__user-btn:hover { background: var(--mist); }
+.nav__avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; background: var(--indigo); color: #fff;
+  font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+  background-size: cover; background-position: center;
+}
+.nav__avatar.has-photo { color: transparent; }
+.nav__user-name { max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav__chev { width: 16px; height: 16px; color: var(--text-soft); transition: transform .25s var(--ease); }
+.nav__user.is-open .nav__chev { transform: rotate(180deg); }
+
+.nav__dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 210px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); padding: 6px; margin: 0; list-style: none; z-index: 60;
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .2s, transform .2s, visibility .2s;
+}
+.nav__user.is-open .nav__dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.nav__dropdown li { margin: 0; }
+.nav__dropdown a, .nav__dropdown .nav__logout {
+  display: block; width: 100%; text-align: left; box-sizing: border-box;
+  padding: 10px 12px; border-radius: var(--radius-sm); border: 0; background: none;
+  font-family: var(--font-display); font-size: .92rem; font-weight: 500;
+  color: var(--text-soft); cursor: pointer; transition: color .2s, background .2s;
+}
+.nav__dropdown a:hover, .nav__dropdown a.is-active,
+.nav__dropdown .nav__logout:hover { color: var(--indigo); background: var(--mist); }
+.nav__dropdown-sep { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
+.nav__logout { color: var(--accent-dark); }
+
 .nav__toggle {
   display: none; width: 46px; height: 46px; border-radius: 12px;
   border: 1px solid var(--line); background: #fff; position: relative;
@@ -179,6 +232,17 @@ button { font: inherit; cursor: pointer; }
   .nav__links a { padding: 13px 14px; font-size: 1.05rem; }
   .nav__cta { margin: 8px 0 0; }
   .nav__cta .btn { width: 100%; justify-content: center; }
+
+  /* Konto-Bereich im Hamburger-Panel: flach, kein verschachteltes Toggle */
+  .nav__links { margin-right: 0; }
+  .nav__account, .nav__user { width: 100%; }
+  .nav__login { width: 100%; text-align: center; padding: 13px 14px; font-size: 1.05rem; }
+  .nav__user-btn { width: 100%; justify-content: flex-start; padding: 10px 12px; }
+  .nav__chev { display: none; }
+  .nav__dropdown {
+    position: static; min-width: 0; opacity: 1; visibility: visible; transform: none;
+    box-shadow: none; border: none; padding: 4px 0 0;
+  }
 }
 
 /* ----------  Hero  ---------- */
