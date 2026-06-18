@@ -36,6 +36,8 @@
 
   const BELTS = ["", "Weißgurt", "Weiß-Gelb", "Gelbgurt", "Gelb-Orange", "Orangegurt", "Orange-Grün", "Grüngurt", "Blaugurt", "Braungurt", "1. Dan (Schwarzgurt)", "2. Dan", "3. Dan", "4. Dan", "5. Dan"];
   const GENDERS = ["", "männlich", "weiblich", "divers"];
+  const WEIGHT_CLASSES = ["", "-60 kg", "-66 kg", "-73 kg", "-81 kg", "-90 kg", "-100 kg", "+100 kg", "-48 kg", "-52 kg", "-57 kg", "-63 kg", "-70 kg", "-78 kg", "+78 kg"];
+  const NATIONALITIES = ["", "Deutsch", "Österreichisch", "Schweizerisch", "Französisch", "Italienisch", "Spanisch", "Niederländisch", "Polnisch", "Türkisch", "Russisch", "Ukrainisch", "Britisch", "US-amerikanisch", "Brasilianisch", "Japanisch", "Andere"];
 
   /* Berechtigungs-Katalog (vom Admin auf Rollen verteilbar) */
   const PERMISSIONS = [
@@ -138,11 +140,7 @@
     setStore(KEYS.passCounter, n);
     return "BSG-" + String(n).padStart(4, "0");
   }
-  function parseWeight(v) {
-    if (v === undefined || v === null || norm(v) === "") return null;
-    const n = parseFloat(String(v).replace(",", "."));
-    return isNaN(n) ? NaN : n;
-  }
+  const fromList = (list, v) => (list.includes(v) ? v : "");
   // gemeinsame Validierung & Übernahme der editierbaren Profilfelder
   function memberProfile(body, errors) {
     if (norm(body.firstName).length < 2) errors.firstName = "Bitte Vornamen angeben.";
@@ -151,17 +149,16 @@
     if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
     else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
     if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Judopass).";
-    const weight = parseWeight(body.weight);
-    if (weight !== null && (isNaN(weight) || weight < 10 || weight > 250)) errors.weight = "Bitte ein gültiges Gewicht (10–250 kg) angeben.";
-    return { age, weight };
+    return { age };
   }
-  function memberFields(body, weight) {
+  function memberFields(body) {
     return {
       firstName: norm(body.firstName), lastName: norm(body.lastName), birthdate: norm(body.birthdate),
-      photo: body.photo, weight: weight,
-      belt: BELTS.includes(body.belt) ? body.belt : "",
-      gender: GENDERS.includes(body.gender) ? body.gender : "",
-      nationality: norm(body.nationality),
+      photo: body.photo,
+      weightClass: fromList(WEIGHT_CLASSES, body.weightClass),
+      belt: fromList(BELTS, body.belt),
+      gender: fromList(GENDERS, body.gender),
+      nationality: fromList(NATIONALITIES, body.nationality),
     };
   }
 
@@ -336,7 +333,7 @@
           id: m.id, firstName: m.firstName, lastName: m.lastName,
           categoryLabel: m.categoryLabel || "", individualFee: m.individualFee || 0,
           status: m.status, startedAt: m.startedAt,
-          photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weight: m.weight != null ? m.weight : null,
+          photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weightClass: m.weightClass || "",
           ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
         };
         if (fin) row.iban = owner.iban || null;
@@ -566,7 +563,7 @@
 
       const cfg = await loadData("membership-types.json");
       const errors = {};
-      const { age, weight } = memberProfile(body, errors);
+      const { age } = memberProfile(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
 
       const all = getStore(KEYS.memberships, []);
@@ -574,7 +571,7 @@
       const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
       const membership = {
         id: genId("mem"), userId: user.id,
-        ...memberFields(body, weight),
+        ...memberFields(body),
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
         passNumber: nextPassNumber(),
         status: "aktiv", startedAt: new Date().toISOString(),
@@ -592,13 +589,13 @@
 
       const cfg = await loadData("membership-types.json");
       const errors = {};
-      const { age, weight } = memberProfile(body, errors);
+      const { age } = memberProfile(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
 
       const band = bandForAge(age, cfg.ageBands) || cfg.ageBands[cfg.ageBands.length - 1];
       all[idx] = {
         ...all[idx],
-        ...memberFields(body, weight),
+        ...memberFields(body),
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
       };
       setStore(KEYS.memberships, all);

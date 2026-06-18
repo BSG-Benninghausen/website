@@ -89,7 +89,7 @@ Bereitgestellte Endpunkte:
   die Summe der Einzelbeiträge, wird er automatisch angesetzt (Beitragsübersicht im Dashboard).
 - **Mitglieder bearbeiten & Judopass:** Jedes Mitglied lässt sich bearbeiten
   (`POST /api/memberships/update`, nur Eigentümer) und wird als kleiner **Judopass** angezeigt.
-  Pflicht-**Foto** (clientseitig verkleinert, als Data-URL gespeichert) plus optional Gewicht,
+  Pflicht-**Foto** (clientseitig verkleinert, als Data-URL gespeichert) plus optional Gewichtsklasse,
   Gürtel/Graduierung, Geschlecht, Nationalität; automatische **Passnummer** (`bsg_pass_counter`).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_seed_version`, `bsg_pass_counter`.

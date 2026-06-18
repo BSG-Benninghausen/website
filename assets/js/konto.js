@@ -178,7 +178,7 @@
               row("Geboren", BSG.escape(birth)) +
               row("Klasse", BSG.escape(label)) +
               row("Gürtel", BSG.escape(m.belt || "—")) +
-              row("Gewicht", m.weight != null ? BSG.escape(m.weight) + " kg" : "—") +
+              row("Gewichtsklasse", m.weightClass ? BSG.escape(m.weightClass) : "—") +
               row("Beitrag", fee + " €/Mon.") +
               row("Mitglied seit", BSG.escape(since)) +
             "</div>" +
@@ -242,7 +242,7 @@
     }
     function openEdit(m) {
       editingId = m.id; clearErrors(mForm);
-      fill(mForm, { firstName: m.firstName, lastName: m.lastName, birthdate: m.birthdate, weight: m.weight ?? "", belt: m.belt || "", gender: m.gender || "", nationality: m.nationality || "" });
+      fill(mForm, { firstName: m.firstName, lastName: m.lastName, birthdate: m.birthdate, weightClass: m.weightClass || "", belt: m.belt || "", gender: m.gender || "", nationality: m.nationality || "" });
       setPhoto(m.photo || "");
       formTitle.textContent = "Mitglied bearbeiten"; submitLabel("Änderungen speichern");
       mForm.hidden = false; mForm.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -276,7 +276,7 @@
       const fd = Object.fromEntries(new FormData(mForm).entries());
       const payload = {
         firstName: fd.firstName, lastName: fd.lastName, birthdate: fd.birthdate,
-        weight: fd.weight, belt: fd.belt, gender: fd.gender, nationality: fd.nationality,
+        weightClass: fd.weightClass, belt: fd.belt, gender: fd.gender, nationality: fd.nationality,
         photo: currentPhoto,
       };
       if (editingId) payload.id = editingId;

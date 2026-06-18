@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=12">
+  <link rel="stylesheet" href="assets/css/styles.css?v=13">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -159,14 +159,51 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label for="m-weight">Gewicht (kg)</label>
-                  <input id="m-weight" name="weight" type="number" min="10" max="250" step="0.1" inputmode="decimal">
-                  <p class="field__error"></p>
+                  <label for="m-weightclass">Gewichtsklasse</label>
+                  <select id="m-weightclass" name="weightClass">
+                    <option value="">Keine Angabe</option>
+                    <optgroup label="Männer">
+                      <option>-60 kg</option>
+                      <option>-66 kg</option>
+                      <option>-73 kg</option>
+                      <option>-81 kg</option>
+                      <option>-90 kg</option>
+                      <option>-100 kg</option>
+                      <option>+100 kg</option>
+                    </optgroup>
+                    <optgroup label="Frauen">
+                      <option>-48 kg</option>
+                      <option>-52 kg</option>
+                      <option>-57 kg</option>
+                      <option>-63 kg</option>
+                      <option>-70 kg</option>
+                      <option>-78 kg</option>
+                      <option>+78 kg</option>
+                    </optgroup>
+                  </select>
                 </div>
               </div>
               <div class="field">
                 <label for="m-nat">Nationalität</label>
-                <input id="m-nat" name="nationality" type="text" placeholder="z. B. Deutsch">
+                <select id="m-nat" name="nationality">
+                  <option value="">Keine Angabe</option>
+                  <option>Deutsch</option>
+                  <option>Österreichisch</option>
+                  <option>Schweizerisch</option>
+                  <option>Französisch</option>
+                  <option>Italienisch</option>
+                  <option>Spanisch</option>
+                  <option>Niederländisch</option>
+                  <option>Polnisch</option>
+                  <option>Türkisch</option>
+                  <option>Russisch</option>
+                  <option>Ukrainisch</option>
+                  <option>Britisch</option>
+                  <option>US-amerikanisch</option>
+                  <option>Brasilianisch</option>
+                  <option>Japanisch</option>
+                  <option>Andere</option>
+                </select>
               </div>
               <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
                 <button type="submit" class="btn btn--primary">
@@ -272,8 +309,8 @@
     </div>
   </footer>
 
-  <script src="assets/js/mock-api.js?v=12" defer></script>
-  <script src="assets/js/main.js?v=12" defer></script>
-  <script src="assets/js/konto.js?v=12" defer></script>
+  <script src="assets/js/mock-api.js?v=13" defer></script>
+  <script src="assets/js/main.js?v=13" defer></script>
+  <script src="assets/js/konto.js?v=13" defer></script>
 </body>
 </html>
