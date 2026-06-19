@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=21">
+  <link rel="stylesheet" href="assets/css/styles.css?v=22">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -44,6 +44,10 @@
               <svg class="nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <ul class="nav__dropdown" id="account-menu" role="menu">
+              <li role="none" class="nav__dropdown-head" data-account-head hidden>
+                <strong data-account-fullname></strong>
+                <span data-account-email></span>
+              </li>
               <li role="none"><a role="menuitem" href="konto.html">Mein Konto</a></li>
               <li role="none"><a role="menuitem" href="mitglieder.html" data-members-link hidden>Mitglieder</a></li>
               <li role="none"><a role="menuitem" href="redaktion.html" data-redaktion-link hidden>Redaktion</a></li>
@@ -143,9 +147,9 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=21" defer></script>
-  <script src="assets/js/mock-api.js?v=21" defer></script>
-  <script src="assets/js/main.js?v=21" defer></script>
-  <script src="assets/js/mitglieder.js?v=21" defer></script>
+  <script src="assets/js/api-config.js?v=22" defer></script>
+  <script src="assets/js/mock-api.js?v=22" defer></script>
+  <script src="assets/js/main.js?v=22" defer></script>
+  <script src="assets/js/mitglieder.js?v=22" defer></script>
 </body>
 </html>

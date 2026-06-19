@@ -4,6 +4,12 @@
 (function () {
   "use strict";
 
+  /* ----- Auth-Snapshot-Cache (für sofortiges, sprungfreies Rendern der Navigation) ----- */
+  const AUTH_CACHE_KEY = "bsg_nav_auth";
+  const readAuthCache = () => { try { return JSON.parse(localStorage.getItem(AUTH_CACHE_KEY) || "null"); } catch (e) { return null; } };
+  const writeAuthCache = (s) => { try { s ? localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(s)) : localStorage.removeItem(AUTH_CACHE_KEY); } catch (e) {} };
+  window.BSGNavAuth = { write: writeAuthCache, clear: () => writeAuthCache(null) };
+
   /* ----- Mobile-Navigation ----- */
   const toggle = document.querySelector(".nav__toggle");
   const menu = document.querySelector(".nav__menu");
@@ -40,6 +46,7 @@
   /* ----- Abmelden (Navigation) ----- */
   document.querySelectorAll("[data-logout]").forEach((b) => {
     b.addEventListener("click", async () => {
+      writeAuthCache(null);
       try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
       window.location.href = "index.html";
     });
@@ -76,38 +83,61 @@
     items.forEach((el) => el.classList.add("is-in"));
   }
 
-  /* ----- Konto-Bereich in der Navigation ----- */
-  const accountLinks = document.querySelectorAll("[data-account-link]");
-  const accountMenu = document.querySelector("[data-account-menu]");
-  const navHasManaged = document.querySelector("[data-admin-link], [data-redaktion-link], [data-members-link]");
-  if (accountLinks.length || accountMenu || navHasManaged) {
+  /* ----- Konto-Bereich in der Navigation (idempotent, aus Cache + Live-Abgleich) ----- */
+  function applyAuth(s) {
+    const loginLinks = document.querySelectorAll("[data-account-link]");
+    const accMenu = document.querySelector("[data-account-menu]");
+    const setHidden = (sel, h) => document.querySelectorAll(sel).forEach((el) => { el.hidden = h; });
+    if (!s) { // ausgeloggt: Default-HTML (Login sichtbar, Menü/Verwaltung verborgen)
+      loginLinks.forEach((a) => { a.hidden = false; });
+      if (accMenu) accMenu.hidden = true;
+      setHidden("[data-members-link],[data-redaktion-link],[data-admin-link]", true);
+      return;
+    }
+    loginLinks.forEach((a) => { a.hidden = true; });
+    if (accMenu) {
+      accMenu.hidden = false;
+      const name = (s.name || "").trim();
+      const nameEl = accMenu.querySelector("[data-account-name]");
+      if (nameEl) nameEl.textContent = name.split(" ")[0] || "Konto";
+      const fullEl = accMenu.querySelector("[data-account-fullname]");
+      if (fullEl) fullEl.textContent = name;
+      const mailEl = accMenu.querySelector("[data-account-email]");
+      if (mailEl) mailEl.textContent = s.email || "";
+      const head = accMenu.querySelector("[data-account-head]");
+      if (head) head.hidden = !(name || s.email);
+      const av = accMenu.querySelector("[data-account-avatar]");
+      if (av) {
+        if (s.photo) {
+          av.style.backgroundImage = 'url("' + s.photo + '")';
+          av.classList.add("has-photo");
+          av.textContent = "";
+        } else {
+          av.classList.remove("has-photo");
+          av.style.backgroundImage = "";
+          av.textContent = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+        }
+      }
+    }
+    const has = (p) => s.isAdmin || (s.perms && s.perms.includes(p));
+    setHidden("[data-members-link]", !has("view_members"));
+    setHidden("[data-redaktion-link]", !(has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts")));
+    setHidden("[data-admin-link]", !(has("manage_roles") || has("manage_users")));
+  }
+
+  const navHasAccount = document.querySelector("[data-account-link], [data-account-menu], [data-admin-link], [data-redaktion-link], [data-members-link]");
+  if (navHasAccount) {
+    applyAuth(readAuthCache()); // sofortiger, synchroner Render -> kein Sprung
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
-        if (!d || !d.ok || !d.user) return; // ausgeloggt: Login-Link bleibt sichtbar
-        accountLinks.forEach((a) => { a.hidden = true; });
-        if (accountMenu) {
-          accountMenu.hidden = false;
-          const name = (d.user.name || "").trim();
-          const nameEl = accountMenu.querySelector("[data-account-name]");
-          if (nameEl) nameEl.textContent = name.split(" ")[0] || "Konto";
-          const av = accountMenu.querySelector("[data-account-avatar]");
-          if (av) {
-            if (d.user.photo) {
-              av.style.backgroundImage = 'url("' + d.user.photo + '")';
-              av.classList.add("has-photo");
-            } else {
-              av.textContent = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
-            }
-          }
-        }
-        const has = (p) => d.isAdmin || (d.permissions && d.permissions.includes(p));
-        const reveal = (sel) => document.querySelectorAll(sel).forEach((a) => { a.hidden = false; });
-        if (has("manage_roles") || has("manage_users")) reveal("[data-admin-link]");
-        if (has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts")) reveal("[data-redaktion-link]");
-        if (has("view_members")) reveal("[data-members-link]");
+        const snap = (d && d.ok && d.user)
+          ? { name: d.user.name || "", email: d.user.email || "", photo: d.user.photo || "", perms: d.permissions || [], isAdmin: !!d.isAdmin }
+          : null;
+        writeAuthCache(snap);
+        applyAuth(snap);
       })
-      .catch(() => {});
+      .catch(() => {}); // Netzfehler: optimistischen Zustand behalten
   }
 
   /* ----- Editierbare Startseiten-Texte anwenden ([data-site="key"]) ----- */

@@ -80,6 +80,10 @@
       });
       const d = await res.json();
       if (res.ok && d.ok) {
+        // Nav-Cache sofort setzen, damit die Folgeseite ohne Sprung eingeloggt rendert
+        if (window.BSGNavAuth && d.user) {
+          window.BSGNavAuth.write({ name: d.user.name || "", email: d.user.email || "", photo: d.user.photo || "", perms: [], isAdmin: false });
+        }
         setStatus(verifyForm, "ok", d.message || "Eingeloggt.");
         setTimeout(() => { window.location.href = "konto.html"; }, 600);
       } else {

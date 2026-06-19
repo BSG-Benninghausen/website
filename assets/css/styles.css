@@ -166,16 +166,16 @@ button { font: inherit; cursor: pointer; }
 .nav__user { position: relative; }
 .nav__user-btn {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 5px 10px 5px 6px; border-radius: 999px;
-  border: 1px solid var(--line); background: #fff; cursor: pointer;
-  font-family: var(--font-display); font-weight: 500; font-size: .92rem; color: var(--text);
-  transition: background .2s, border-color .2s;
+  padding: 5px 12px 5px 6px; border-radius: 999px;
+  border: 0; background: transparent; cursor: pointer;
+  font-family: var(--font-display); font-weight: 500; font-size: .95rem; color: var(--text-soft);
+  transition: background .2s, color .2s;
 }
-.nav__user-btn:hover { background: var(--mist); }
+.nav__user-btn:hover, .nav__user.is-open .nav__user-btn { background: var(--mist); color: var(--indigo); }
 .nav__avatar {
-  width: 30px; height: 30px; border-radius: 50%; flex: none;
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
   display: grid; place-items: center; background: var(--indigo); color: #fff;
-  font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+  font-size: .78rem; font-weight: 700; letter-spacing: .02em;
   background-size: cover; background-position: center;
 }
 .nav__avatar.has-photo { color: transparent; }
@@ -184,14 +184,17 @@ button { font: inherit; cursor: pointer; }
 .nav__user.is-open .nav__chev { transform: rotate(180deg); }
 
 .nav__dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 210px;
+  position: absolute; top: calc(100% + 10px); right: 0; min-width: 232px;
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
-  box-shadow: var(--shadow); padding: 6px; margin: 0; list-style: none; z-index: 60;
+  box-shadow: var(--shadow); padding: 8px; margin: 0; list-style: none; z-index: 60;
   opacity: 0; visibility: hidden; transform: translateY(-6px);
   transition: opacity .2s, transform .2s, visibility .2s;
 }
 .nav__user.is-open .nav__dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
 .nav__dropdown li { margin: 0; }
+.nav__dropdown-head { padding: 8px 12px 12px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.nav__dropdown-head strong { display: block; font-family: var(--font-display); font-weight: 600; font-size: .95rem; color: var(--text); }
+.nav__dropdown-head span { display: block; margin-top: 2px; font-size: .8rem; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav__dropdown a, .nav__dropdown .nav__logout {
   display: block; width: 100%; text-align: left; box-sizing: border-box;
   padding: 10px 12px; border-radius: var(--radius-sm); border: 0; background: none;
@@ -202,6 +205,17 @@ button { font: inherit; cursor: pointer; }
 .nav__dropdown .nav__logout:hover { color: var(--indigo); background: var(--mist); }
 .nav__dropdown-sep { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
 .nav__logout { color: var(--accent-dark); }
+
+/* Probetraining im Header dezent (Outline statt vollrotem Block) */
+.nav__cta .btn--primary {
+  background: transparent; color: var(--accent);
+  border: 1.5px solid currentColor; box-shadow: none;
+  padding: 8px 18px; font-size: .92rem;
+}
+.nav__cta .btn--primary:hover {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+  transform: none; box-shadow: none;
+}
 
 .nav__toggle {
   display: none; width: 46px; height: 46px; border-radius: 12px;
