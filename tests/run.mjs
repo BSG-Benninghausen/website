@@ -29,6 +29,12 @@ for (const f of files) {
   if (mode === "real" && mod.mockOnly) { console.log(`\n— ${title}: übersprungen (nur Mock) —`); continue; }
 
   const api = createClient({ mode, base });   // frischer Client je Suite (Isolation)
+  const resetRes = await api.reset();          // Real-Modus: Backend pro Suite frisch seeden (Mock: No-op)
+  if (mode === "real" && (!resetRes || !resetRes.ok)) {
+    console.error(`\nAbbruch: POST /api/test/reset fehlgeschlagen (Status: ${resetRes ? resetRes.status : "keine Antwort"}).`);
+    console.error(`Läuft unter ${base} ein Backend im Dev-Modus (BSG_DEV != 0)? Ohne Reset ist die Suite-Isolation nicht gewährleistet.`);
+    process.exit(1);
+  }
   let pass = 0, fail = 0;
   const ck = (n, c) => {
     if (c) { pass++; console.log("  ✓", n); }

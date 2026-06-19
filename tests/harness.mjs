@@ -114,6 +114,10 @@ export function createClient(opts = {}) {
     email: (local) => `${local}.${RUN_ID}@example.com`,
   };
 
+  // Pro-Suite-Isolation: im Real-Modus setzt der Runner den Backend-Store vor
+  // jeder Suite auf den Seed-Zustand zurück (das Pendant zur frischen Mock-Sandbox).
+  // Im Mock-Modus ist jede Suite ohnehin isoliert -> No-op.
+  api.reset = () => (mode === "real" ? api.post("/api/test/reset", {}) : Promise.resolve());
   api.logout = () => api.post("/api/auth/logout", {});
   api.register = (name, email) => api.post("/api/auth/register", { name, email, privacy: true });
   api.login = async (email) => {
