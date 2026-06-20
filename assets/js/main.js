@@ -166,6 +166,9 @@
       .then((d) => {
         if (!d || !d.ok || !d.values) return;
         const v = d.values;
+        // Nur http(s)-URLs als href zulassen (verhindert javascript:/data: o. Ä.
+        // aus fehlkonfigurierter/kompromittierter Club-Config).
+        const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");
         document.querySelectorAll("[data-club]").forEach((el) => {
           const val = v[el.getAttribute("data-club")];
           if (typeof val === "string" && val.trim()) el.textContent = val;
@@ -177,7 +180,8 @@
           if (v.email && v.email.trim()) el.setAttribute("href", "mailto:" + v.email);
         });
         document.querySelectorAll("[data-club-instagram]").forEach((el) => {
-          if (v.instagram_url && v.instagram_url.trim()) el.setAttribute("href", v.instagram_url);
+          const u = safeUrl(v.instagram_url);
+          if (u) el.setAttribute("href", u);
         });
       })
       .catch(() => {});

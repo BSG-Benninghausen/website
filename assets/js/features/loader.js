@@ -55,9 +55,13 @@ function apply(caps) {
 function hideAll() {
   document.querySelectorAll("[data-feature]").forEach((el) => { el.hidden = true; });
 }
-async function refresh() {
-  const cached = read();
-  if (cached) apply(cached); // optimistisch, flackerfrei
+async function refresh(failClosed) {
+  // Bei Auth-Wechsel fail-closed: alten Cache verwerfen und sofort ausblenden,
+  // bis frische, nutzer-spezifische Capabilities erfolgreich geladen sind.
+  // Beim Erstaufruf optimistisch aus dem Cache rendern (flackerfrei).
+  const cached = failClosed ? null : read();
+  if (failClosed) { write(null); hideAll(); }
+  else if (cached) apply(cached);
   try {
     const r = await fetch("/api/capabilities");
     const d = await r.json();
@@ -68,6 +72,6 @@ async function refresh() {
 
 if (document.querySelector("[data-feature]")) {
   refresh();
-  // Auth-Wechsel (Login/Logout) -> Capabilities neu holen (main.js feuert das Event).
-  window.addEventListener("bsg:auth-change", refresh);
+  // Auth-Wechsel (Login/Logout) -> fail-closed neu holen (main.js feuert das Event).
+  window.addEventListener("bsg:auth-change", () => refresh(true));
 }
