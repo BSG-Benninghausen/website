@@ -51,7 +51,12 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   `kassenwart`, `trainer`, Board-Rollen) sind **reine Rechte-Rollen**. Die öffentliche
   Team-Anzeige kommt aus **Vereinsämtern** (`positions`, Recht `manage_team`); `GET /api/team`
   rechnet `positions × users`.
-- **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Klassen).
+- **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Club/Klassen).
+- **Vereinsdaten/Branding (White-Label).** `GET /api/club` antwortet öffentlich
+  `{ ok, fields: [{key,label,type}], values: { <key>: string } }` (Seed aus `assets/data/club.json`);
+  `POST /api/club` `{ values: { <key>: string } }` speichert (nur bekannte Keys) und erfordert das
+  Recht `manage_club` (ohne Login → 401, ohne Recht → 403). Treibt im Frontend Name, Sport, Adresse,
+  Kontakt, Impressum & Logo über `[data-club="key"]`.
 - **Feature-Gating & Beta-Freigabe.** `GET /api/capabilities` antwortet **nutzer-spezifisch**
   `{ ok, features: { <key>: { status: "stable"|"beta", public: boolean } } }` und enthält nur
   Features, die der aktuelle Nutzer sehen darf (Reifegrad aus dem Feature-Katalog × Freigabe-Scope).

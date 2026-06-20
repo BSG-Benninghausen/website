@@ -35,6 +35,7 @@
     registrations: "bsg_registrations",
     training: "bsg_training",
     site: "bsg_site",
+    club: "bsg_club",
     payouts: "bsg_payouts",
     positions: "bsg_positions",
     demoVersion: "bsg_demo_version",
@@ -55,6 +56,7 @@
     { key: "manage_events", label: "Termine pflegen" },
     { key: "manage_training", label: "Trainingszeiten bearbeiten" },
     { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
+    { key: "manage_club", label: "Vereinsdaten & Branding bearbeiten (Name, Kontakt, Impressum)" },
     { key: "manage_team", label: "Team-Seite / Vereinsämter verwalten" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
@@ -172,6 +174,28 @@
     { key: "cta_text", label: "Call-to-Action · Text", type: "textarea" },
   ];
   const SITE_KEYS = SITE_FIELDS.map((f) => f.key);
+
+  /* ----- Vereinsdaten / Branding: Schema (White-Label-Config) -----
+     Treibt Name, Sport, Adresse, Kontakt, Impressum & Logo der gesamten Site
+     (Anwendung im Frontend über [data-club="key"], siehe main.js). Wird vom
+     SaaS-Backend pro Domain ausgeliefert; im Mock aus assets/data/club.json. */
+  const CLUB_FIELDS = [
+    { key: "brand_name", label: "Logo-Text (Kurzname im Header/Footer)", type: "text" },
+    { key: "name", label: "Vollständiger Vereinsname (rechtlich, Impressum)", type: "text" },
+    { key: "short_name", label: "Kurzname (App/PWA)", type: "text" },
+    { key: "sport", label: "Sportart", type: "text" },
+    { key: "brand_sub", label: "Logo-Unterzeile", type: "text" },
+    { key: "locality", label: "Ort", type: "text" },
+    { key: "email", label: "Kontakt-E-Mail", type: "text" },
+    { key: "instagram_url", label: "Instagram · URL", type: "text" },
+    { key: "instagram_handle", label: "Instagram · Handle", type: "text" },
+    { key: "venue", label: "Trainingsstätte", type: "text" },
+    { key: "street", label: "Straße & Hausnummer", type: "text" },
+    { key: "city", label: "PLZ & Ort", type: "text" },
+    { key: "description", label: "Kurzbeschreibung (Meta/SEO)", type: "textarea" },
+    { key: "logo", label: "Logo-Pfad/URL", type: "text" },
+  ];
+  const CLUB_KEYS = CLUB_FIELDS.map((f) => f.key);
 
   /* ----- IBAN-Prüfung inkl. Mod-97 ----- */
   function isIban(v) {
@@ -430,6 +454,12 @@
       grantF("vorstand"); grantF("vorsitz1");
       setStore(KEYS.seedVersion, 7);
     }
+    // Migration v8: Vereinsdaten-/Branding-Recht (White-Label) an Vorstand & 1. Vorsitzenden.
+    if (seedVersion < 8) {
+      const grantC = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_club")) r.permissions.push("manage_club"); };
+      grantC("vorstand"); grantC("vorsitz1");
+      setStore(KEYS.seedVersion, 8);
+    }
     setRoles(roles);
 
     const users = getUsers();
@@ -466,6 +496,11 @@
   async function ensureSite() {
     let values = getStore(KEYS.site, null);
     if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
+    return values;
+  }
+  async function ensureClub() {
+    let values = getStore(KEYS.club, null);
+    if (!values) { values = await loadData("club.json"); setStore(KEYS.club, values); }
     return values;
   }
   /* Beispiel-Stammdaten (Nutzer/Vereinsämter/Mitgliedschaften) einmalig einspielen.
@@ -659,6 +694,25 @@
       const out = {};
       SITE_FIELDS.forEach((f) => { out[f.key] = norm(stored[f.key]); });
       return json({ ok: true, values: out, message: "Startseiten-Texte gespeichert." });
+    },
+
+    /* ---------- Vereinsdaten / Branding (White-Label-Config) ---------- */
+    "GET /api/club": async () => {
+      const stored = await ensureClub();
+      const values = {};
+      CLUB_FIELDS.forEach((f) => { values[f.key] = norm(stored[f.key]); });
+      return json({ ok: true, fields: CLUB_FIELDS, values });
+    },
+    "POST /api/club": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_club")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const stored = await ensureClub();
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      CLUB_KEYS.forEach((k) => { if (k in values) stored[k] = norm(values[k]); });
+      setStore(KEYS.club, stored);
+      const out = {};
+      CLUB_FIELDS.forEach((f) => { out[f.key] = norm(stored[f.key]); });
+      return json({ ok: true, values: out, message: "Vereinsdaten gespeichert." });
     },
 
     "GET /api/events": async () => {

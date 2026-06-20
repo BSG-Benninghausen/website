@@ -16,15 +16,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=27">
+  <link rel="stylesheet" href="assets/css/theme.css?v=28">
+  <link rel="stylesheet" href="assets/css/styles.css?v=28">
 </head>
 <body>
   <header class="site-header">
     <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
     <nav class="nav wrap" aria-label="Hauptnavigation">
       <a href="index.html" class="brand">
-        <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42">
-        <span class="brand__name">BSG Benninghausen<small>Judo · Benninghausen</small></span>
+        <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
+        <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
       </a>
       <div class="nav__cta"><a href="index.html" class="btn btn--primary">Zur Startseite</a></div>
     </nav>
@@ -50,12 +51,12 @@
   <footer class="site-footer">
     <div class="wrap">
       <div class="footer-bottom" style="border-top:0">
-        <span>© <span data-year>2026</span> BSG Benninghausen e.V. · Judo in Benninghausen</span>
+        <span>© <span data-year>2026</span> <span data-club="name">BSG Benninghausen e.V.</span> · <span data-club="sport">Judo</span> in <span data-club="locality">Benninghausen</span></span>
         <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/main.js?v=27" defer></script>
+  <script src="assets/js/main.js?v=28" defer></script>
 </body>
 </html>

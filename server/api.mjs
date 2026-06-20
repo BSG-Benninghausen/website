@@ -33,6 +33,7 @@ const PERMISSIONS = [
   { key: "manage_events", label: "Termine pflegen" },
   { key: "manage_training", label: "Trainingszeiten bearbeiten" },
   { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
+  { key: "manage_club", label: "Vereinsdaten & Branding bearbeiten (Name, Kontakt, Impressum)" },
   { key: "manage_team", label: "Team-Seite / Vereinsämter verwalten" },
   { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
   { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
@@ -75,6 +76,26 @@ const SITE_FIELDS = [
   { key: "cta_text", label: "Call-to-Action · Text", type: "textarea" },
 ];
 const SITE_KEYS = SITE_FIELDS.map((f) => f.key);
+
+/* Vereinsdaten / Branding (White-Label-Config) – 1:1 zum Mock. Treibt Name,
+   Sport, Adresse, Kontakt, Impressum & Logo (Frontend via [data-club="key"]). */
+const CLUB_FIELDS = [
+  { key: "brand_name", label: "Logo-Text (Kurzname im Header/Footer)", type: "text" },
+  { key: "name", label: "Vollständiger Vereinsname (rechtlich, Impressum)", type: "text" },
+  { key: "short_name", label: "Kurzname (App/PWA)", type: "text" },
+  { key: "sport", label: "Sportart", type: "text" },
+  { key: "brand_sub", label: "Logo-Unterzeile", type: "text" },
+  { key: "locality", label: "Ort", type: "text" },
+  { key: "email", label: "Kontakt-E-Mail", type: "text" },
+  { key: "instagram_url", label: "Instagram · URL", type: "text" },
+  { key: "instagram_handle", label: "Instagram · Handle", type: "text" },
+  { key: "venue", label: "Trainingsstätte", type: "text" },
+  { key: "street", label: "Straße & Hausnummer", type: "text" },
+  { key: "city", label: "PLZ & Ort", type: "text" },
+  { key: "description", label: "Kurzbeschreibung (Meta/SEO)", type: "textarea" },
+  { key: "logo", label: "Logo-Pfad/URL", type: "text" },
+];
+const CLUB_KEYS = CLUB_FIELDS.map((f) => f.key);
 
 // Rollen sind reine Rechte-Objekte; die öffentliche Team-Anzeige läuft über Vereinsämter (positions).
 const EXAMPLE_ROLES = [
@@ -339,6 +360,12 @@ export function createApi({ dataDir, dev = true }) {
       grant("vorsitz1", ["manage_features"]);
       db.seedVersion = 7;
     }
+    // Migration v8: Vereinsdaten-/Branding-Recht (White-Label) an Vorstand & 1. Vorsitzenden.
+    if (db.seedVersion < 8) {
+      grant("vorstand", ["manage_club"]);
+      grant("vorsitz1", ["manage_club"]);
+      db.seedVersion = 8;
+    }
 
     if (!db.users.some((u) => u.email === ADMIN_EMAIL)) {
       db.users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
@@ -353,6 +380,7 @@ export function createApi({ dataDir, dev = true }) {
     db.events = loadJSON("events.json");
     db.training = loadJSON("trainingszeiten.json");
     db.site = loadJSON("site.json");
+    db.club = loadJSON("club.json");
     db.registrations = []; db.payouts = []; db.codes = {}; db.passCounter = 0; db.seedVersion = 0;
     db.positions = [];
     db.featureFlags = {};
@@ -523,6 +551,22 @@ export function createApi({ dataDir, dev = true }) {
       const out = {};
       SITE_FIELDS.forEach((f) => { out[f.key] = norm(db.site[f.key]); });
       return J({ ok: true, values: out, message: "Startseiten-Texte gespeichert." });
+    },
+
+    /* ---------- Vereinsdaten / Branding (White-Label-Config) ---------- */
+    "GET /api/club": async () => {
+      const values = {};
+      CLUB_FIELDS.forEach((f) => { values[f.key] = norm(db.club[f.key]); });
+      return J({ ok: true, fields: CLUB_FIELDS, values });
+    },
+    "POST /api/club": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_club")) return deny(user);
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      CLUB_KEYS.forEach((k) => { if (k in values) db.club[k] = norm(values[k]); });
+      const out = {};
+      CLUB_FIELDS.forEach((f) => { out[f.key] = norm(db.club[f.key]); });
+      return J({ ok: true, values: out, message: "Vereinsdaten gespeichert." });
     },
 
     /* ---------- Termine ---------- */

@@ -17,7 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=27">
+  <link rel="stylesheet" href="assets/css/theme.css?v=28">
+  <link rel="stylesheet" href="assets/css/styles.css?v=28">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -26,8 +27,8 @@
     <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
     <nav class="nav wrap" aria-label="Hauptnavigation">
       <a href="index.html" class="brand">
-        <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42">
-        <span class="brand__name">BSG Benninghausen<small>Judo · Benninghausen</small></span>
+        <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
+        <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
       </a>
       <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
       <div class="nav__menu" id="nav-menu">
@@ -128,8 +129,8 @@
       <div class="footer-grid">
         <div class="footer-about">
           <a href="index.html" class="brand">
-            <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42">
-            <span class="brand__name">BSG Benninghausen<small>Judo · Benninghausen</small></span>
+            <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
+            <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
           </a>
           <p>Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
           <div class="socials">
@@ -158,22 +159,22 @@
         <div class="footer-col">
           <h4>Training</h4>
           <ul>
-            <li>Sporthalle Grundschule Benninghausen</li>
-            <li>Im Brühl 29, 59556 Lippstadt</li>
+            <li data-club="venue">Sporthalle Grundschule Benninghausen</li>
+            <li><span data-club="street">Im Brühl 29</span>, <span data-club="city">59556 Lippstadt</span></li>
             <li>Mittwochs &amp; freitags</li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span data-year>2026</span> BSG Benninghausen e.V. · Judo in Benninghausen</span>
+        <span>© <span data-year>2026</span> <span data-club="name">BSG Benninghausen e.V.</span> · <span data-club="sport">Judo</span> in <span data-club="locality">Benninghausen</span></span>
         <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=27" defer></script>
-  <script src="assets/js/mock-api.js?v=27" defer></script>
-  <script src="assets/js/main.js?v=27" defer></script>
-  <script src="assets/js/auth.js?v=27" defer></script>
+  <script src="assets/js/api-config.js?v=28" defer></script>
+  <script src="assets/js/mock-api.js?v=28" defer></script>
+  <script src="assets/js/main.js?v=28" defer></script>
+  <script src="assets/js/auth.js?v=28" defer></script>
 </body>
 </html>

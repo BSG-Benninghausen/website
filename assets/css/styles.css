@@ -1,51 +1,12 @@
 /* =====================================================================
    BSG Benninghausen e.V. – Design System & Styles
    Plain CSS, keine Build-Tools. Mobile-first.
+
+   Design-Tokens (Farben, Schrift, Maße) liegen in der austauschbaren
+   Marken-Schicht assets/css/theme.css (vor dieser Datei geladen). Diese
+   Datei enthält nur Struktur und referenziert ausschließlich die
+   dort definierten Custom Properties.
    ===================================================================== */
-
-/* ----------  Design Tokens  ---------- */
-:root {
-  /* Farben – Anlehnung an Judo-Gürtel & Tatami */
-  --night: #1b1822;         /* dunkles Anthrazit (weniger reines Schwarz) */
-  --night-2: #272431;
-  --ink: #1a1620;
-  --indigo: #2a2632;        /* dunkles Slate (Text-Akzent) */
-  --indigo-2: #3c3540;
-
-  --accent: #e3141b;        /* Drachen-Rot (Flamme) */
-  --accent-dark: #ab0d12;
-  --accent-bright: #ff4a4f; /* helles Rot für dunkle Flächen */
-  --gold: #f3b836;          /* Gold-Akzent (warm) */
-  --mat: #e3141b;           /* einheitliches Rot */
-
-  --sand: #f6f2e9;          /* helle Tatami-Fläche */
-  --paper: #ffffff;
-  --mist: #f4f5fb;
-  --line: #e6e7f1;
-
-  --text: #1c2030;
-  --text-soft: #565a72;
-  --text-invert: #f3f4ff;
-  --text-invert-soft: #b9bce0;
-
-  /* Maße */
-  --maxw: 1180px;
-  --radius: 18px;
-  --radius-sm: 12px;
-  --radius-lg: 28px;
-
-  --shadow-sm: 0 2px 8px rgba(13, 16, 48, .06);
-  --shadow: 0 14px 40px rgba(13, 16, 48, .12);
-  --shadow-lg: 0 30px 70px rgba(13, 16, 48, .22);
-
-  --gradient: linear-gradient(135deg, var(--accent-bright), var(--accent-dark));
-  --gradient-night: radial-gradient(125% 125% at 80% -10%, #3a2030 0%, var(--night) 60%);
-
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Sora", var(--font-body);
-
-  --ease: cubic-bezier(.16, .84, .44, 1);
-}
 
 /* ----------  Reset  ---------- */
 *, *::before, *::after { box-sizing: border-box; }

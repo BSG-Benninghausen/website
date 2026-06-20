@@ -158,6 +158,31 @@
       .catch(() => {});
   }
 
+  /* ----- Vereinsdaten / Branding anwenden (White-Label, [data-club*]) ----- */
+  const clubEls = document.querySelectorAll("[data-club], [data-club-logo], [data-club-mail], [data-club-instagram]");
+  if (clubEls.length) {
+    fetch("/api/club")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || !d.ok || !d.values) return;
+        const v = d.values;
+        document.querySelectorAll("[data-club]").forEach((el) => {
+          const val = v[el.getAttribute("data-club")];
+          if (typeof val === "string" && val.trim()) el.textContent = val;
+        });
+        document.querySelectorAll("[data-club-logo]").forEach((el) => {
+          if (v.logo && v.logo.trim()) el.setAttribute("src", v.logo);
+        });
+        document.querySelectorAll("[data-club-mail]").forEach((el) => {
+          if (v.email && v.email.trim()) el.setAttribute("href", "mailto:" + v.email);
+        });
+        document.querySelectorAll("[data-club-instagram]").forEach((el) => {
+          if (v.instagram_url && v.instagram_url.trim()) el.setAttribute("href", v.instagram_url);
+        });
+      })
+      .catch(() => {});
+  }
+
   /* ----- Service Worker registrieren (PWA / Offline) ----- */
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

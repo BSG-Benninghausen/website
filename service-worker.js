@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v27";
+const VERSION = "v28";
 const CACHE = "bsg-cache-" + VERSION;
 const RUNTIME = "bsg-runtime-" + VERSION;
 const OFFLINE_URL = "offline.html";
@@ -40,6 +40,7 @@ const PRECACHE_URLS = [
   "offline.html",
   "manifest.webmanifest",
 
+  "assets/css/theme.css?v=" + VERSION.slice(1),
   "assets/css/styles.css?v=" + VERSION.slice(1),
 
   "assets/js/api-config.js?v=" + VERSION.slice(1),
@@ -64,6 +65,7 @@ const PRECACHE_URLS = [
   "assets/data/membership-types.json",
   "assets/data/news.json",
   "assets/data/site.json",
+  "assets/data/club.json",
   "assets/data/trainingszeiten.json",
 
   "assets/img/drache.png",

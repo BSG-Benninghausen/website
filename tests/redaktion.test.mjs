@@ -5,7 +5,7 @@ export const name = "Redaktion (Trainingszeiten / Startseite / News-Bild)";
 export default async function run(api, ck) {
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("12 Berechtigungen inkl. Content-Rechte", d.items.length === 12 && ["manage_training", "manage_site", "manage_team"].every((k) => d.items.some((p) => p.key === k)));
+  ck("13 Berechtigungen inkl. Content-Rechte", d.items.length === 13 && ["manage_training", "manage_site", "manage_team"].every((k) => d.items.some((p) => p.key === k)));
   [s, d] = await api.getJ("/api/roles");
   const role = (id) => d.items.find((r) => r.id === id);
   ck("trainer hat manage_training", role("trainer").permissions.includes("manage_training"));

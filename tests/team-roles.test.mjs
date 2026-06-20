@@ -5,7 +5,7 @@ export const name = "Vereinsämter (positions) getrennt von Berechtigungs-Rollen
 export default async function run(api, ck) {
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("12 Rechte inkl. manage_team", d.items.length === 12 && d.items.some((p) => p.key === "manage_team"));
+  ck("13 Rechte inkl. manage_team", d.items.length === 13 && d.items.some((p) => p.key === "manage_team"));
 
   // Rollen sind reine Rechte-Objekte (keine Team-Felder mehr)
   [s, d] = await api.getJ("/api/roles");
