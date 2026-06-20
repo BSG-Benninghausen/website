@@ -38,7 +38,8 @@
     can.users = me.isAdmin || me.permissions.includes("manage_users");
     can.team = me.isAdmin || me.permissions.includes("manage_team");
     can.features = me.isAdmin || me.permissions.includes("manage_features");
-    if (!can.roles && !can.users && !can.team && !can.features) { window.location.href = "konto.html"; return; }
+    can.booking = me.isAdmin || me.permissions.includes("book_features");
+    if (!can.roles && !can.users && !can.team && !can.features && !can.booking) { window.location.href = "konto.html"; return; }
 
     $("#admin-loading").hidden = true;
     $("#admin").hidden = false;
@@ -62,6 +63,10 @@
     if (can.features) {
       await loadFeatures();
       $("#features-section").hidden = false;
+    }
+    if (can.booking) {
+      await loadBookings();
+      $("#booking-section").hidden = false;
     }
     wireEvents();
   }
@@ -207,6 +212,28 @@
 
   const checkedValues = (scope) => [...scope.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value);
 
+  /* ---------- Funktionen buchen (Provisionierung) ---------- */
+  async function loadBookings() {
+    try {
+      const data = await (await fetch("/api/bookings")).json();
+      renderBookings(data.items || []);
+    } catch (e) {
+      $("#booking-list").innerHTML = '<p class="load-error">Buchungen konnten nicht geladen werden.</p>';
+    }
+  }
+  function renderBookings(items) {
+    $("#booking-list").innerHTML = items.length ? items.map((f) => {
+      const statusBadge = f.status === "beta" ? ' <span class="badge badge--beta">Beta</span>' : "";
+      return (
+        '<div class="adm-role" data-booking-key="' + f.key + '">' +
+          '<div class="adm-role__head"><div><b>' + BSG.escape(f.label) + "</b>" + statusBadge + "</div></div>" +
+          '<label class="perm-check"><input type="checkbox" data-book-toggle' + (f.booked ? " checked" : "") + "> Gebucht (für diesen Verein freigeschaltet)</label>" +
+          '<button class="btn btn--primary btn--sm" data-save-booking="' + f.key + '">Buchung speichern</button>' +
+        "</div>"
+      );
+    }).join("") : '<p class="muted-note">Keine Funktionen vorhanden.</p>';
+  }
+
   function wireEvents() {
     // Neue Rolle anlegen
     const createForm = $("#role-create-form");
@@ -279,6 +306,7 @@
       const savePos = e.target.closest("[data-save-position]");
       const delPos = e.target.closest("[data-del-position]");
       const saveFeat = e.target.closest("[data-save-feature]");
+      const saveBooking = e.target.closest("[data-save-booking]");
 
       if (saveFeat) {
         const card = saveFeat.closest("[data-feature-key]");
@@ -287,6 +315,14 @@
         const { res, data } = await postJSON("/api/features/release", { key: saveFeat.getAttribute("data-save-feature"), release });
         toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
         if (res.ok && data.ok) await loadFeatures();
+      }
+
+      if (saveBooking) {
+        const card = saveBooking.closest("[data-booking-key]");
+        const booked = !!(card.querySelector("[data-book-toggle]") || {}).checked;
+        const { res, data } = await postJSON("/api/features/book", { key: saveBooking.getAttribute("data-save-booking"), booked });
+        toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
+        if (res.ok && data.ok) await loadBookings();
       }
 
       if (saveRole) {

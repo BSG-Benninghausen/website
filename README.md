@@ -86,6 +86,7 @@ Bereitgestellte Endpunkte:
 | `GET /api/payouts` · `POST /api/payouts` · `POST /api/payouts/cancel` | Überweisungen der Teilnahmegebühren an den Veranstalter (Recht `manage_payouts`) |
 | `GET /api/capabilities` | **Nutzer-spezifisch:** welche Features darf dieser Nutzer sehen (`{ <key>: { status, public } }`) – steuert Gating & Beta-Badges im Frontend |
 | `GET /api/features` · `POST /api/features/release` | Feature-Katalog + Beta-Freigabe lesen · Scope setzen (`public`/`off`/Rollen) (Recht `manage_features`) |
+| `GET /api/bookings` · `POST /api/features/book` | Buchung/Provisionierung lesen · Feature für den Verein buchen/entbuchen (`{key,booked}`, Recht `book_features`). Nicht gebuchte Features fehlen für alle in `/api/capabilities` (gebucht × freigegeben) |
 
 > Es findet **kein echter Datenversand** statt. Formulareingaben werden nur lokal im
 > Browser gespeichert (Demo-Zweck).
@@ -126,7 +127,7 @@ Bereitgestellte Endpunkte:
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
   `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`,
-  `manage_payouts`, `manage_features`.
+  `manage_payouts`, `manage_features`, `book_features`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
   Startseiten-Texte, Vereinsdaten/Branding, Vereinsämter) ist einzeln zuweisbar.
 - **Vereinsämter ≠ Rollen:** Rollen geben **ausschließlich Rechte**; die öffentliche

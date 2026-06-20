@@ -68,17 +68,17 @@ Loader `assets/js/features/loader.js`). Damit erfüllt der heutige Stand bereits
 „gemocktes Feature nur dem Vorstand zum Testen zeigen, nicht den Mitgliedern" — exakt
 `release: { roles: ["vorstand"] }`.
 
-**Was die Buchungs-Schicht ergänzt:**
+**Was die Buchungs-Schicht ergänzt (P3, umgesetzt):**
 
-1. **Provisioning-Store** pro Mandant: Menge der **gebuchten** Feature-Keys (aus dem Tarif).
-   Im Mock self-service / alle gebucht; im realen Backend aus Abo/Billing abgeleitet.
-2. **`GET /api/capabilities` filtert zusätzlich** gegen die gebuchten Keys: ein nicht gebuchtes
-   Feature ist für **alle** unsichtbar (auch für `manage_features`), unabhängig vom Freigabe-Scope.
-   Reihenfolge: `gebucht?` → dann `Backend implementiert (FEATURES-Katalog)?` → dann
-   `freigegeben für diesen Nutzer?`.
-3. **Neues Recht `book_features`** + `POST /api/features/book` `{ key, booked }`: erlaubt einem
-   Vereins-Admin, im Rahmen seines Tarifs Features selbst zu buchen/abzubestellen. Im realen
-   SaaS durch Abo-Grenzen/Billing gegated (Upgrade nötig), im Mock frei.
+1. **Provisioning-Store** pro Mandant (`bsg_feature_bookings` / `db.featureBookings`): Buchung je
+   Feature-Key. Default **gebucht** (`FEATURE_DEFAULT_BOOKED`), daher für BSG unverändert; im realen
+   Backend künftig aus Abo/Billing abgeleitet.
+2. **`GET /api/capabilities` filtert gebucht × freigegeben:** ein nicht gebuchtes Feature ist für
+   **alle** unsichtbar (auch für `manage_features`-Vorschau), unabhängig vom Freigabe-Scope —
+   der Buchungs-Gate greift **vor** `canSeeFeature`.
+3. **Recht `book_features`** + `GET /api/bookings` + `POST /api/features/book` `{ key, booked }`:
+   Verwaltung über Admin → „Funktionen buchen". Im Mock self-service; im realen SaaS später durch
+   Abo-Grenzen/Billing gegated (Upgrade nötig, P4).
 
 So bleibt die Trennung sauber: **Anbieter** bestimmt *Verfügbarkeit* (Buchung), **Vereins-Admin**
 bestimmt *Sichtbarkeit* (Freigabe an `public`/Rollen).
@@ -118,7 +118,7 @@ eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
 |---|---|---|
 | **P1 White-Label-Extraktion** | `club.json` + `GET/POST /api/club`, `[data-club]`, `theme.css`, Recht `manage_club`, generische Defaults, Contract-Test | **umgesetzt (diese Iteration)** |
 | **P2 Branding pro Domain** | Dynamisches `manifest.webmanifest` (Backend, `/api/manifest`) + client-seitiges `<title>`/`theme-color`/App-Titel aus `/api/club`; Felder `tagline`/`theme_color` | **umgesetzt** (offen: Crawler-SEO-Templating, per-Verein-Icon-Dateien) |
-| **P3 Feature-Buchung mocken** | Provisioning-Store + Recht `book_features` + `POST /api/features/book`; `capabilities` filtert gebucht×freigegeben | offen |
+| **P3 Feature-Buchung mocken** | Provisioning-Store (`bsg_feature_bookings`) + Recht `book_features` + `GET /api/bookings`/`POST /api/features/book` + Admin-UI „Funktionen buchen"; `capabilities` filtert gebucht×freigegeben | **umgesetzt** (offen: Abo/Billing-Gating, P4) |
 | **P4 Mehrmandanten-Backend** | Host-basierte Mandantenauflösung, DB-Persistenz, Onboarding, Billing-Anbindung | offen |
 | **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |
 

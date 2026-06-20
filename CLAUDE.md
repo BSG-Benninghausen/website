@@ -121,6 +121,14 @@ elements: hides the un-granted ones and — crucially for isolation — only **d
 a feature's module (`assets/js/features/<key>.js`, default-exports `init(rootEl)`) when granted, so
 disabled feature code never runs and can't break stable features. Badges (`.badge--beta`/`--intern`)
 go into a `[data-feature-badge]` slot. Manage releases under Admin → „Features & Beta-Freigabe".
+A **third, orthogonal axis** sits *above* release: **booking/provisioning** (which features are even
+provisioned for this tenant/tarif). Permission `book_features` + store `bsg_feature_bookings` /
+`db.featureBookings` + routes `GET /api/bookings` / `POST /api/features/book` `{key,booked}` (Admin →
+„Funktionen buchen"). `FEATURE_DEFAULT_BOOKED` defaults to booked, so nothing changes until a feature
+is un-booked. `GET /api/capabilities` filters **booked × released**: an un-booked feature is hidden
+for **everyone** (even the `manage_features` preview), regardless of scope — the booking gate runs
+*before* `canSeeFeature`. In the mock this is self-service; a real SaaS would gate booking by
+subscription/billing (a later phase). See `docs/productization-saas-plan.md`.
 
 ### Domain config templates
 `assets/data/age-classes.json` and `weight-classes.json` are editable, club-adjustable templates that

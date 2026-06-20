@@ -40,6 +40,7 @@ const PERMISSIONS = [
   { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
   { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
   { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
+  { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
 ];
 const ALL_PERMS = PERMISSIONS.map((p) => p.key);
 const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
@@ -54,6 +55,8 @@ const FEATURES = [
 ];
 const FEATURE_KEYS = FEATURES.map((f) => f.key);
 const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", beitragsrechner: "off" };
+// Default-Buchung (Provisionierung) – 1:1 zum Mock; standardmäßig gebucht.
+const FEATURE_DEFAULT_BOOKED = { payouts: true, tournaments: true, beitragsrechner: true };
 const normalizeScope = (release, validRoleIds) => {
   if (release === "public" || release === "off") return release;
   const arr = Array.isArray(release) ? release : (release && Array.isArray(release.roles) ? release.roles : null);
@@ -308,6 +311,7 @@ export function createApi({ dataDir, dev = true }) {
 
   /* ----- Feature-Freigabe (Beta-Steuerung pro Gruppe), 1:1 zum Mock ----- */
   const scopeFor = (key) => (key in db.featureFlags ? db.featureFlags[key] : (FEATURE_DEFAULT_SCOPE[key] || "off"));
+  const isBooked = (key) => (key in db.featureBookings ? !!db.featureBookings[key] : (FEATURE_DEFAULT_BOOKED[key] ?? true));
   function canSeeFeature(user, scope) {
     if (scope === "public") return true;
     if (hasPerm(user, "manage_features")) return true;
@@ -389,6 +393,12 @@ export function createApi({ dataDir, dev = true }) {
       grant("vorsitz1", ["manage_club"]);
       db.seedVersion = 8;
     }
+    // Migration v9: Provisionierungs-Recht (Funktionen buchen) an Vorstand & 1. Vorsitzenden.
+    if (db.seedVersion < 9) {
+      grant("vorstand", ["book_features"]);
+      grant("vorsitz1", ["book_features"]);
+      db.seedVersion = 9;
+    }
 
     if (!db.users.some((u) => u.email === ADMIN_EMAIL)) {
       db.users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
@@ -407,6 +417,7 @@ export function createApi({ dataDir, dev = true }) {
     db.registrations = []; db.payouts = []; db.codes = {}; db.passCounter = 0; db.seedVersion = 0;
     db.positions = [];
     db.featureFlags = {};
+    db.featureBookings = {};
     sessions.clear();
     seed();
     seedDemo();
@@ -762,6 +773,7 @@ export function createApi({ dataDir, dev = true }) {
       const user = ctx.currentUser();
       const features = {};
       FEATURES.forEach((f) => {
+        if (!isBooked(f.key)) return; // nicht gebucht -> für den Mandanten nicht existent
         const scope = scopeFor(f.key);
         if (canSeeFeature(user, scope)) features[f.key] = { status: f.status, public: scope === "public" };
       });
@@ -782,6 +794,20 @@ export function createApi({ dataDir, dev = true }) {
       if (scope === null) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { release: "Ungültige Freigabe." } }, 422);
       db.featureFlags[body.key] = scope;
       return J({ ok: true, key: body.key, scope, message: "Freigabe gespeichert." });
+    },
+    "GET /api/bookings": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "book_features")) return deny(user);
+      const items = FEATURES.map((f) => ({ key: f.key, label: f.label, status: f.status, booked: isBooked(f.key) }));
+      return J({ ok: true, items });
+    },
+    "POST /api/features/book": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "book_features")) return deny(user);
+      if (!FEATURE_KEYS.includes(body.key)) return J({ ok: false, message: "Unbekanntes Feature." }, 404);
+      if (typeof body.booked !== "boolean") return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { booked: "Buchung muss true/false sein." } }, 422);
+      db.featureBookings[body.key] = body.booked;
+      return J({ ok: true, key: body.key, booked: body.booked, message: "Buchung gespeichert." });
     },
     "GET /api/roles": async (_body, ctx) => {
       const user = ctx.currentUser();

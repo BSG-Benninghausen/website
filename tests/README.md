@@ -70,6 +70,12 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   Rollen-Array `["roleId", …]`). Scope-Regeln: `public` → alle; `{roles}` → Nutzer mit passender
   Rolle *oder* `manage_features` (Vorschau); `off` → nur `manage_features`. Unbekanntes Feature → 404,
   ungültiger `release` → 422.
+- **Feature-Buchung / Provisionierung.** Dritte Achse über dem Gating: `GET /api/bookings`
+  (Recht `book_features`) liefert `{ ok, items: [{key,label,status,booked}] }`; `POST /api/features/book`
+  `{ key, booked: boolean }` bucht/entbucht ein Feature für den Mandanten. **`GET /api/capabilities`
+  filtert gebucht × freigegeben:** ein nicht gebuchtes Feature fehlt für **alle** (auch in der
+  `manage_features`-Vorschau), unabhängig vom Scope. Default ist **gebucht** (Response-Shape der
+  capabilities unverändert). Unbekanntes Feature → 404, `booked` kein Boolean → 422.
 - Die Tests verwenden **pro Lauf eindeutige E-Mail-Adressen** (`local.<RUN_ID>@example.com`) und
   zählen relativ, damit sie auch gegen ein persistentes Backend mehrfach laufen können.
 - **Test-/Dev-Endpoint `POST /api/test/reset`** (nur Dev-Modus): setzt den Store auf den

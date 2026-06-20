@@ -40,6 +40,7 @@
     positions: "bsg_positions",
     demoVersion: "bsg_demo_version",
     featureFlags: "bsg_feature_flags",
+    featureBookings: "bsg_feature_bookings",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -63,6 +64,7 @@
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
     { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
     { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
+    { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
@@ -80,6 +82,9 @@
   const FEATURE_KEYS = FEATURES.map((f) => f.key);
   // Default-Freigabe je Feature (greift, solange der Superadmin nichts gesetzt hat).
   const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", beitragsrechner: "off" };
+  // Default-Buchung (Provisionierung) je Feature: standardmäßig gebucht -> für BSG unverändert.
+  // Der echte SaaS-Betrieb leitet dies aus dem gebuchten Tarif ab (später, P4).
+  const FEATURE_DEFAULT_BOOKED = { payouts: true, tournaments: true, beitragsrechner: true };
 
   const realFetch = window.fetch.bind(window);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -368,6 +373,12 @@
      {roles} nur, wenn der Nutzer eine der Rollen hält. */
   const getFeatureFlags = () => getStore(KEYS.featureFlags, null) || {};
   const setFeatureFlags = (f) => setStore(KEYS.featureFlags, f);
+  const getFeatureBookings = () => getStore(KEYS.featureBookings, null) || {};
+  const setFeatureBookings = (b) => setStore(KEYS.featureBookings, b);
+  function isBooked(key, bookings) {
+    const b = bookings || getFeatureBookings();
+    return (key in b) ? !!b[key] : (FEATURE_DEFAULT_BOOKED[key] ?? true);
+  }
   function scopeFor(key, flags) {
     const f = flags || getFeatureFlags();
     return (key in f) ? f[key] : (FEATURE_DEFAULT_SCOPE[key] || "off");
@@ -483,6 +494,12 @@
       const grantC = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_club")) r.permissions.push("manage_club"); };
       grantC("vorstand"); grantC("vorsitz1");
       setStore(KEYS.seedVersion, 8);
+    }
+    // Migration v9: Provisionierungs-Recht (Funktionen buchen) an Vorstand & 1. Vorsitzenden.
+    if (seedVersion < 9) {
+      const grantB = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("book_features")) r.permissions.push("book_features"); };
+      grantB("vorstand"); grantB("vorsitz1");
+      setStore(KEYS.seedVersion, 9);
     }
     setRoles(roles);
 
@@ -928,8 +945,10 @@
     "GET /api/capabilities": async () => {
       const user = currentUser();
       const flags = getFeatureFlags();
+      const bookings = getFeatureBookings();
       const features = {};
       FEATURES.forEach((f) => {
+        if (!isBooked(f.key, bookings)) return; // nicht gebucht -> für den Mandanten nicht existent
         const scope = scopeFor(f.key, flags);
         if (canSeeFeature(user, scope)) features[f.key] = { status: f.status, public: scope === "public" };
       });
@@ -954,6 +973,24 @@
       flags[body.key] = scope;
       setFeatureFlags(flags);
       return json({ ok: true, key: body.key, scope, message: "Freigabe gespeichert." });
+    },
+    // Provisionierung (Buchung): welche Features sind für diesen Mandanten gebucht?
+    "GET /api/bookings": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "book_features")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const bookings = getFeatureBookings();
+      const items = FEATURES.map((f) => ({ key: f.key, label: f.label, status: f.status, booked: isBooked(f.key, bookings) }));
+      return json({ ok: true, items });
+    },
+    "POST /api/features/book": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "book_features")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (!FEATURE_KEYS.includes(body.key)) return json({ ok: false, message: "Unbekanntes Feature." }, 404);
+      if (typeof body.booked !== "boolean") return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { booked: "Buchung muss true/false sein." } }, 422);
+      const bookings = getFeatureBookings();
+      bookings[body.key] = body.booked;
+      setFeatureBookings(bookings);
+      return json({ ok: true, key: body.key, booked: body.booked, message: "Buchung gespeichert." });
     },
 
     "GET /api/roles": async () => {
