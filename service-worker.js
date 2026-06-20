@@ -14,9 +14,12 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v33";
-const CACHE = "bsg-cache-" + VERSION;
-const RUNTIME = "bsg-runtime-" + VERSION;
+const VERSION = "v34";
+/* Cache-Namespace (vereinsneutral); ein Fork kann hier seinen eigenen Prefix
+   setzen, damit getrennte Deployments keine kollidierenden Cache-Namen erben. */
+const CACHE_NS = "app";
+const CACHE = CACHE_NS + "-cache-" + VERSION;
+const RUNTIME = CACHE_NS + "-runtime-" + VERSION;
 const OFFLINE_URL = "offline.html";
 
 /* Relative URLs (basis-pfad-agnostisch: werden relativ zur SW-URL aufgelöst). */
