@@ -51,7 +51,20 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   `kassenwart`, `trainer`, Board-Rollen) sind **reine Rechte-Rollen**. Die öffentliche
   Team-Anzeige kommt aus **Vereinsämtern** (`positions`, Recht `manage_team`); `GET /api/team`
   rechnet `positions × users`.
-- **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Klassen).
+- **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Club/Klassen).
+- **Vereinsdaten/Branding (White-Label).** `GET /api/club` antwortet öffentlich
+  `{ ok, fields: [{key,label,type}], values: { <key>: string } }` (Seed aus `assets/data/club.json`);
+  `POST /api/club` `{ values: { <key>: string } }` speichert (nur bekannte Keys) und erfordert das
+  Recht `manage_club` (ohne Login → 401, ohne Recht → 403). Treibt im Frontend Name, Sport, Adresse,
+  Kontakt, Impressum & Logo über `[data-club="key"]`.
+- **Feature-Gating & Beta-Freigabe.** `GET /api/capabilities` antwortet **nutzer-spezifisch**
+  `{ ok, features: { <key>: { status: "stable"|"beta", public: boolean } } }` und enthält nur
+  Features, die der aktuelle Nutzer sehen darf (Reifegrad aus dem Feature-Katalog × Freigabe-Scope).
+  `GET /api/features` (Recht `manage_features`) liefert Katalog + Scope je Feature + Rollen-Auswahl;
+  `POST /api/features/release` `{ key, release }` setzt den Scope (`"public"` | `"off"` |
+  Rollen-Array `["roleId", …]`). Scope-Regeln: `public` → alle; `{roles}` → Nutzer mit passender
+  Rolle *oder* `manage_features` (Vorschau); `off` → nur `manage_features`. Unbekanntes Feature → 404,
+  ungültiger `release` → 422.
 - Die Tests verwenden **pro Lauf eindeutige E-Mail-Adressen** (`local.<RUN_ID>@example.com`) und
   zählen relativ, damit sie auch gegen ein persistentes Backend mehrfach laufen können.
 - **Test-/Dev-Endpoint `POST /api/test/reset`** (nur Dev-Modus): setzt den Store auf den

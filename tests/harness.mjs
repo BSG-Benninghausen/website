@@ -14,10 +14,23 @@
      TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
    ===================================================================== */
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
-const MOCK_SRC = readFileSync(new URL("../assets/js/mock-api.js", import.meta.url), "utf8");
-const DATA_DIR = new URL("../assets/data/", import.meta.url);
+
+/* Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar – Vorbereitung auf
+   ein ausgelagertes Contract-Package (siehe docs/backend-repo-separation-plan.md).
+   Ohne Env greifen die heutigen Repo-Pfade, sodass `node tests/run.mjs` unverändert läuft.
+     BSG_MOCK_SRC  – Pfad zu mock-api.js (abs. oder relativ zum CWD)
+     BSG_DATA_DIR  – Verzeichnis mit den Seed-/Config-JSONs (abs. oder relativ zum CWD) */
+const MOCK_SRC_URL = process.env.BSG_MOCK_SRC
+  ? pathToFileURL(resolve(process.env.BSG_MOCK_SRC))
+  : new URL("../assets/js/mock-api.js", import.meta.url);
+const DATA_DIR = process.env.BSG_DATA_DIR
+  ? pathToFileURL(resolve(process.env.BSG_DATA_DIR) + "/")
+  : new URL("../assets/data/", import.meta.url);
+const MOCK_SRC = readFileSync(MOCK_SRC_URL, "utf8");
 
 /* Pro Test-Lauf eindeutige Adressen, damit dieselbe Suite mehrfach gegen ein
    (persistentes) echtes Backend laufen kann, ohne zu kollidieren. */

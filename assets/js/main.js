@@ -136,6 +136,8 @@
           : null;
         writeAuthCache(snap);
         applyAuth(snap);
+        // Feature-Loader benachrichtigen: Capabilities sind nutzer-spezifisch.
+        try { window.dispatchEvent(new CustomEvent("bsg:auth-change")); } catch (e) {}
       })
       .catch(() => {}); // Netzfehler: optimistischen Zustand behalten
   }
@@ -151,6 +153,35 @@
           const key = el.getAttribute("data-site");
           const val = d.values[key];
           if (typeof val === "string" && val.trim()) el.textContent = val;
+        });
+      })
+      .catch(() => {});
+  }
+
+  /* ----- Vereinsdaten / Branding anwenden (White-Label, [data-club*]) ----- */
+  const clubEls = document.querySelectorAll("[data-club], [data-club-logo], [data-club-mail], [data-club-instagram]");
+  if (clubEls.length) {
+    fetch("/api/club")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || !d.ok || !d.values) return;
+        const v = d.values;
+        // Nur http(s)-URLs als href zulassen (verhindert javascript:/data: o. Ä.
+        // aus fehlkonfigurierter/kompromittierter Club-Config).
+        const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");
+        document.querySelectorAll("[data-club]").forEach((el) => {
+          const val = v[el.getAttribute("data-club")];
+          if (typeof val === "string" && val.trim()) el.textContent = val;
+        });
+        document.querySelectorAll("[data-club-logo]").forEach((el) => {
+          if (v.logo && v.logo.trim()) el.setAttribute("src", v.logo);
+        });
+        document.querySelectorAll("[data-club-mail]").forEach((el) => {
+          if (v.email && v.email.trim()) el.setAttribute("href", "mailto:" + v.email);
+        });
+        document.querySelectorAll("[data-club-instagram]").forEach((el) => {
+          const u = safeUrl(v.instagram_url);
+          if (u) el.setAttribute("href", u);
         });
       })
       .catch(() => {});

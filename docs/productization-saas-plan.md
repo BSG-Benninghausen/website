@@ -1,0 +1,123 @@
+# Produktisierung: Open-Source-Frontend + buchbares SaaS-Backend
+
+Status: **Vorschlag / Diskussionsgrundlage.** Begleitdokument zu
+[`backend-repo-separation-plan.md`](./backend-repo-separation-plan.md). Während jenes Dokument die
+*technische* Trennung von Frontend, Mock und Backend beschreibt, beschreibt dieses die
+*Produkt*-Vision: aus dem BSG-spezifischen Vereinsauftritt ein **wiederverwendbares Produkt** machen.
+
+---
+
+## 1. Vision & Zielbild
+
+- **Frontend = Open Source.** Ein generischer Vereins-Webauftritt (HTML/CSS/JS, zero-dep) inklusive
+  vollständigem **Mock-Backend** im öffentlichen Repo. Jeder Verein kann ihn klonen, lokal/als
+  Static (z. B. GitHub Pages) betreiben und im **Mock-Modus** sofort ausprobieren.
+- **Backend = buchbarer SaaS-Dienst.** Das echte Backend (eigenes, privates Repo) wird pro Verein
+  als Dienst betrieben und ist **per Domain/IP** erreichbar. Vereine buchen ein Abo und ggf.
+  einzelne Features; der Dienst stellt sie für ihre Domain bereit.
+- **BSG = Referenzkunde (erster Mandant).** BSG validiert das Produkt end-to-end; die
+  BSG-spezifischen Inhalte sind **Konfiguration**, kein Code.
+
+Die tragende Mechanik existiert bereits: Der **Mock⇄Real-Router** (`assets/js/api-config.js`,
+`window.BSG_API = { mode, base, live }`) trennt UI von Backend; das Frontend spricht ausschließlich
+`/api/*`. Ein Verein zeigt im `real`-Modus mit `base = https://api.<verein>.de` auf seinen Mandanten.
+
+---
+
+## 2. White-Label-Schicht (in dieser Iteration umgesetzt)
+
+Branding ist nicht mehr im Markup hartcodiert, sondern **Laufzeit-Konfiguration**:
+
+- **`GET/POST /api/club`** + Seed `assets/data/club.json` (Schema `CLUB_FIELDS`, gespiegelt in
+  `assets/js/mock-api.js` und `server/api.mjs`). Felder: `brand_name`, `name`, `short_name`, `sport`,
+  `brand_sub`, `locality`, `email`, `instagram_url/_handle`, `venue`, `street`, `city`,
+  `description`, `logo`. Schreiben erfordert das neue Recht **`manage_club`**.
+- **`[data-club="key"]`** im DOM (Anwendung in `main.js`, analog zum bestehenden `[data-site]`):
+  Name, Sport, Adresse, Kontakt, Impressum und Logo werden zur Laufzeit gefüllt. Generische
+  Platzhalter im HTML dienen als Fallback.
+- **Theme-Schicht** `assets/css/theme.css` (Farben/Schrift als CSS-Custom-Properties), vor
+  `styles.css` geladen. Ein Verein tauscht **nur diese Datei** (Vorlage: `theme.example.css`);
+  `styles.css` enthält nur noch Struktur.
+- **Generischer Default:** `club.example.json` + `theme.example.css` („Musterverein"). Der
+  ausgelieferte Seed `club.json` trägt die BSG-Werte (BSG = erster Kunde), sodass die bestehende
+  GitHub-Pages-Seite optisch unverändert bleibt.
+
+**Noch offen (nächste Phase):** `<title>`, `manifest.webmanifest` und Favicon/Logo-Binärdateien
+liegen im `<head>` bzw. als statische Dateien und lassen sich nicht via `[data-club]` füllen. Im
+SaaS-Betrieb rendert das **Backend diese pro Domain** (templated `index.html`/manifest, Asset-Pfade
+aus der Mandanten-Config). Bis dahin bleiben sie der Deploy-/BSG-Default.
+
+---
+
+## 3. Zwei-Schichten-Feature-Modell (Kern der „Feature-Buchung")
+
+Heute steuert ein Feature **eine** Achse (Freigabe-Scope). Für SaaS braucht es **zwei** klar
+getrennte Schichten:
+
+| Schicht | Ebene | Wer entscheidet | „Frage" | Speicher (heute/künftig) |
+|---|---|---|---|---|
+| **Provisioniert / gebucht** | Mandant (Domain) | SaaS-Anbieter / Abo-Tarif | *Existiert* das Feature für diesen Verein überhaupt? | künftig: Provisioning-Store pro Mandant |
+| **Freigegeben** | Verein (intern) | Vereins-Admin (`manage_features`) | *Wer im Verein* sieht es? (`public`/`off`/`{roles}`) | **vorhanden:** `bsg_feature_flags` |
+
+Die **Freigabe-Schicht existiert bereits** vollständig (`GET /api/capabilities`,
+`POST /api/features/release`, Scope `public | off | {roles}`, Recht `manage_features`,
+Loader `assets/js/features/loader.js`). Damit erfüllt der heutige Stand bereits den Wunsch
+„gemocktes Feature nur dem Vorstand zum Testen zeigen, nicht den Mitgliedern" — exakt
+`release: { roles: ["vorstand"] }`.
+
+**Was die Buchungs-Schicht ergänzt:**
+
+1. **Provisioning-Store** pro Mandant: Menge der **gebuchten** Feature-Keys (aus dem Tarif).
+   Im Mock self-service / alle gebucht; im realen Backend aus Abo/Billing abgeleitet.
+2. **`GET /api/capabilities` filtert zusätzlich** gegen die gebuchten Keys: ein nicht gebuchtes
+   Feature ist für **alle** unsichtbar (auch für `manage_features`), unabhängig vom Freigabe-Scope.
+   Reihenfolge: `gebucht?` → dann `Backend implementiert (FEATURES-Katalog)?` → dann
+   `freigegeben für diesen Nutzer?`.
+3. **Neues Recht `book_features`** + `POST /api/features/book` `{ key, booked }`: erlaubt einem
+   Vereins-Admin, im Rahmen seines Tarifs Features selbst zu buchen/abzubestellen. Im realen
+   SaaS durch Abo-Grenzen/Billing gegated (Upgrade nötig), im Mock frei.
+
+So bleibt die Trennung sauber: **Anbieter** bestimmt *Verfügbarkeit* (Buchung), **Vereins-Admin**
+bestimmt *Sichtbarkeit* (Freigabe an `public`/Rollen).
+
+---
+
+## 4. Mehrmandantenfähigkeit (Backend)
+
+Das heutige `server/` ist **single-tenant** (ein In-Memory-Store, ein Seed-Admin). Für SaaS nötig:
+
+- **Mandanten-Auflösung** per `Host`-Header (Domain → Mandant) bzw. dediziertem Deploy je Verein.
+- **Mandanten-getrennter Store + DB-Persistenz** (heute prozess-lokal/flüchtig). Pro Mandant:
+  Nutzer/Rollen/Mitglieder, `club`-Config, `featureFlags` (Freigabe) **und** Provisioning (Buchung).
+- **Branding-Assets pro Mandant** (Logo/Favicon/manifest/title; siehe §2 „offen").
+- **Onboarding-Flow:** neuer Mandant = Seed (Admin-Konto, Default-`club`/Theme, gebuchte Features
+  aus Tarif). Self-Service-Registrierung optional.
+
+Der Same-Origin-Vorteil (kein CORS, `SameSite=Lax`-Cookies) bleibt erhalten, wenn pro Verein ein
+eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
+`backend-repo-separation-plan.md` §6 (Option B).
+
+---
+
+## 5. Bezug zum Repo-Split
+
+- Das **generische Frontend + Mock** gehören ins öffentliche Repo; die **White-Label-Config**
+  (`club`, `theme`) lebt dort.
+- **Provisioning/Billing/Mehrmandanten-Persistenz** gehören ins **private Backend-Repo**.
+- Der **gemeinsame Vertrag** (Contract-Package aus dem Trennungsplan) deckt auch `/api/club` und —
+  künftig — `/api/features/book` ab, sodass Mock und Backend testgetrieben in Sync bleiben.
+
+---
+
+## 6. Phasen-Roadmap
+
+| Phase | Inhalt | Status |
+|---|---|---|
+| **P1 White-Label-Extraktion** | `club.json` + `GET/POST /api/club`, `[data-club]`, `theme.css`, Recht `manage_club`, generische Defaults, Contract-Test | **umgesetzt (diese Iteration)** |
+| **P2 Branding pro Domain** | Backend rendert `manifest`/`<title>`/Favicon/Logo aus der Mandanten-`club`-Config | offen |
+| **P3 Feature-Buchung mocken** | Provisioning-Store + Recht `book_features` + `POST /api/features/book`; `capabilities` filtert gebucht×freigegeben | offen |
+| **P4 Mehrmandanten-Backend** | Host-basierte Mandantenauflösung, DB-Persistenz, Onboarding, Billing-Anbindung | offen |
+| **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |
+
+> **Empfehlung:** P2/P3 als nächste, in sich abgeschlossene Schritte (rein additiv, gegen den
+> bestehenden Vertrag). P4/P5 erst, wenn ein zweiter realer Mandant der konkrete Treiber ist.

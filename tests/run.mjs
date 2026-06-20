@@ -4,6 +4,10 @@
      node tests/run.mjs tournaments     # nur Suites mit "tournaments" im Dateinamen
      TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
    Exit-Code != 0, wenn mindestens eine Prüfung fehlschlägt.
+
+   Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar (Vorbereitung auf
+   ein ausgelagertes Contract-Package, s. docs/backend-repo-separation-plan.md):
+     BSG_MOCK_SRC=/pfad/zu/mock-api.js  BSG_DATA_DIR=/pfad/zu/data  node tests/run.mjs
    ===================================================================== */
 import { readdirSync } from "node:fs";
 import { createClient } from "./harness.mjs";

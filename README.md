@@ -78,10 +78,13 @@ Bereitgestellte Endpunkte:
 | `GET /api/team` | Team & Vorstand – **aus den Vereinsämtern × Nutzern** berechnet (öffentlich) |
 | `GET /api/positions` · `POST /api/positions`(`/update`,`/delete`) | Vereinsämter (Team-Seite) lesen & pflegen (`manage_team`) |
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
+| `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Impressum, Logo) |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
 | `GET /api/admin/registrations` | Anmeldungen je Turnier inkl. Gebührensummen & Veranstalter (Recht `manage_events` **oder** `manage_payouts`) |
 | `GET /api/payouts` · `POST /api/payouts` · `POST /api/payouts/cancel` | Überweisungen der Teilnahmegebühren an den Veranstalter (Recht `manage_payouts`) |
+| `GET /api/capabilities` | **Nutzer-spezifisch:** welche Features darf dieser Nutzer sehen (`{ <key>: { status, public } }`) – steuert Gating & Beta-Badges im Frontend |
+| `GET /api/features` · `POST /api/features/release` | Feature-Katalog + Beta-Freigabe lesen · Scope setzen (`public`/`off`/Rollen) (Recht `manage_features`) |
 
 > Es findet **kein echter Datenversand** statt. Formulareingaben werden nur lokal im
 > Browser gespeichert (Demo-Zweck).
@@ -112,7 +115,8 @@ Bereitgestellte Endpunkte:
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`,
-  `bsg_site`, `bsg_payouts`, `bsg_positions`, `bsg_seed_version`, `bsg_pass_counter`.
+  `bsg_site`, `bsg_club`, `bsg_payouts`, `bsg_positions`, `bsg_feature_flags`, `bsg_seed_version`,
+  `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
 
@@ -120,9 +124,10 @@ Bereitgestellte Endpunkte:
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
-  `manage_site`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`, `manage_payouts`.
+  `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`,
+  `manage_payouts`, `manage_features`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
-  Startseiten-Texte, Vereinsämter) ist einzeln zuweisbar.
+  Startseiten-Texte, Vereinsdaten/Branding, Vereinsämter) ist einzeln zuweisbar.
 - **Vereinsämter ≠ Rollen:** Rollen geben **ausschließlich Rechte**; die öffentliche
   Team-Anzeige läuft über einen getrennten **Vereinsämter-Store** (`bsg_positions`,
   Datensatz `{ userId, group, label, order }`, `group` ∈ `vorstand`/`trainer`). Ämter geben

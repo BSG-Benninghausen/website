@@ -35,9 +35,11 @@
     registrations: "bsg_registrations",
     training: "bsg_training",
     site: "bsg_site",
+    club: "bsg_club",
     payouts: "bsg_payouts",
     positions: "bsg_positions",
     demoVersion: "bsg_demo_version",
+    featureFlags: "bsg_feature_flags",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -54,14 +56,30 @@
     { key: "manage_events", label: "Termine pflegen" },
     { key: "manage_training", label: "Trainingszeiten bearbeiten" },
     { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
+    { key: "manage_club", label: "Vereinsdaten & Branding bearbeiten (Name, Kontakt, Impressum)" },
     { key: "manage_team", label: "Team-Seite / Vereinsämter verwalten" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
     { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
+    { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+
+  /* Feature-Katalog (Reifegrad). Quelle der Wahrheit für „welche Features kennt
+     das Backend" – im Mock sind alle implementiert. Im echten (privaten) Backend
+     fehlen noch-nicht-nachgezogene Keys, wodurch sie in Produktion unsichtbar bleiben.
+     status: "stable" | "beta". Die Freigabe (wer sieht es) liegt orthogonal in
+     bsg_feature_flags und wird vom Superadmin (manage_features) gesetzt. */
+  const FEATURES = [
+    { key: "payouts", label: "Auszahlungen an Veranstalter", status: "stable" },
+    { key: "tournaments", label: "Turnier-Anmeldung", status: "stable" },
+    { key: "beitragsrechner", label: "Beitragsrechner", status: "beta" },
+  ];
+  const FEATURE_KEYS = FEATURES.map((f) => f.key);
+  // Default-Freigabe je Feature (greift, solange der Superadmin nichts gesetzt hat).
+  const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", beitragsrechner: "off" };
 
   const realFetch = window.fetch.bind(window);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -156,6 +174,28 @@
     { key: "cta_text", label: "Call-to-Action · Text", type: "textarea" },
   ];
   const SITE_KEYS = SITE_FIELDS.map((f) => f.key);
+
+  /* ----- Vereinsdaten / Branding: Schema (White-Label-Config) -----
+     Treibt Name, Sport, Adresse, Kontakt, Impressum & Logo der gesamten Site
+     (Anwendung im Frontend über [data-club="key"], siehe main.js). Wird vom
+     SaaS-Backend pro Domain ausgeliefert; im Mock aus assets/data/club.json. */
+  const CLUB_FIELDS = [
+    { key: "brand_name", label: "Logo-Text (Kurzname im Header/Footer)", type: "text" },
+    { key: "name", label: "Vollständiger Vereinsname (rechtlich, Impressum)", type: "text" },
+    { key: "short_name", label: "Kurzname (App/PWA)", type: "text" },
+    { key: "sport", label: "Sportart", type: "text" },
+    { key: "brand_sub", label: "Logo-Unterzeile", type: "text" },
+    { key: "locality", label: "Ort", type: "text" },
+    { key: "email", label: "Kontakt-E-Mail", type: "text" },
+    { key: "instagram_url", label: "Instagram · URL", type: "text" },
+    { key: "instagram_handle", label: "Instagram · Handle", type: "text" },
+    { key: "venue", label: "Trainingsstätte", type: "text" },
+    { key: "street", label: "Straße & Hausnummer", type: "text" },
+    { key: "city", label: "PLZ & Ort", type: "text" },
+    { key: "description", label: "Kurzbeschreibung (Meta/SEO)", type: "textarea" },
+    { key: "logo", label: "Logo-Pfad/URL", type: "text" },
+  ];
+  const CLUB_KEYS = CLUB_FIELDS.map((f) => f.key);
 
   /* ----- IBAN-Prüfung inkl. Mod-97 ----- */
   function isIban(v) {
@@ -298,6 +338,30 @@
   const isAdmin = (user) => !!user && (user.roles || []).includes("admin");
   const hasPerm = (user, perm) => isAdmin(user) || userPermissions(user).includes(perm);
 
+  /* ----- Feature-Freigabe (Beta-Steuerung pro Gruppe) -----
+     Scope je Feature: "public" (alle) | "off" (niemand) | { roles:[...] } (diese Rollen).
+     canSeeFeature: public immer; manage_features sieht alles (Vorschau/Verwaltung);
+     {roles} nur, wenn der Nutzer eine der Rollen hält. */
+  const getFeatureFlags = () => getStore(KEYS.featureFlags, null) || {};
+  const setFeatureFlags = (f) => setStore(KEYS.featureFlags, f);
+  function scopeFor(key, flags) {
+    const f = flags || getFeatureFlags();
+    return (key in f) ? f[key] : (FEATURE_DEFAULT_SCOPE[key] || "off");
+  }
+  function normalizeScope(release, validRoleIds) {
+    if (release === "public" || release === "off") return release;
+    const arr = Array.isArray(release) ? release : (release && Array.isArray(release.roles) ? release.roles : null);
+    if (arr) { const roles = arr.filter((r) => validRoleIds.includes(r)); return roles.length ? { roles } : "off"; }
+    return null;
+  }
+  function canSeeFeature(user, scope) {
+    if (scope === "public") return true;
+    if (hasPerm(user, "manage_features")) return true;
+    if (scope === "off" || !scope) return false;
+    if (scope.roles) return !!user && (user.roles || []).some((r) => scope.roles.includes(r));
+    return false;
+  }
+
   /* Seed: Standardrollen + Admin-Konto (idempotent). Rollen sind reine Rechte-Objekte;
      die öffentliche Team-Anzeige läuft über Vereinsämter (positions), siehe GET /api/team. */
   const EXAMPLE_ROLES = [
@@ -384,6 +448,18 @@
       grantT("vorstand"); grantT("vorsitz1");
       setStore(KEYS.seedVersion, 6);
     }
+    // Migration v7: Feature-/Beta-Freigabe-Recht an Vorstand & 1. Vorsitzenden.
+    if (seedVersion < 7) {
+      const grantF = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_features")) r.permissions.push("manage_features"); };
+      grantF("vorstand"); grantF("vorsitz1");
+      setStore(KEYS.seedVersion, 7);
+    }
+    // Migration v8: Vereinsdaten-/Branding-Recht (White-Label) an Vorstand & 1. Vorsitzenden.
+    if (seedVersion < 8) {
+      const grantC = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_club")) r.permissions.push("manage_club"); };
+      grantC("vorstand"); grantC("vorsitz1");
+      setStore(KEYS.seedVersion, 8);
+    }
     setRoles(roles);
 
     const users = getUsers();
@@ -420,6 +496,11 @@
   async function ensureSite() {
     let values = getStore(KEYS.site, null);
     if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
+    return values;
+  }
+  async function ensureClub() {
+    let values = getStore(KEYS.club, null);
+    if (!values) { values = await loadData("club.json"); setStore(KEYS.club, values); }
     return values;
   }
   /* Beispiel-Stammdaten (Nutzer/Vereinsämter/Mitgliedschaften) einmalig einspielen.
@@ -615,6 +696,25 @@
       return json({ ok: true, values: out, message: "Startseiten-Texte gespeichert." });
     },
 
+    /* ---------- Vereinsdaten / Branding (White-Label-Config) ---------- */
+    "GET /api/club": async () => {
+      const stored = await ensureClub();
+      const values = {};
+      CLUB_FIELDS.forEach((f) => { values[f.key] = norm(stored[f.key]); });
+      return json({ ok: true, fields: CLUB_FIELDS, values });
+    },
+    "POST /api/club": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_club")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const stored = await ensureClub();
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      CLUB_KEYS.forEach((k) => { if (k in values) stored[k] = norm(values[k]); });
+      setStore(KEYS.club, stored);
+      const out = {};
+      CLUB_FIELDS.forEach((f) => { out[f.key] = norm(stored[f.key]); });
+      return json({ ok: true, values: out, message: "Vereinsdaten gespeichert." });
+    },
+
     "GET /api/events": async () => {
       const events = (await ensureEvents()).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
       return json({ ok: true, items: events });
@@ -793,6 +893,39 @@
       const user = currentUser();
       if (!hasPerm(user, "manage_roles")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       return json({ ok: true, items: PERMISSIONS });
+    },
+
+    /* ---------- Feature-Gating & Beta-Freigabe ---------- */
+    // Nutzer-spezifisch & öffentlich erreichbar: welche Features darf DIESER Nutzer sehen?
+    "GET /api/capabilities": async () => {
+      const user = currentUser();
+      const flags = getFeatureFlags();
+      const features = {};
+      FEATURES.forEach((f) => {
+        const scope = scopeFor(f.key, flags);
+        if (canSeeFeature(user, scope)) features[f.key] = { status: f.status, public: scope === "public" };
+      });
+      return json({ ok: true, features });
+    },
+    // Verwaltung (Superadmin): Katalog + aktuelle Freigabe je Feature + Rollen-Auswahl.
+    "GET /api/features": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_features")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const flags = getFeatureFlags();
+      const items = FEATURES.map((f) => ({ key: f.key, label: f.label, status: f.status, scope: scopeFor(f.key, flags) }));
+      const roles = getRoles().map((r) => ({ id: r.id, label: r.label }));
+      return json({ ok: true, items, roles });
+    },
+    "POST /api/features/release": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_features")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (!FEATURE_KEYS.includes(body.key)) return json({ ok: false, message: "Unbekanntes Feature." }, 404);
+      const scope = normalizeScope(body.release, getRoles().map((r) => r.id));
+      if (scope === null) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { release: "Ungültige Freigabe." } }, 422);
+      const flags = getFeatureFlags();
+      flags[body.key] = scope;
+      setFeatureFlags(flags);
+      return json({ ok: true, key: body.key, scope, message: "Freigabe gespeichert." });
     },
 
     "GET /api/roles": async () => {

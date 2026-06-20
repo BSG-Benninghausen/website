@@ -84,7 +84,8 @@ This single file is the backend. Key pieces:
 - To add a permission: add to `PERMISSIONS`; grant it to relevant `EXAMPLE_ROLES` + a seed migration;
   gate the backend routes with `hasPerm(user, key)`; reveal nav/UI in the frontend (see below). Rights
   are intentionally **fine-grained, one per content area** (`manage_news`, `manage_events`,
-  `manage_training`, `manage_site`, `manage_team`, `manage_payouts`, plus `view_*`/`manage_roles/users`).
+  `manage_training`, `manage_site`, `manage_team`, `manage_payouts`, `manage_features`, plus
+  `view_*`/`manage_roles/users`).
 - **Roles are pure permission objects** (`{id, label, permissions[], system}`) — they grant rights
   and never appear publicly. The public **Team page is computed from a separate `positions` store**
   (`{userId, group, label, order}`, `group ∈ vorstand/trainer`), curated under Admin → Vereinsämter
@@ -104,6 +105,22 @@ This single file is the backend. Key pieces:
   pages guard access by re-checking `me.permissions` and redirecting.
 - `redaktion.js` is the dynamic-content editor hub; reuse its `setupEditor({listEl, form, api, render,
   collect, onFill, onReset})` helper (CRUD list+form with hooks) for any new editable content type.
+
+### Feature gating & Beta releases
+A capability layer hides features that have no real backend (so production never suggests
+non-existent functionality) and marks new ones as Beta. **Two orthogonal axes** per feature:
+a **maturity** `status` (`beta`/`stable`) declared in the `FEATURES` catalog (mirrored in
+`mock-api.js` and `server/api.mjs` — the catalog itself is the contract; a real backend that hasn't
+caught up simply omits the key, hiding it in `real` mode), and a **release scope**
+(`"public"|"off"|{roles:[…]}`) set at runtime by a superadmin (`manage_features`) and stored in
+`bsg_feature_flags`. `GET /api/capabilities` is **user-specific**: returns only features the current
+user may see (`public` → all; `{roles}` → user holds the role *or* has `manage_features`; `off` →
+only `manage_features` preview). Internal vs. public Beta = release to a role vs. to `public`.
+`assets/js/features/loader.js` (ES module, `<script type="module">`) gates `[data-feature="key"]`
+elements: hides the un-granted ones and — crucially for isolation — only **dynamically `import()`s**
+a feature's module (`assets/js/features/<key>.js`, default-exports `init(rootEl)`) when granted, so
+disabled feature code never runs and can't break stable features. Badges (`.badge--beta`/`--intern`)
+go into a `[data-feature-badge]` slot. Manage releases under Admin → „Features & Beta-Freigabe".
 
 ### Domain config templates
 `assets/data/age-classes.json` and `weight-classes.json` are editable, club-adjustable templates that
