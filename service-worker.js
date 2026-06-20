@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v26";
+const VERSION = "v27";
 const CACHE = "bsg-cache-" + VERSION;
 const RUNTIME = "bsg-runtime-" + VERSION;
 const OFFLINE_URL = "offline.html";
@@ -55,6 +55,8 @@ const PRECACHE_URLS = [
   "assets/js/mitglieder.js?v=" + VERSION.slice(1),
   "assets/js/redaktion.js?v=" + VERSION.slice(1),
   "assets/js/admin.js?v=" + VERSION.slice(1),
+  "assets/js/features/loader.js?v=" + VERSION.slice(1),
+  "assets/js/features/beitragsrechner.js?v=" + VERSION.slice(1),
 
   "assets/data/age-classes.json",
   "assets/data/weight-classes.json",

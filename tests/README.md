@@ -52,6 +52,14 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   Team-Anzeige kommt aus **Vereinsämtern** (`positions`, Recht `manage_team`); `GET /api/team`
   rechnet `positions × users`.
 - **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Klassen).
+- **Feature-Gating & Beta-Freigabe.** `GET /api/capabilities` antwortet **nutzer-spezifisch**
+  `{ ok, features: { <key>: { status: "stable"|"beta", public: boolean } } }` und enthält nur
+  Features, die der aktuelle Nutzer sehen darf (Reifegrad aus dem Feature-Katalog × Freigabe-Scope).
+  `GET /api/features` (Recht `manage_features`) liefert Katalog + Scope je Feature + Rollen-Auswahl;
+  `POST /api/features/release` `{ key, release }` setzt den Scope (`"public"` | `"off"` |
+  Rollen-Array `["roleId", …]`). Scope-Regeln: `public` → alle; `{roles}` → Nutzer mit passender
+  Rolle *oder* `manage_features` (Vorschau); `off` → nur `manage_features`. Unbekanntes Feature → 404,
+  ungültiger `release` → 422.
 - Die Tests verwenden **pro Lauf eindeutige E-Mail-Adressen** (`local.<RUN_ID>@example.com`) und
   zählen relativ, damit sie auch gegen ein persistentes Backend mehrfach laufen können.
 - **Test-/Dev-Endpoint `POST /api/test/reset`** (nur Dev-Modus): setzt den Store auf den

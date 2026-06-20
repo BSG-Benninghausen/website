@@ -582,6 +582,10 @@ button { font: inherit; cursor: pointer; }
 .badge { font-family: var(--font-display); font-weight: 600; font-size: .78rem; padding: 6px 13px; border-radius: 999px; text-transform: capitalize; }
 .badge--aktiv { background: rgba(31, 122, 90, .12); color: #14624a; }
 .badge--gekuendigt { background: rgba(20, 20, 26, .07); color: var(--text-soft); }
+/* Feature-/Beta-Kennzeichnung (capability-gesteuert, siehe assets/js/features/loader.js) */
+.badge--beta { background: rgba(243, 184, 54, .28); color: #7a4f00; }
+.badge--intern { background: rgba(20, 20, 26, .08); color: var(--text-soft); }
+.feature-badge { margin-left: 8px; vertical-align: middle; font-size: .68rem; padding: 3px 9px; }
 .btn--sm { padding: 9px 16px; font-size: .88rem; }
 .sub-form { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--line); }
 .muted-note { color: var(--text-soft); }

@@ -136,6 +136,8 @@
           : null;
         writeAuthCache(snap);
         applyAuth(snap);
+        // Feature-Loader benachrichtigen: Capabilities sind nutzer-spezifisch.
+        try { window.dispatchEvent(new CustomEvent("bsg:auth-change")); } catch (e) {}
       })
       .catch(() => {}); // Netzfehler: optimistischen Zustand behalten
   }

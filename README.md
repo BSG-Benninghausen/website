@@ -82,6 +82,8 @@ Bereitgestellte Endpunkte:
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
 | `GET /api/admin/registrations` | Anmeldungen je Turnier inkl. Gebührensummen & Veranstalter (Recht `manage_events` **oder** `manage_payouts`) |
 | `GET /api/payouts` · `POST /api/payouts` · `POST /api/payouts/cancel` | Überweisungen der Teilnahmegebühren an den Veranstalter (Recht `manage_payouts`) |
+| `GET /api/capabilities` | **Nutzer-spezifisch:** welche Features darf dieser Nutzer sehen (`{ <key>: { status, public } }`) – steuert Gating & Beta-Badges im Frontend |
+| `GET /api/features` · `POST /api/features/release` | Feature-Katalog + Beta-Freigabe lesen · Scope setzen (`public`/`off`/Rollen) (Recht `manage_features`) |
 
 > Es findet **kein echter Datenversand** statt. Formulareingaben werden nur lokal im
 > Browser gespeichert (Demo-Zweck).

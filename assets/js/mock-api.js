@@ -38,6 +38,7 @@
     payouts: "bsg_payouts",
     positions: "bsg_positions",
     demoVersion: "bsg_demo_version",
+    featureFlags: "bsg_feature_flags",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -59,9 +60,24 @@
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
     { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
+    { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+
+  /* Feature-Katalog (Reifegrad). Quelle der Wahrheit für „welche Features kennt
+     das Backend" – im Mock sind alle implementiert. Im echten (privaten) Backend
+     fehlen noch-nicht-nachgezogene Keys, wodurch sie in Produktion unsichtbar bleiben.
+     status: "stable" | "beta". Die Freigabe (wer sieht es) liegt orthogonal in
+     bsg_feature_flags und wird vom Superadmin (manage_features) gesetzt. */
+  const FEATURES = [
+    { key: "payouts", label: "Auszahlungen an Veranstalter", status: "stable" },
+    { key: "tournaments", label: "Turnier-Anmeldung", status: "stable" },
+    { key: "beitragsrechner", label: "Beitragsrechner", status: "beta" },
+  ];
+  const FEATURE_KEYS = FEATURES.map((f) => f.key);
+  // Default-Freigabe je Feature (greift, solange der Superadmin nichts gesetzt hat).
+  const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", beitragsrechner: "off" };
 
   const realFetch = window.fetch.bind(window);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -298,6 +314,30 @@
   const isAdmin = (user) => !!user && (user.roles || []).includes("admin");
   const hasPerm = (user, perm) => isAdmin(user) || userPermissions(user).includes(perm);
 
+  /* ----- Feature-Freigabe (Beta-Steuerung pro Gruppe) -----
+     Scope je Feature: "public" (alle) | "off" (niemand) | { roles:[...] } (diese Rollen).
+     canSeeFeature: public immer; manage_features sieht alles (Vorschau/Verwaltung);
+     {roles} nur, wenn der Nutzer eine der Rollen hält. */
+  const getFeatureFlags = () => getStore(KEYS.featureFlags, null) || {};
+  const setFeatureFlags = (f) => setStore(KEYS.featureFlags, f);
+  function scopeFor(key, flags) {
+    const f = flags || getFeatureFlags();
+    return (key in f) ? f[key] : (FEATURE_DEFAULT_SCOPE[key] || "off");
+  }
+  function normalizeScope(release, validRoleIds) {
+    if (release === "public" || release === "off") return release;
+    const arr = Array.isArray(release) ? release : (release && Array.isArray(release.roles) ? release.roles : null);
+    if (arr) { const roles = arr.filter((r) => validRoleIds.includes(r)); return roles.length ? { roles } : "off"; }
+    return null;
+  }
+  function canSeeFeature(user, scope) {
+    if (scope === "public") return true;
+    if (hasPerm(user, "manage_features")) return true;
+    if (scope === "off" || !scope) return false;
+    if (scope.roles) return !!user && (user.roles || []).some((r) => scope.roles.includes(r));
+    return false;
+  }
+
   /* Seed: Standardrollen + Admin-Konto (idempotent). Rollen sind reine Rechte-Objekte;
      die öffentliche Team-Anzeige läuft über Vereinsämter (positions), siehe GET /api/team. */
   const EXAMPLE_ROLES = [
@@ -383,6 +423,12 @@
       const grantT = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_team")) r.permissions.push("manage_team"); };
       grantT("vorstand"); grantT("vorsitz1");
       setStore(KEYS.seedVersion, 6);
+    }
+    // Migration v7: Feature-/Beta-Freigabe-Recht an Vorstand & 1. Vorsitzenden.
+    if (seedVersion < 7) {
+      const grantF = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_features")) r.permissions.push("manage_features"); };
+      grantF("vorstand"); grantF("vorsitz1");
+      setStore(KEYS.seedVersion, 7);
     }
     setRoles(roles);
 
@@ -793,6 +839,39 @@
       const user = currentUser();
       if (!hasPerm(user, "manage_roles")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       return json({ ok: true, items: PERMISSIONS });
+    },
+
+    /* ---------- Feature-Gating & Beta-Freigabe ---------- */
+    // Nutzer-spezifisch & öffentlich erreichbar: welche Features darf DIESER Nutzer sehen?
+    "GET /api/capabilities": async () => {
+      const user = currentUser();
+      const flags = getFeatureFlags();
+      const features = {};
+      FEATURES.forEach((f) => {
+        const scope = scopeFor(f.key, flags);
+        if (canSeeFeature(user, scope)) features[f.key] = { status: f.status, public: scope === "public" };
+      });
+      return json({ ok: true, features });
+    },
+    // Verwaltung (Superadmin): Katalog + aktuelle Freigabe je Feature + Rollen-Auswahl.
+    "GET /api/features": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_features")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const flags = getFeatureFlags();
+      const items = FEATURES.map((f) => ({ key: f.key, label: f.label, status: f.status, scope: scopeFor(f.key, flags) }));
+      const roles = getRoles().map((r) => ({ id: r.id, label: r.label }));
+      return json({ ok: true, items, roles });
+    },
+    "POST /api/features/release": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_features")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (!FEATURE_KEYS.includes(body.key)) return json({ ok: false, message: "Unbekanntes Feature." }, 404);
+      const scope = normalizeScope(body.release, getRoles().map((r) => r.id));
+      if (scope === null) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { release: "Ungültige Freigabe." } }, 422);
+      const flags = getFeatureFlags();
+      flags[body.key] = scope;
+      setFeatureFlags(flags);
+      return json({ ok: true, key: body.key, scope, message: "Freigabe gespeichert." });
     },
 
     "GET /api/roles": async () => {

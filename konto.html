@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=26">
+  <link rel="stylesheet" href="assets/css/styles.css?v=27">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -294,6 +294,18 @@
         </div>
       </div>
     </section>
+
+    <!-- Beta-Feature (capability-gesteuert, vom Loader ein-/ausgeblendet) -->
+    <section class="section" data-feature="beitragsrechner" data-feature-module="beitragsrechner" hidden>
+      <div class="wrap">
+        <div class="card" style="max-width:480px">
+          <span class="eyebrow">Mitgliedschaft</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 4px">Beitragsrechner <span data-feature-badge></span></h2>
+          <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:14px">Schätze den monatlichen Beitrag nach Alter.</p>
+          <div data-calc-mount></div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -344,9 +356,10 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=26" defer></script>
-  <script src="assets/js/mock-api.js?v=26" defer></script>
-  <script src="assets/js/main.js?v=26" defer></script>
-  <script src="assets/js/konto.js?v=26" defer></script>
+  <script src="assets/js/api-config.js?v=27" defer></script>
+  <script src="assets/js/mock-api.js?v=27" defer></script>
+  <script src="assets/js/main.js?v=27" defer></script>
+  <script src="assets/js/konto.js?v=27" defer></script>
+  <script type="module" src="assets/js/features/loader.js?v=27"></script>
 </body>
 </html>

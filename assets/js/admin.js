@@ -9,7 +9,8 @@
   let perms = [];   // Berechtigungs-Katalog
   let roles = [];   // alle Rollen
   let posUsers = []; // {id,name} für den Mitglieder-Picker der Vereinsämter
-  let can = { roles: false, users: false, team: false };
+  let featureRoles = []; // {id,label} für die Rollen-Auswahl der Feature-Freigabe
+  let can = { roles: false, users: false, team: false, features: false };
 
   async function postJSON(url, data) {
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -36,7 +37,8 @@
     can.roles = me.isAdmin || me.permissions.includes("manage_roles");
     can.users = me.isAdmin || me.permissions.includes("manage_users");
     can.team = me.isAdmin || me.permissions.includes("manage_team");
-    if (!can.roles && !can.users && !can.team) { window.location.href = "konto.html"; return; }
+    can.features = me.isAdmin || me.permissions.includes("manage_features");
+    if (!can.roles && !can.users && !can.team && !can.features) { window.location.href = "konto.html"; return; }
 
     $("#admin-loading").hidden = true;
     $("#admin").hidden = false;
@@ -56,6 +58,10 @@
     if (can.team) {
       await loadPositions();
       $("#team-section").hidden = false;
+    }
+    if (can.features) {
+      await loadFeatures();
+      $("#features-section").hidden = false;
     }
     wireEvents();
   }
@@ -160,6 +166,45 @@
       "</div>").join("") : '<p class="muted-note">Noch keine Ämter angelegt.</p>';
   }
 
+  /* ---------- Features & Beta-Freigabe ---------- */
+  async function loadFeatures() {
+    try {
+      const data = await (await fetch("/api/features")).json();
+      featureRoles = data.roles || [];
+      renderFeatures(data.items || []);
+    } catch (e) {
+      $("#features-list").innerHTML = '<p class="load-error">Features konnten nicht geladen werden.</p>';
+    }
+  }
+  // Scope eines Features auf den Selektor-Wert abbilden: "public" | "off" | "roles".
+  const scopeMode = (scope) => (scope === "public" ? "public" : (scope && scope.roles ? "roles" : "off"));
+  function featureRoleChecks(scope) {
+    const sel = (scope && scope.roles) || [];
+    return featureRoles.map((r) =>
+      '<label class="perm-check"><input type="checkbox" value="' + r.id + '"' +
+      (sel.includes(r.id) ? " checked" : "") + "> " + BSG.escape(r.label) + "</label>"
+    ).join("");
+  }
+  function renderFeatures(items) {
+    $("#features-list").innerHTML = items.length ? items.map((f) => {
+      const mode = scopeMode(f.scope);
+      const statusBadge = f.status === "beta" ? ' <span class="badge badge--beta">Beta</span>' : "";
+      const opt = (v, t) => '<option value="' + v + '"' + (mode === v ? " selected" : "") + ">" + t + "</option>";
+      return (
+        '<div class="adm-role" data-feature-key="' + f.key + '">' +
+          '<div class="adm-role__head"><div><b>' + BSG.escape(f.label) + "</b>" + statusBadge + "</div></div>" +
+          '<div class="field"><label>Freigabe</label><select data-feat-scope>' +
+            opt("off", "Aus (nur Vorschau für Verwalter)") +
+            opt("roles", "Nur bestimmte Rollen (interne Beta)") +
+            opt("public", "Öffentlich (alle)") +
+          "</select></div>" +
+          '<fieldset class="perm-grid" data-feat-roles' + (mode === "roles" ? "" : " hidden") + ">" + featureRoleChecks(f.scope) + "</fieldset>" +
+          '<button class="btn btn--primary btn--sm" data-save-feature="' + f.key + '">Freigabe speichern</button>' +
+        "</div>"
+      );
+    }).join("") : '<p class="muted-note">Keine Features vorhanden.</p>';
+  }
+
   const checkedValues = (scope) => [...scope.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value);
 
   function wireEvents() {
@@ -216,6 +261,16 @@
       }
     });
 
+    // Feature-Scope-Selektor: Rollen-Auswahl nur im Modus „roles" zeigen
+    const featuresList = $("#features-list");
+    if (featuresList) featuresList.addEventListener("change", (e) => {
+      const sel = e.target.closest("[data-feat-scope]");
+      if (!sel) return;
+      const card = sel.closest("[data-feature-key]");
+      const roleset = card && card.querySelector("[data-feat-roles]");
+      if (roleset) roleset.hidden = sel.value !== "roles";
+    });
+
     // Klicks im Admin-Bereich (Delegation)
     $("#admin").addEventListener("click", async (e) => {
       const saveRole = e.target.closest("[data-save-role]");
@@ -223,6 +278,16 @@
       const saveUser = e.target.closest("[data-save-user]");
       const savePos = e.target.closest("[data-save-position]");
       const delPos = e.target.closest("[data-del-position]");
+      const saveFeat = e.target.closest("[data-save-feature]");
+
+      if (saveFeat) {
+        const card = saveFeat.closest("[data-feature-key]");
+        const mode = (card.querySelector("[data-feat-scope]") || {}).value;
+        const release = mode === "roles" ? checkedValues(card.querySelector("[data-feat-roles]")) : mode;
+        const { res, data } = await postJSON("/api/features/release", { key: saveFeat.getAttribute("data-save-feature"), release });
+        toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
+        if (res.ok && data.ok) await loadFeatures();
+      }
 
       if (saveRole) {
         const card = saveRole.closest(".adm-role");
