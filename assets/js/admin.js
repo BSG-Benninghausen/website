@@ -8,7 +8,8 @@
   const $ = (s) => document.querySelector(s);
   let perms = [];   // Berechtigungs-Katalog
   let roles = [];   // alle Rollen
-  let can = { roles: false, users: false };
+  let posUsers = []; // {id,name} für den Mitglieder-Picker der Vereinsämter
+  let can = { roles: false, users: false, team: false };
 
   async function postJSON(url, data) {
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -34,7 +35,8 @@
 
     can.roles = me.isAdmin || me.permissions.includes("manage_roles");
     can.users = me.isAdmin || me.permissions.includes("manage_users");
-    if (!can.roles && !can.users) { window.location.href = "konto.html"; return; }
+    can.team = me.isAdmin || me.permissions.includes("manage_team");
+    if (!can.roles && !can.users && !can.team) { window.location.href = "konto.html"; return; }
 
     $("#admin-loading").hidden = true;
     $("#admin").hidden = false;
@@ -50,6 +52,10 @@
       if (!roles.length) await loadRoles();   // für Rollen-Auswahl
       await loadUsers();
       $("#users-section").hidden = false;
+    }
+    if (can.team) {
+      await loadPositions();
+      $("#team-section").hidden = false;
     }
     wireEvents();
   }
@@ -71,23 +77,6 @@
       '<legend class="perm-legend">Berechtigungen</legend>' + permCheckboxes([], false);
   }
 
-  function teamControls(r) {
-    const g = r.teamGroup || "";
-    const opt = (v, t) => '<option value="' + v + '"' + (g === v ? " selected" : "") + ">" + t + "</option>";
-    return (
-      '<div class="role-team">' +
-        '<div class="field-row">' +
-          '<div class="field"><label>Auf Team-Seite anzeigen</label>' +
-            '<select data-team-group>' + opt("", "— nicht anzeigen —") + opt("vorstand", "Vorstand") + opt("trainer", "Trainerteam") + "</select></div>" +
-          '<div class="field"><label>Reihenfolge</label>' +
-            '<input type="number" step="1" data-team-order value="' + (Number(r.teamOrder) || 0) + '"></div>' +
-        "</div>" +
-        '<div class="field"><label>Funktionsname (optional)</label>' +
-          '<input type="text" data-team-label placeholder="Standard: ' + BSG.escape(r.label) + '" value="' + BSG.escape(r.teamLabel || "") + '"></div>' +
-      "</div>"
-    );
-  }
-
   function renderRoles() {
     $("#roles-list").innerHTML = roles.map((r) => {
       const isAdminRole = r.id === "admin";
@@ -101,8 +90,7 @@
           (isAdminRole
             ? '<p class="muted-note">Besitzt immer alle Berechtigungen.</p>'
             : '<fieldset class="perm-grid">' + permCheckboxes(checked, false) + "</fieldset>" +
-              teamControls(r) +
-              '<button class="btn btn--primary btn--sm" data-save-role="' + r.id + '">Berechtigungen &amp; Anzeige speichern</button>') +
+              '<button class="btn btn--primary btn--sm" data-save-role="' + r.id + '">Berechtigungen speichern</button>') +
         "</div>"
       );
     }).join("");
@@ -132,6 +120,46 @@
     );
   }
 
+  /* ---------- Vereinsämter (öffentliche Team-Seite) ---------- */
+  async function loadPositions() {
+    try {
+      const data = await (await fetch("/api/positions")).json();
+      posUsers = data.users || [];
+      renderUserPicker();
+      renderPositions(data.items || []);
+    } catch (e) {
+      $("#positions-list").innerHTML = '<p class="load-error">Vereinsämter konnten nicht geladen werden.</p>';
+    }
+  }
+  function userOptions(selected) {
+    return posUsers.map((u) =>
+      '<option value="' + u.id + '"' + (u.id === selected ? " selected" : "") + ">" + BSG.escape(u.name) + "</option>").join("");
+  }
+  function renderUserPicker(selected) {
+    const sel = $("#pos-user");
+    if (sel) sel.innerHTML = userOptions(selected);
+  }
+  function groupOptions(g) {
+    const opt = (v, t) => '<option value="' + v + '"' + (g === v ? " selected" : "") + ">" + t + "</option>";
+    return opt("vorstand", "Vorstand") + opt("trainer", "Trainerteam");
+  }
+  function renderPositions(items) {
+    $("#positions-list").innerHTML = items.length ? items.map((p) =>
+      '<div class="adm-role" data-position="' + p.id + '">' +
+        '<div class="adm-role__head"><div><b>' + BSG.escape(p.name) + '</b> <span class="badge">' + (p.group === "trainer" ? "Trainerteam" : "Vorstand") + "</span></div>" +
+          '<button class="btn btn--outline btn--sm" data-del-position="' + p.id + '">Löschen</button></div>' +
+        '<div class="field-row">' +
+          '<div class="field"><label>Mitglied</label><select data-pos-user>' + userOptions(p.userId) + "</select></div>" +
+          '<div class="field"><label>Bereich</label><select data-pos-group>' + groupOptions(p.group) + "</select></div>" +
+        "</div>" +
+        '<div class="field-row">' +
+          '<div class="field"><label>Funktionsname</label><input type="text" data-pos-label value="' + BSG.escape(p.label) + '"></div>' +
+          '<div class="field"><label>Reihenfolge</label><input type="number" step="1" data-pos-order value="' + (Number(p.order) || 0) + '"></div>' +
+        "</div>" +
+        '<button class="btn btn--primary btn--sm" data-save-position="' + p.id + '">Amt speichern</button>' +
+      "</div>").join("") : '<p class="muted-note">Noch keine Ämter angelegt.</p>';
+  }
+
   const checkedValues = (scope) => [...scope.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value);
 
   function wireEvents() {
@@ -142,10 +170,7 @@
       createForm.querySelectorAll(".field--error").forEach((f) => f.classList.remove("field--error"));
       const label = createForm.elements.label.value;
       const permissions = checkedValues($("#role-perms"));
-      const teamGroup = createForm.elements.teamGroup.value;
-      const teamLabel = createForm.elements.teamLabel.value;
-      const teamOrder = createForm.elements.teamOrder.value;
-      const { res, data } = await postJSON("/api/roles", { label, permissions, teamGroup, teamLabel, teamOrder });
+      const { res, data } = await postJSON("/api/roles", { label, permissions });
       if (res.ok && data.ok) {
         createForm.reset();
         await loadRoles(); renderRoles();
@@ -161,19 +186,48 @@
       }
     });
 
+    // Neues Vereinsamt anlegen
+    const posForm = $("#position-create-form");
+    if (posForm) posForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      posForm.querySelectorAll(".field--error").forEach((f) => f.classList.remove("field--error"));
+      const payload = {
+        userId: posForm.elements.userId.value,
+        group: posForm.elements.group.value,
+        label: posForm.elements.label.value,
+        order: posForm.elements.order.value,
+      };
+      const { res, data } = await postJSON("/api/positions", payload);
+      if (res.ok && data.ok) {
+        posForm.reset();
+        await loadPositions();
+        toast("ok", data.message);
+      } else {
+        if (data.errors) {
+          Object.keys(data.errors).forEach((key) => {
+            const el = posForm.elements[key];
+            const f = el && el.closest(".field");
+            if (!f) return;
+            f.classList.add("field--error");
+            const p = f.querySelector(".field__error"); if (p) p.textContent = data.errors[key];
+          });
+        }
+        toast("err", data.message || "Fehler.");
+      }
+    });
+
     // Klicks im Admin-Bereich (Delegation)
     $("#admin").addEventListener("click", async (e) => {
       const saveRole = e.target.closest("[data-save-role]");
       const delRole = e.target.closest("[data-del-role]");
       const saveUser = e.target.closest("[data-save-user]");
+      const savePos = e.target.closest("[data-save-position]");
+      const delPos = e.target.closest("[data-del-position]");
 
       if (saveRole) {
         const card = saveRole.closest(".adm-role");
         const permissions = checkedValues(card.querySelector(".perm-grid"));
-        const teamGroup = (card.querySelector("[data-team-group]") || {}).value || "";
-        const teamLabel = (card.querySelector("[data-team-label]") || {}).value || "";
-        const teamOrder = (card.querySelector("[data-team-order]") || {}).value || 0;
-        const { res, data } = await postJSON("/api/roles/update", { id: saveRole.getAttribute("data-save-role"), permissions, teamGroup, teamLabel, teamOrder });
+        const { res, data } = await postJSON("/api/roles/update", { id: saveRole.getAttribute("data-save-role"), permissions });
         toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
         if (res.ok && data.ok) await loadRoles();
       }
@@ -191,6 +245,27 @@
         const { res, data } = await postJSON("/api/users/roles", { userId: saveUser.getAttribute("data-save-user"), roles: newRoles });
         toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
         if (res.ok && data.ok) await loadUsers();
+      }
+
+      if (savePos) {
+        const card = savePos.closest(".adm-role");
+        const payload = {
+          id: savePos.getAttribute("data-save-position"),
+          userId: (card.querySelector("[data-pos-user]") || {}).value,
+          group: (card.querySelector("[data-pos-group]") || {}).value,
+          label: (card.querySelector("[data-pos-label]") || {}).value,
+          order: (card.querySelector("[data-pos-order]") || {}).value,
+        };
+        const { res, data } = await postJSON("/api/positions/update", payload);
+        toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
+        if (res.ok && data.ok) await loadPositions();
+      }
+
+      if (delPos) {
+        if (!confirm("Dieses Amt wirklich löschen?")) return;
+        const { res, data } = await postJSON("/api/positions/delete", { id: delPos.getAttribute("data-del-position") });
+        toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
+        if (res.ok && data.ok) await loadPositions();
       }
     });
   }

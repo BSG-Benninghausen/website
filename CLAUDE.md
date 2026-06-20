@@ -78,9 +78,14 @@ This single file is the backend. Key pieces:
 - To add a permission: add to `PERMISSIONS`; grant it to relevant `EXAMPLE_ROLES` + a seed migration;
   gate the backend routes with `hasPerm(user, key)`; reveal nav/UI in the frontend (see below). Rights
   are intentionally **fine-grained, one per content area** (`manage_news`, `manage_events`,
-  `manage_training`, `manage_site`, `manage_payouts`, plus `view_*`/`manage_roles/users`).
-- Roles also carry optional `teamGroup`/`teamLabel`/`teamOrder` fields: the public **Team page is
-  computed from roles × users** (`GET /api/team`) — there is no manual team store/editor.
+  `manage_training`, `manage_site`, `manage_team`, `manage_payouts`, plus `view_*`/`manage_roles/users`).
+- **Roles are pure permission objects** (`{id, label, permissions[], system}`) — they grant rights
+  and never appear publicly. The public **Team page is computed from a separate `positions` store**
+  (`{userId, group, label, order}`, `group ∈ vorstand/trainer`), curated under Admin → Vereinsämter
+  via `GET/POST /api/positions(/update/delete)` (gated by `manage_team`). `GET /api/team` keeps its
+  shape (`{group,label,order,name,photo}`) but computes it from **positions × users**. So holding a
+  role (e.g. a stand-in with news rights) does not list someone on the team, and a web admin need not
+  appear with a photo. Name & photo come from the user account.
 
 ### Frontend wiring
 - `assets/js/main.js` defines the global `BSG.*` helpers (`escape`, `formatDate`, `dayMonth`,

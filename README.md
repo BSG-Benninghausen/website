@@ -75,7 +75,8 @@ Bereitgestellte Endpunkte:
 | `GET /api/age-classes` | Auswählbare Wettkampf-Altersklassen (für den Termin-Editor) |
 | `GET /api/weight-classes` | Gewichtsklassen je Altersklasse & Geschlecht (für gefilterte Auswahl) |
 | `GET /api/training` · `POST /api/training`(`/update`,`/delete`) | Trainingszeiten lesen (öffentlich) · pflegen (`manage_training`) |
-| `GET /api/team` | Team & Vorstand – **automatisch aus den Rollen** erzeugt (öffentlich) |
+| `GET /api/team` | Team & Vorstand – **aus den Vereinsämtern × Nutzern** berechnet (öffentlich) |
+| `GET /api/positions` · `POST /api/positions`(`/update`,`/delete`) | Vereinsämter (Team-Seite) lesen & pflegen (`manage_team`) |
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
@@ -111,7 +112,7 @@ Bereitgestellte Endpunkte:
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`,
-  `bsg_site`, `bsg_payouts`, `bsg_seed_version`, `bsg_pass_counter`.
+  `bsg_site`, `bsg_payouts`, `bsg_positions`, `bsg_seed_version`, `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
 
@@ -119,14 +120,16 @@ Bereitgestellte Endpunkte:
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
-  `manage_site`, `manage_memberships`, `view_members`, `view_finance`, `manage_payouts`.
+  `manage_site`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`, `manage_payouts`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
-  Startseiten-Texte) ist einzeln zuweisbar.
-- **Team/Vorstand aus Rollen:** Rollen tragen optionale Felder `teamGroup`
-  (`vorstand`/`trainer`), `teamLabel` (Anzeige-Override, sonst Rollenname) und `teamOrder`.
-  Wer eine so markierte Rolle hat, erscheint automatisch auf `team.html` – der Vorstand
-  granular über eigene Funktionsrollen (z. B. *1. Vorsitzender*, *Kassenwart*). Konfiguriert
-  wird das im **Admin-Rolleneditor** (`manage_roles`); Name & Foto stammen aus dem Benutzerkonto.
+  Startseiten-Texte, Vereinsämter) ist einzeln zuweisbar.
+- **Vereinsämter ≠ Rollen:** Rollen geben **ausschließlich Rechte**; die öffentliche
+  Team-Anzeige läuft über einen getrennten **Vereinsämter-Store** (`bsg_positions`,
+  Datensatz `{ userId, group, label, order }`, `group` ∈ `vorstand`/`trainer`). Ämter geben
+  keine Rechte. `GET /api/team` berechnet die Team-Seite aus **Ämtern × Nutzern**; gepflegt
+  werden sie im **Admin → Vereinsämter** (`manage_team`). So kann z. B. eine Vertretung die
+  Rechte eines Pressewarts erhalten, ohne öffentlich gelistet zu sein, und ein Web-Admin
+  taucht nicht zwangsläufig mit Foto im Vorstand auf. Name & Foto stammen aus dem Benutzerkonto.
 - **Profilfoto:** Benutzer laden ihr Foto optional selbst unter „Mein Konto" hoch
   (`POST /api/account/update` Feld `photo`); es erscheint auf der Team-Karte (sonst Initialen).
 - **Seed-Admin & Beispiel-Rollen:** Beim ersten Laden legt der Mock die System-Rollen
@@ -137,6 +140,8 @@ Bereitgestellte Endpunkte:
   `POST /api/roles/delete`, `GET /api/users`, `POST /api/users/roles`. Schutz: System-Rollen
   sind nicht löschbar, die Admin-Rolle behält immer alle Rechte, mindestens ein Administrator
   bleibt erhalten.
+- **Vereinsämter-Endpunkte:** `GET /api/positions` (liefert auch einen Mitglieder-Picker),
+  `POST /api/positions`(`/update`,`/delete`) – alle unter `manage_team`.
 
 ### Dynamischer Content & interne Bereiche
 
@@ -151,8 +156,8 @@ Bereitgestellte Endpunkte:
   **Trainingszeiten** (`manage_training`, `assets/data/trainingszeiten.json` → `trainingszeiten.html`,
   Startseiten-Teaser, Hero-Mini) und **Startseiten-Texte** (`manage_site`, `assets/data/site.json` →
   per `[data-site="key"]` auf der Startseite; Felder-Schema `SITE_FIELDS` in `mock-api.js`).
-  **Team & Vorstand** wird nicht manuell gepflegt, sondern automatisch aus den Rollen erzeugt
-  (siehe oben).
+  **Team & Vorstand** wird über die **Vereinsämter** (`manage_team`, Admin → Vereinsämter)
+  gepflegt und von `GET /api/team` aus Ämtern × Nutzern berechnet (siehe oben).
   Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu
   **Wettkampf-Altersklassen** (leer = offen für alle) sowie **Gebühr** und **Eigenanteil**;
   die Differenz (`Gebühr − Eigenanteil`) trägt der Verein. Bei Turnieren/Meisterschaften lassen
@@ -210,7 +215,8 @@ in `tests/README.md`.
 
 - **News:** `assets/data/news.json` bearbeiten (neueste werden automatisch zuerst angezeigt).
 - **Termine:** `assets/data/events.json` bearbeiten (nur Termine ab heute werden gezeigt).
-- **Texte/Trainingszeiten/Team:** direkt im jeweiligen HTML.
+- **Texte/Trainingszeiten:** über die Redaktion bzw. die jeweiligen Seed-JSONs.
+- **Team:** über **Admin → Vereinsämter** (`manage_team`).
 
 ## Noch zu ergänzen (vor dem Live-Gang)
 

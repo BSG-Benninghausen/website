@@ -48,7 +48,9 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   Feld `devCode` zurück (der Client nutzt es für `POST /api/auth/login`). `POST /api/auth/register`
   legt den Benutzer an und meldet ihn an; `GET /api/auth/me` liefert `{ user, permissions, isAdmin }`.
 - **Seed-Admin** `admin@bsg-benninghausen.de` existiert; Seed-Rollen (`vorstand`, `pressewart`,
-  `kassenwart`, `trainer`, Board-Rollen) inkl. `teamGroup`/`teamLabel`/`teamOrder` wie im Mock.
+  `kassenwart`, `trainer`, Board-Rollen) sind **reine Rechte-Rollen**. Die öffentliche
+  Team-Anzeige kommt aus **Vereinsämtern** (`positions`, Recht `manage_team`); `GET /api/team`
+  rechnet `positions × users`.
 - **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Klassen).
 - Die Tests verwenden **pro Lauf eindeutige E-Mail-Adressen** (`local.<RUN_ID>@example.com`) und
   zählen relativ, damit sie auch gegen ein persistentes Backend mehrfach laufen können.

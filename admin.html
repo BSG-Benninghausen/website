@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administration – BSG Benninghausen e.V.</title>
-  <meta name="description" content="Administration: Rollen, Berechtigungen und Benutzer der BSG Benninghausen e.V. verwalten.">
+  <meta name="description" content="Administration: Rollen, Berechtigungen, Benutzer und Vereinsämter der BSG Benninghausen e.V. verwalten.">
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=22">
+  <link rel="stylesheet" href="assets/css/styles.css?v=25">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -69,7 +69,7 @@
         <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Administration</p>
         <span class="eyebrow eyebrow--invert">Administration</span>
         <h1>Rollen &amp; Berechtigungen</h1>
-        <p>Lege Rollen an, setze Berechtigungen und weise sie Benutzern zu.</p>
+        <p>Lege Rollen an, setze Berechtigungen, weise sie Benutzern zu und pflege die Vereinsämter der Team-Seite.</p>
       </div>
     </section>
 
@@ -84,7 +84,7 @@
           <div id="roles-section" class="card" style="margin-bottom:24px" hidden>
             <span class="eyebrow">Rollen</span>
             <h2 style="font-size:1.3rem;margin:6px 0 4px">Rollen &amp; Berechtigungen</h2>
-            <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Die Administrator-Rolle besitzt immer alle Berechtigungen. System-Rollen können nicht gelöscht werden.</p>
+            <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Rollen geben ausschließlich Rechte. Die öffentliche Team-Anzeige steuerst du unten unter <em>Vereinsämter</em>. Die Administrator-Rolle besitzt immer alle Berechtigungen; System-Rollen können nicht gelöscht werden.</p>
             <div id="roles-list" class="adm-roles"></div>
 
             <form id="role-create-form" class="sub-form" novalidate>
@@ -95,24 +95,6 @@
                 <p class="field__error"></p>
               </div>
               <fieldset id="role-perms" class="perm-grid"></fieldset>
-              <div class="field-row">
-                <div class="field">
-                  <label for="role-teamgroup">Auf Team-Seite anzeigen</label>
-                  <select id="role-teamgroup" name="teamGroup">
-                    <option value="">— nicht anzeigen —</option>
-                    <option value="vorstand">Vorstand</option>
-                    <option value="trainer">Trainerteam</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="role-teamorder">Reihenfolge</label>
-                  <input id="role-teamorder" name="teamOrder" type="number" value="0" step="1">
-                </div>
-              </div>
-              <div class="field">
-                <label for="role-teamlabel">Funktionsname (optional)</label>
-                <input id="role-teamlabel" name="teamLabel" type="text" placeholder="Standard: Rollenname">
-              </div>
               <button type="submit" class="btn btn--primary">
                 <span class="spinner" aria-hidden="true"></span>
                 Rolle anlegen
@@ -127,6 +109,48 @@
             <h2 style="font-size:1.3rem;margin:6px 0 4px">Benutzer &amp; Rollenzuweisung</h2>
             <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Weise jedem Benutzer eine oder mehrere Rollen zu.</p>
             <div id="users-list" class="adm-users"></div>
+          </div>
+
+          <!-- Vereinsämter / Team-Seite -->
+          <div id="team-section" class="card" style="margin-top:24px" hidden>
+            <span class="eyebrow">Vereinsämter</span>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px">Team-Seite / Vereinsämter</h2>
+            <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Wer hier ein Amt erhält, erscheint öffentlich auf der Team-Seite (mit Foto aus dem Konto). Ämter geben keine Rechte.</p>
+            <div id="positions-list" class="adm-roles"></div>
+
+            <form id="position-create-form" class="sub-form" novalidate>
+              <h3 style="font-size:1.1rem;margin-bottom:14px">Neues Amt anlegen</h3>
+              <div class="field-row">
+                <div class="field">
+                  <label for="pos-user">Mitglied <span class="req">*</span></label>
+                  <select id="pos-user" name="userId"></select>
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="pos-group">Bereich</label>
+                  <select id="pos-group" name="group">
+                    <option value="vorstand">Vorstand</option>
+                    <option value="trainer">Trainerteam</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="pos-label">Funktionsname <span class="req">*</span></label>
+                  <input id="pos-label" name="label" type="text" placeholder="z. B. 1. Vorsitzender, Trainer">
+                  <p class="field__error"></p>
+                </div>
+                <div class="field">
+                  <label for="pos-order">Reihenfolge</label>
+                  <input id="pos-order" name="order" type="number" value="0" step="1">
+                </div>
+              </div>
+              <button type="submit" class="btn btn--primary">
+                <span class="spinner" aria-hidden="true"></span>
+                Amt anlegen
+              </button>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </form>
           </div>
         </div>
       </div>
@@ -181,9 +205,9 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=22" defer></script>
-  <script src="assets/js/mock-api.js?v=22" defer></script>
-  <script src="assets/js/main.js?v=22" defer></script>
-  <script src="assets/js/admin.js?v=22" defer></script>
+  <script src="assets/js/api-config.js?v=25" defer></script>
+  <script src="assets/js/mock-api.js?v=25" defer></script>
+  <script src="assets/js/main.js?v=25" defer></script>
+  <script src="assets/js/admin.js?v=25" defer></script>
 </body>
 </html>

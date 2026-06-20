@@ -46,8 +46,10 @@ Damit funktioniert das Frontend gegen das echte Backend end-to-end: gleicher Ori
 
 `createApi({ dataDir, dev })` lädt die Seed-/Config-JSONs aus `assets/data/`, seedet System-Rollen
 (`admin`, `member`), Beispiel-Rollen (`vorstand`, `pressewart`, `kassenwart`, `trainer`) und die
-Board-Rollen (`vorsitz1`, …) inkl. `teamGroup`/`teamLabel`/`teamOrder` – identisch zum Mock. Der
-Seed-Admin `admin@bsg-benninghausen.de` existiert immer.
+Board-Rollen (`vorsitz1`, …) als **reine Rechte-Rollen** – identisch zum Mock. Die öffentliche
+Team-Anzeige läuft über die **Vereinsämter** (`db.positions`, `GET /api/positions` unter
+`manage_team`); `GET /api/team` rechnet `positions × users`. Der Seed-Admin
+`admin@bsg-benninghausen.de` existiert immer.
 
 ### Sessions
 

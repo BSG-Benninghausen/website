@@ -36,6 +36,8 @@
     training: "bsg_training",
     site: "bsg_site",
     payouts: "bsg_payouts",
+    positions: "bsg_positions",
+    demoVersion: "bsg_demo_version",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -52,6 +54,7 @@
     { key: "manage_events", label: "Termine pflegen" },
     { key: "manage_training", label: "Trainingszeiten bearbeiten" },
     { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
+    { key: "manage_team", label: "Team-Seite / Vereinsämter verwalten" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
@@ -134,7 +137,7 @@
     title: norm(b.title), start: norm(b.start), end: norm(b.end),
     ageGroup: norm(b.ageGroup), description: norm(b.description),
   });
-  // Team/Vorstand wird aus den Rollen erzeugt (siehe GET /api/team). teamGroup je Rolle.
+  // Bereiche der öffentlichen Team-Seite (Vereinsämter, siehe GET /api/team & /api/positions).
   const TEAM_GROUPS = ["vorstand", "trainer"];
   const teamGroupOf = (v) => (TEAM_GROUPS.includes(v) ? v : "");
 
@@ -277,6 +280,9 @@
   /* ----- Rollen & Berechtigungen ----- */
   const getRoles = () => getStore(KEYS.roles, []);
   const setRoles = (r) => setStore(KEYS.roles, r);
+  // Vereinsämter (öffentliche Team-Anzeige) – getrennt von den Berechtigungs-Rollen
+  const getPositions = () => getStore(KEYS.positions, []);
+  const setPositions = (p) => setStore(KEYS.positions, p);
   function userPermissions(user) {
     if (!user) return [];
     const roleIds = user.roles || ["member"];
@@ -292,18 +298,18 @@
   const isAdmin = (user) => !!user && (user.roles || []).includes("admin");
   const hasPerm = (user, perm) => isAdmin(user) || userPermissions(user).includes(perm);
 
-  /* Seed: Standardrollen + Admin-Konto (idempotent) */
+  /* Seed: Standardrollen + Admin-Konto (idempotent). Rollen sind reine Rechte-Objekte;
+     die öffentliche Team-Anzeige läuft über Vereinsämter (positions), siehe GET /api/team. */
   const EXAMPLE_ROLES = [
-    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
+    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
     { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
-    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false, teamGroup: "vorstand", teamOrder: 30 },
-    { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false, teamGroup: "trainer", teamOrder: 0 },
+    { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false },
+    { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
   ];
-  // Beispiel-Funktionsrollen für den Vorstand (granulare Anzeige auf der Team-Seite)
+  // Beispiel-Funktionsrollen für den Vorstand (reine Rechte; Anzeige über Vereinsämter)
   const BOARD_ROLES = [
-    { id: "vorsitz1", label: "1. Vorsitzender", permissions: ["manage_users", "manage_news", "manage_events", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false, teamGroup: "vorstand", teamOrder: 10 },
-    { id: "vorsitz2", label: "2. Vorsitzender", permissions: ["manage_news", "manage_events", "view_members"], system: false, teamGroup: "vorstand", teamOrder: 20 },
-    { id: "schriftfuehrer", label: "Schriftführer", permissions: [], system: false, teamGroup: "vorstand", teamOrder: 40 },
+    { id: "vorsitz1", label: "1. Vorsitzender", permissions: ["manage_users", "manage_news", "manage_events", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
+    { id: "vorsitz2", label: "2. Vorsitzender", permissions: ["manage_news", "manage_events", "view_members"], system: false },
   ];
 
   function seed() {
@@ -348,6 +354,36 @@
       roles.forEach((r) => { if (r.permissions) r.permissions = r.permissions.filter((p) => p !== "manage_team"); });
       setStore(KEYS.seedVersion, 5);
     }
+    // Migration v6: Berechtigungs-Rollen von der öffentlichen Team-Anzeige trennen.
+    // - Pro team-markierter Rolle für jeden Inhaber ein Vereinsamt (positions) anlegen.
+    // - teamGroup/teamLabel/teamOrder von ALLEN Rollen entfernen (reine Rechte-Rollen).
+    // - Rein anzeigende Rollen ohne Rechte (z. B. Schriftführer) entfernen.
+    // - manage_team an Vorstand/1. Vorsitzenden vergeben.
+    if (seedVersion < 6) {
+      const users = getUsers();
+      const positions = getPositions();
+      const has = (uid, g, l, o) => positions.some((x) => x.userId === uid && x.group === g && x.label === l && Number(x.order) === Number(o));
+      roles.forEach((r) => {
+        if (!TEAM_GROUPS.includes(r.teamGroup)) return;
+        const g = r.teamGroup, l = norm(r.teamLabel) || r.label, o = Number(r.teamOrder) || 0;
+        users.forEach((u) => {
+          if ((u.roles || []).includes(r.id) && !has(u.id, g, l, o)) positions.push({ id: genId("pos"), userId: u.id, group: g, label: l, order: o });
+        });
+      });
+      setPositions(positions);
+      roles.forEach((r) => { delete r.teamGroup; delete r.teamLabel; delete r.teamOrder; });
+      // Rein anzeigende Rollen ohne Rechte entfernen (sie gewährten nichts)
+      const empty = roles.filter((r) => !r.system && (!r.permissions || r.permissions.length === 0)).map((r) => r.id);
+      if (empty.length) {
+        roles = roles.filter((r) => !empty.includes(r.id));
+        users.forEach((u) => { if (u.roles) u.roles = u.roles.filter((id) => !empty.includes(id)); });
+        setUsers(users);
+      }
+      // manage_team an passende Rollen vergeben
+      const grantT = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_team")) r.permissions.push("manage_team"); };
+      grantT("vorstand"); grantT("vorsitz1");
+      setStore(KEYS.seedVersion, 6);
+    }
     setRoles(roles);
 
     const users = getUsers();
@@ -385,6 +421,27 @@
     let values = getStore(KEYS.site, null);
     if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
     return values;
+  }
+  /* Beispiel-Stammdaten (Nutzer/Vereinsämter/Mitgliedschaften) einmalig einspielen.
+     Synchroner seed() kann kein JSON laden -> hier async beim ersten API-Zugriff.
+     Idempotent über feste IDs/E-Mail; gegated über bsg_demo_version. */
+  async function ensureDemo() {
+    if (getStore(KEYS.demoVersion, 0) >= 1) return;
+    let demo;
+    try { demo = await loadData("demo-data.json"); }
+    catch (e) { setStore(KEYS.demoVersion, 1); return; } // ohne Datei still überspringen
+    const users = getUsers();
+    (demo.users || []).forEach((u) => { if (!users.some((x) => x.id === u.id || x.email === u.email)) users.push(u); });
+    setUsers(users);
+    const positions = getPositions();
+    (demo.positions || []).forEach((p) => { if (!positions.some((x) => x.id === p.id)) positions.push(p); });
+    setPositions(positions);
+    const mem = getStore(KEYS.memberships, []);
+    (demo.memberships || []).forEach((m) => { if (!mem.some((x) => x.id === m.id)) mem.push(m); });
+    setStore(KEYS.memberships, mem);
+    const pc = getStore(KEYS.passCounter, 0) || 0;
+    if (pc < (demo.passCounter || 0)) setStore(KEYS.passCounter, demo.passCounter);
+    setStore(KEYS.demoVersion, 1);
   }
 
   /* ----- Route-Handler ----- */
@@ -471,24 +528,72 @@
       return json({ ok: true, message: "Trainingszeit gelöscht." });
     },
 
-    /* ---------- Team & Vorstand (automatisch aus Rollen) ---------- */
+    /* ---------- Team & Vorstand (öffentlich, aus Vereinsämtern × Nutzern) ---------- */
     "GET /api/team": async () => {
-      const teamRoles = getRoles().filter((r) => TEAM_GROUPS.includes(r.teamGroup));
       const users = getUsers();
+      const byId = {}; users.forEach((u) => { byId[u.id] = u; });
       const items = [];
-      teamRoles.forEach((r) => {
-        users.filter((u) => (u.roles || []).includes(r.id)).forEach((u) => {
-          items.push({
-            group: r.teamGroup,
-            label: norm(r.teamLabel) || r.label,
-            order: Number(r.teamOrder) || 0,
-            name: u.name,
-            photo: u.photo || "",
-          });
+      getPositions().forEach((p) => {
+        const u = byId[p.userId];
+        if (!u) return; // Nutzer gelöscht -> Amt überspringen
+        if (!TEAM_GROUPS.includes(p.group)) return; // ungültige/leere Gruppe nicht veröffentlichen (Contract: vorstand|trainer)
+        items.push({
+          group: p.group,
+          label: norm(p.label),
+          order: Number(p.order) || 0,
+          name: u.name,
+          photo: u.photo || "",
         });
       });
       items.sort((a, b) => (a.order - b.order) || a.label.localeCompare(b.label, "de") || a.name.localeCompare(b.name, "de"));
       return json({ ok: true, items });
+    },
+
+    /* ---------- Vereinsämter (Team-Seite verwalten, gated: manage_team) ---------- */
+    "GET /api/positions": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const users = getUsers();
+      const byId = {}; users.forEach((u) => { byId[u.id] = u; });
+      const items = getPositions().map((p) => {
+        const u = byId[p.userId] || {};
+        return { id: p.id, userId: p.userId, group: p.group, label: p.label, order: p.order, name: u.name || "—", email: u.email || "—" };
+      });
+      return json({ ok: true, items, users: users.map((u) => ({ id: u.id, name: u.name })) });
+    },
+
+    "POST /api/positions": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (!getUserById(body.userId)) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422);
+      const label = norm(body.label);
+      if (label.length < 1) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { label: "Bitte einen Funktionsnamen angeben." } }, 422);
+      const pos = { id: genId("pos"), userId: body.userId, group: teamGroupOf(body.group), label, order: num(body.order) };
+      const list = getPositions(); list.push(pos); setPositions(list);
+      return json({ ok: true, position: pos, message: "Amt angelegt." }, 201);
+    },
+
+    "POST /api/positions/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const list = getPositions();
+      const idx = list.findIndex((p) => p.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Amt nicht gefunden." }, 404);
+      if (body.userId !== undefined) { if (!getUserById(body.userId)) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422); list[idx].userId = body.userId; }
+      if (body.group !== undefined) list[idx].group = teamGroupOf(body.group);
+      if (body.label !== undefined && norm(body.label).length >= 1) list[idx].label = norm(body.label);
+      if (body.order !== undefined) list[idx].order = num(body.order);
+      setPositions(list);
+      return json({ ok: true, position: list[idx], message: "Amt gespeichert." });
+    },
+
+    "POST /api/positions/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_team")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const list = getPositions();
+      if (!list.some((p) => p.id === body.id)) return json({ ok: false, message: "Amt nicht gefunden." }, 404);
+      setPositions(list.filter((p) => p.id !== body.id));
+      return json({ ok: true, message: "Amt gelöscht." });
     },
 
     /* ---------- Startseiten-Texte ---------- */
@@ -704,7 +809,7 @@
       const perms = (body.permissions || []).filter((p) => ALL_PERMS.includes(p));
       const roles = getRoles();
       const id = "role-" + label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Math.random().toString(36).slice(2, 5);
-      const role = { id, label, permissions: perms, system: false, teamGroup: teamGroupOf(body.teamGroup), teamLabel: norm(body.teamLabel), teamOrder: num(body.teamOrder) };
+      const role = { id, label, permissions: perms, system: false };
       roles.push(role); setRoles(roles);
       return json({ ok: true, role, message: "Rolle „" + label + "“ angelegt." }, 201);
     },
@@ -718,9 +823,6 @@
       if (roles[idx].id === "admin") return json({ ok: false, message: "Die Administrator-Rolle besitzt immer alle Berechtigungen und kann nicht eingeschränkt werden." }, 409);
       if (body.label !== undefined && norm(body.label).length >= 2) roles[idx].label = norm(body.label);
       if (Array.isArray(body.permissions)) roles[idx].permissions = body.permissions.filter((p) => ALL_PERMS.includes(p));
-      if (body.teamGroup !== undefined) roles[idx].teamGroup = teamGroupOf(body.teamGroup);
-      if (body.teamLabel !== undefined) roles[idx].teamLabel = norm(body.teamLabel);
-      if (body.teamOrder !== undefined) roles[idx].teamOrder = num(body.teamOrder);
       setRoles(roles);
       return json({ ok: true, role: roles[idx], message: "Rolle gespeichert." });
     },
@@ -1044,6 +1146,7 @@
     }
 
     // Mock-Pfad (Default): lokale Route-Handler mit simulierter Latenz.
+    await ensureDemo();
     const handler = routes[method + " " + path];
     await wait(rnd(LATENCY));
     if (!handler) return json({ ok: false, message: "Endpoint nicht gefunden (Mock)." }, 404);

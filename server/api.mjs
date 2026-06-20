@@ -33,6 +33,7 @@ const PERMISSIONS = [
   { key: "manage_events", label: "Termine pflegen" },
   { key: "manage_training", label: "Trainingszeiten bearbeiten" },
   { key: "manage_site", label: "Startseiten-Texte bearbeiten" },
+  { key: "manage_team", label: "Team-Seite / Vereinsämter verwalten" },
   { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
   { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
   { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
@@ -57,16 +58,16 @@ const SITE_FIELDS = [
 ];
 const SITE_KEYS = SITE_FIELDS.map((f) => f.key);
 
+// Rollen sind reine Rechte-Objekte; die öffentliche Team-Anzeige läuft über Vereinsämter (positions).
 const EXAMPLE_ROLES = [
-  { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
+  { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
   { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
-  { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false, teamGroup: "vorstand", teamOrder: 30 },
-  { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false, teamGroup: "trainer", teamOrder: 0 },
+  { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false },
+  { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
 ];
 const BOARD_ROLES = [
-  { id: "vorsitz1", label: "1. Vorsitzender", permissions: ["manage_users", "manage_news", "manage_events", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false, teamGroup: "vorstand", teamOrder: 10 },
-  { id: "vorsitz2", label: "2. Vorsitzender", permissions: ["manage_news", "manage_events", "view_members"], system: false, teamGroup: "vorstand", teamOrder: 20 },
-  { id: "schriftfuehrer", label: "Schriftführer", permissions: [], system: false, teamGroup: "vorstand", teamOrder: 40 },
+  { id: "vorsitz1", label: "1. Vorsitzender", permissions: ["manage_users", "manage_news", "manage_events", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
+  { id: "vorsitz2", label: "2. Vorsitzender", permissions: ["manage_news", "manage_events", "view_members"], system: false },
 ];
 
 /* ----- reine Helfer (1:1 zum Mock) ----- */
@@ -281,6 +282,29 @@ export function createApi({ dataDir, dev = true }) {
       roles.forEach((r) => { if (r.permissions) r.permissions = r.permissions.filter((p) => p !== "manage_team"); });
       db.seedVersion = 5;
     }
+    // Migration v6: Berechtigungs-Rollen von der öffentlichen Team-Anzeige trennen (siehe Mock).
+    // Team-markierte Rollen -> Vereinsämter (positions); Team-Felder von allen Rollen entfernen;
+    // rein anzeigende Rollen ohne Rechte entfernen; manage_team vergeben.
+    if (db.seedVersion < 6) {
+      const positions = db.positions;
+      const has = (uid, g, l, o) => positions.some((x) => x.userId === uid && x.group === g && x.label === l && Number(x.order) === Number(o));
+      db.roles.forEach((r) => {
+        if (!TEAM_GROUPS.includes(r.teamGroup)) return;
+        const g = r.teamGroup, l = norm(r.teamLabel) || r.label, o = Number(r.teamOrder) || 0;
+        db.users.forEach((u) => {
+          if ((u.roles || []).includes(r.id) && !has(u.id, g, l, o)) positions.push({ id: genId("pos"), userId: u.id, group: g, label: l, order: o });
+        });
+      });
+      db.roles.forEach((r) => { delete r.teamGroup; delete r.teamLabel; delete r.teamOrder; });
+      const empty = db.roles.filter((r) => !r.system && (!r.permissions || r.permissions.length === 0)).map((r) => r.id);
+      if (empty.length) {
+        db.roles = db.roles.filter((r) => !empty.includes(r.id));
+        db.users.forEach((u) => { if (u.roles) u.roles = u.roles.filter((id) => !empty.includes(id)); });
+      }
+      grant("vorstand", ["manage_team"]);
+      grant("vorsitz1", ["manage_team"]);
+      db.seedVersion = 6;
+    }
 
     if (!db.users.some((u) => u.email === ADMIN_EMAIL)) {
       db.users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
@@ -296,8 +320,20 @@ export function createApi({ dataDir, dev = true }) {
     db.training = loadJSON("trainingszeiten.json");
     db.site = loadJSON("site.json");
     db.registrations = []; db.payouts = []; db.codes = {}; db.passCounter = 0; db.seedVersion = 0;
+    db.positions = [];
     sessions.clear();
     seed();
+    seedDemo();
+  }
+  /* Beispiel-Stammdaten aus demo-data.json (gleiche Quelle wie der Mock). init()
+     leert ohnehin, daher kein Idempotenz-Check nötig. Fehlt die Datei, wird übersprungen. */
+  function seedDemo() {
+    let demo;
+    try { demo = loadJSON("demo-data.json"); } catch (e) { return; }
+    (demo.users || []).forEach((u) => db.users.push(u));
+    (demo.positions || []).forEach((p) => db.positions.push(p));
+    (demo.memberships || []).forEach((m) => db.memberships.push(m));
+    db.passCounter = Math.max(db.passCounter, demo.passCounter || 0);
   }
   init();
 
@@ -375,23 +411,67 @@ export function createApi({ dataDir, dev = true }) {
       return J({ ok: true, message: "Trainingszeit gelöscht." });
     },
 
-    /* ---------- Team & Vorstand (aus Rollen × Nutzern) ---------- */
+    /* ---------- Team & Vorstand (öffentlich, aus Vereinsämtern × Nutzern) ---------- */
     "GET /api/team": async () => {
-      const teamRoles = db.roles.filter((r) => TEAM_GROUPS.includes(r.teamGroup));
+      const byId = {}; db.users.forEach((u) => { byId[u.id] = u; });
       const items = [];
-      teamRoles.forEach((r) => {
-        db.users.filter((u) => (u.roles || []).includes(r.id)).forEach((u) => {
-          items.push({
-            group: r.teamGroup,
-            label: norm(r.teamLabel) || r.label,
-            order: Number(r.teamOrder) || 0,
-            name: u.name,
-            photo: u.photo || "",
-          });
+      db.positions.forEach((p) => {
+        const u = byId[p.userId];
+        if (!u) return; // Nutzer gelöscht -> Amt überspringen
+        if (!TEAM_GROUPS.includes(p.group)) return; // ungültige/leere Gruppe nicht veröffentlichen (Contract: vorstand|trainer)
+        items.push({
+          group: p.group,
+          label: norm(p.label),
+          order: Number(p.order) || 0,
+          name: u.name,
+          photo: u.photo || "",
         });
       });
       items.sort((a, b) => (a.order - b.order) || a.label.localeCompare(b.label, "de") || a.name.localeCompare(b.name, "de"));
       return J({ ok: true, items });
+    },
+
+    /* ---------- Vereinsämter (Team-Seite verwalten, gated: manage_team) ---------- */
+    "GET /api/positions": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_team")) return deny(user);
+      const byId = {}; db.users.forEach((u) => { byId[u.id] = u; });
+      const items = db.positions.map((p) => {
+        const u = byId[p.userId] || {};
+        return { id: p.id, userId: p.userId, group: p.group, label: p.label, order: p.order, name: u.name || "—", email: u.email || "—" };
+      });
+      return J({ ok: true, items, users: db.users.map((u) => ({ id: u.id, name: u.name })) });
+    },
+
+    "POST /api/positions": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_team")) return deny(user);
+      if (!getUserById(body.userId)) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422);
+      const label = norm(body.label);
+      if (label.length < 1) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { label: "Bitte einen Funktionsnamen angeben." } }, 422);
+      const pos = { id: genId("pos"), userId: body.userId, group: teamGroupOf(body.group), label, order: num(body.order) };
+      db.positions.push(pos);
+      return J({ ok: true, position: pos, message: "Amt angelegt." }, 201);
+    },
+
+    "POST /api/positions/update": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_team")) return deny(user);
+      const idx = db.positions.findIndex((p) => p.id === body.id);
+      if (idx === -1) return J({ ok: false, message: "Amt nicht gefunden." }, 404);
+      if (body.userId !== undefined) { if (!getUserById(body.userId)) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422); db.positions[idx].userId = body.userId; }
+      if (body.group !== undefined) db.positions[idx].group = teamGroupOf(body.group);
+      if (body.label !== undefined && norm(body.label).length >= 1) db.positions[idx].label = norm(body.label);
+      if (body.order !== undefined) db.positions[idx].order = num(body.order);
+      return J({ ok: true, position: db.positions[idx], message: "Amt gespeichert." });
+    },
+
+    "POST /api/positions/delete": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_team")) return deny(user);
+      if (!db.positions.some((p) => p.id === body.id)) return J({ ok: false, message: "Amt nicht gefunden." }, 404);
+      db.positions = db.positions.filter((p) => p.id !== body.id);
+      return J({ ok: true, message: "Amt gelöscht." });
     },
 
     /* ---------- Startseiten-Texte ---------- */
@@ -583,7 +663,7 @@ export function createApi({ dataDir, dev = true }) {
       if (label.length < 2) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { label: "Bitte Rollennamen angeben." } }, 422);
       const perms = (body.permissions || []).filter((p) => ALL_PERMS.includes(p));
       const id = "role-" + label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Math.random().toString(36).slice(2, 5);
-      const role = { id, label, permissions: perms, system: false, teamGroup: teamGroupOf(body.teamGroup), teamLabel: norm(body.teamLabel), teamOrder: num(body.teamOrder) };
+      const role = { id, label, permissions: perms, system: false };
       db.roles.push(role);
       return J({ ok: true, role, message: "Rolle „" + label + "“ angelegt." }, 201);
     },
@@ -595,9 +675,6 @@ export function createApi({ dataDir, dev = true }) {
       if (db.roles[idx].id === "admin") return J({ ok: false, message: "Die Administrator-Rolle besitzt immer alle Berechtigungen und kann nicht eingeschränkt werden." }, 409);
       if (body.label !== undefined && norm(body.label).length >= 2) db.roles[idx].label = norm(body.label);
       if (Array.isArray(body.permissions)) db.roles[idx].permissions = body.permissions.filter((p) => ALL_PERMS.includes(p));
-      if (body.teamGroup !== undefined) db.roles[idx].teamGroup = teamGroupOf(body.teamGroup);
-      if (body.teamLabel !== undefined) db.roles[idx].teamLabel = norm(body.teamLabel);
-      if (body.teamOrder !== undefined) db.roles[idx].teamOrder = num(body.teamOrder);
       return J({ ok: true, role: db.roles[idx], message: "Rolle gespeichert." });
     },
     "POST /api/roles/delete": async (body, ctx) => {
