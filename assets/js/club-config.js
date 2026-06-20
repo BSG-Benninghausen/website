@@ -32,8 +32,8 @@
       sport: "Judo",
       locality: "Benninghausen",
       status: "live",
-      clubSeed: "club.json",
-      theme: "assets/css/theme.css",
+      clubSeed: "club.bsg.json",
+      theme: "assets/css/theme.bsg.css",
       accent: "#e3141b",
       summary:
         "Judo-Verein im Kreis Soest – der erste Referenzkunde, vollständig " +
