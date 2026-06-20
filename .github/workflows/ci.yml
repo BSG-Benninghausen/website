@@ -43,6 +43,9 @@ jobs:
       - name: Mock-Modus
         run: node tests/run.mjs
 
+      - name: Persistenz (JSON-Snapshot, Restart-Roundtrip)
+        run: node tests/persistence.mjs
+
       - name: Backend starten (Dev-Modus)
         run: |
           node server/index.mjs > /tmp/bsg-server.log 2>&1 &

@@ -25,6 +25,7 @@ BSG_DEV=0 node server/index.mjs       # Produktionsmodus (s. u.)
 | `BSG_STATIC`         | an (`!= "0"`)      | Statische Website aus dem Repo-Root ausliefern.                               |
 | `BSG_SECURE_COOKIES` | an, wenn nicht Dev | Session-Cookie mit `Secure` markieren (für HTTPS-Betrieb).                    |
 | `BSG_CORS_ORIGINS`   | leer               | Komma-Liste erlaubter Cross-Origin-Origins (Cookie-Auth → Allowlist nötig).   |
+| `BSG_DATA_FILE`      | leer               | Pfad zur JSON-Snapshot-Datei → **Persistenz** (s. u.). Leer = rein in-memory.  |
 
 Sicherheits-Defaults: Das Session-Cookie ist `HttpOnly` + `SameSite=Lax` (in Produktion zusätzlich
 `Secure`). CORS ist standardmäßig **aus** – same-origin (Static-Serving am selben Origin) braucht
@@ -57,11 +58,28 @@ Passwordless wie der Mock: `POST /api/auth/request-code` erzeugt einen Code; `PO
 tauscht ihn gegen eine Session. Die Session wird serverseitig (Token → userId) gehalten und als
 `bsg_session`-Cookie (`HttpOnly`, `SameSite=Lax`) transportiert. `register` legt an und meldet an.
 
-### Datenhaltung
+### Datenhaltung & Persistenz
 
-In-Memory (Prozess-Lebensdauer). Das genügt für die Contract-Tests und einen Demo-/Dev-Betrieb;
-für echte Persistenz ließe sich `api.mjs` hinter denselben Routen auf eine DB umstellen, ohne dass
-sich Frontend oder Tests ändern.
+Standardmäßig **in-memory** (Prozess-Lebensdauer) – das genügt für die Contract-Tests und einen
+Demo-/Dev-Betrieb. Für **Durability** setzt man `BSG_DATA_FILE` auf einen Dateipfad: dann hält
+`server/store.mjs` den `db` als **JSON-Snapshot** auf der Platte (spiegelt das localStorage-Modell
+des Mocks).
+
+- **Boot:** existiert die Snapshot-Datei, wird sie geladen und `seed()` zieht idempotente
+  Migrationen nach (Forward-Compat); sonst wird frisch geseedet. Danach einmal geschrieben.
+- **Write-through:** nach jeder zustandsändernden (Nicht-GET-)Anfrage wird im Dispatcher `handle()`
+  **atomar** geschrieben (`<file>.tmp` → `rename`). Ein defekter/fehlender Snapshot fällt fail-safe
+  auf den Seed-Zustand zurück (kein Crash).
+- Persistiert wird **nur `db`** (Inhalte/Stammdaten), **nicht `sessions`** – Tokens bleiben flüchtig,
+  nach Neustart meldet man sich neu an. Statische Config-Templates (`age-classes.json` etc.) werden
+  weiterhin bei jedem Start frisch geladen.
+- Ohne `BSG_DATA_FILE` ändert sich **nichts** gegenüber früher (Contract-Tests/E2E unverändert).
+  Test: `node tests/persistence.mjs`.
+
+**Ausblick Mehrmandantenfähigkeit:** `store.mjs` + die `db`/`dataFile`-Kapselung in `createApi` sind
+die Naht dafür. Ein Multi-Tenant-Server hält eine `Map<tenantId, createApi({dataFile: …})>`, löst den
+Mandanten in `index.mjs` aus `req.headers.host` auf und ruft dasselbe `handle(...)`. Host-Auflösung,
+Onboarding und Billing sind ein späterer Schritt (siehe `docs/productization-saas-plan.md`).
 
 ## Dev-/Test-Modus (`BSG_DEV`, Default an)
 

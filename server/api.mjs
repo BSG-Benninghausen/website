@@ -17,6 +17,7 @@
    ===================================================================== */
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { loadSnapshot, saveSnapshot } from "./store.mjs";
 
 /* ----- Kataloge & Konstanten (1:1 zum Mock) ----- */
 const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
@@ -276,8 +277,10 @@ function memberFields(body, allowedWeights) {
 }
 
 /* ===================================================================== */
-export function createApi({ dataDir, dev = true }) {
+export function createApi({ dataDir, dev = true, dataFile = "" }) {
   const loadJSON = (file) => JSON.parse(readFileSync(new URL(file, dataDir), "utf8"));
+  // Persistenz ist opt-in: nur mit dataFile (Env BSG_DATA_FILE) wird `db` durabel.
+  const persist = () => { if (dataFile) saveSnapshot(dataFile, db); };
 
   /* statische Config (anpassbare Vorlagen) */
   const ageCfg = loadJSON("age-classes.json");
@@ -432,7 +435,23 @@ export function createApi({ dataDir, dev = true }) {
     (demo.memberships || []).forEach((m) => db.memberships.push(m));
     db.passCounter = Math.max(db.passCounter, demo.passCounter || 0);
   }
-  init();
+  /* Hochfahren: persistierten Snapshot laden (falls vorhanden) und idempotente
+     Migrationen via seed() nachziehen; sonst frisch seeden. Danach einmalig
+     persistieren, damit auch ein frisch geseedeter Mandant eine Datei bekommt. */
+  function boot() {
+    const snap = dataFile ? loadSnapshot(dataFile) : null;
+    init(); // immer zuerst: garantiert die erwartete db-Struktur + Defaults
+    if (snap) {
+      // Persistierte Werte kontrolliert übernehmen: nur bereits bekannte db-Keys
+      // (kein __proto__/constructor -> keine Prototype-Pollution). Fehlt ein Key im
+      // Snapshot, behält er seinen init()-Default (Forward-Compat bei neuen Feldern).
+      Object.keys(db).forEach((k) => { if (Object.prototype.hasOwnProperty.call(snap, k)) db[k] = snap[k]; });
+      sessions.clear();
+      seed(); // idempotente Migrationen (v2…v9) auf die übernommenen Daten nachziehen
+    }
+    persist();
+  }
+  boot();
 
   /* ----- Antwort-Helfer ----- */
   const J = (body, status = 200) => ({ status, body });
@@ -1075,6 +1094,7 @@ export function createApi({ dataDir, dev = true }) {
     "POST /api/test/reset": async () => {
       if (!dev) return J({ ok: false, message: "Endpoint nicht gefunden." }, 404);
       init();
+      persist();
       return J({ ok: true, message: "Backend auf Seed-Zustand zurückgesetzt." });
     },
   };
@@ -1092,6 +1112,9 @@ export function createApi({ dataDir, dev = true }) {
     };
     try {
       const res = await handler(body || {}, ctx);
+      // Write-through: nach jeder zustandsändernden (Nicht-GET-)Anfrage persistieren
+      // (eine Stelle statt vieler Mutationsorte; No-op ohne dataFile).
+      if (method !== "GET" && method !== "HEAD") persist();
       return { status: res.status, body: res.body, session: ctx._session };
     } catch (err) {
       // Details (inkl. evtl. internals) nur im Dev-Modus an den Client geben.

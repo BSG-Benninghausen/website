@@ -32,10 +32,12 @@ const SECURE_COOKIES = process.env.BSG_SECURE_COOKIES != null ? process.env.BSG_
 const CORS_ORIGINS = (process.env.BSG_CORS_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
 const ROOT = fileURLToPath(new URL("../", import.meta.url));           // Repo-Root
 const DATA_DIR = new URL("../assets/data/", import.meta.url);
+// Persistenz (opt-in): Pfad zur JSON-Snapshot-Datei. Leer = rein in-memory wie bisher.
+const DATA_FILE = process.env.BSG_DATA_FILE || "";
 // Repo-interne Verzeichnisse, die nie über das Static-Serving erreichbar sein sollen.
 const DENY_STATIC = new Set([".git", ".github", "server", "tests", "node_modules"]);
 
-const api = createApi({ dataDir: DATA_DIR, dev: DEV });
+const api = createApi({ dataDir: DATA_DIR, dev: DEV, dataFile: DATA_FILE });
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -183,6 +185,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`BSG-Backend läuft auf http://localhost:${PORT}  (statisch: ${SERVE_STATIC ? "an" : "aus"}, dev: ${DEV ? "an" : "aus"})`);
+  console.log(`BSG-Backend läuft auf http://localhost:${PORT}  (statisch: ${SERVE_STATIC ? "an" : "aus"}, dev: ${DEV ? "an" : "aus"}, persistenz: ${DATA_FILE ? "an (" + DATA_FILE + ")" : "aus"})`);
   console.log(`Contract-Tests:  TEST_BASE=http://localhost:${PORT} node tests/run.mjs`);
 });

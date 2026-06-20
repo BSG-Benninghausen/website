@@ -87,10 +87,16 @@ bestimmt *Sichtbarkeit* (Freigabe an `public`/Rollen).
 
 ## 4. Mehrmandantenfähigkeit (Backend)
 
-Das heutige `server/` ist **single-tenant** (ein In-Memory-Store, ein Seed-Admin). Für SaaS nötig:
+**Persistenz (P4 Teil 1, umgesetzt):** Das `server/` hält den `db` jetzt optional als JSON-Snapshot
+durabel (`BSG_DATA_FILE` → `server/store.mjs`, atomares Write-through in `handle()`, fail-safe Boot,
+`sessions` flüchtig). Ohne die Env-Var bleibt alles in-memory wie zuvor → Tests/CI/E2E unverändert.
+Die `db`/`dataFile`-Kapselung ist die **Naht** für echte Mandantenfähigkeit (ein `dataFile` je Mandant).
+
+Das `server/` ist weiterhin **single-tenant** (ein Store, ein Seed-Admin). Für volle SaaS-Mandanten
+fehlt noch:
 
 - **Mandanten-Auflösung** per `Host`-Header (Domain → Mandant) bzw. dediziertem Deploy je Verein.
-- **Mandanten-getrennter Store + DB-Persistenz** (heute prozess-lokal/flüchtig). Pro Mandant:
+- **Mandanten-getrennter Store** (`Map<tenantId, createApi({dataFile})>`); pro Mandant:
   Nutzer/Rollen/Mitglieder, `club`-Config, `featureFlags` (Freigabe) **und** Provisioning (Buchung).
 - **Branding-Assets pro Mandant** (Logo/Favicon/manifest/title; siehe §2 „offen").
 - **Onboarding-Flow:** neuer Mandant = Seed (Admin-Konto, Default-`club`/Theme, gebuchte Features
@@ -119,7 +125,7 @@ eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
 | **P1 White-Label-Extraktion** | `club.json` + `GET/POST /api/club`, `[data-club]`, `theme.css`, Recht `manage_club`, generische Defaults, Contract-Test | **umgesetzt (diese Iteration)** |
 | **P2 Branding pro Domain** | Dynamisches `manifest.webmanifest` (Backend, `/api/manifest`) + client-seitiges `<title>`/`theme-color`/App-Titel aus `/api/club`; Felder `tagline`/`theme_color` | **umgesetzt** (offen: Crawler-SEO-Templating, per-Verein-Icon-Dateien) |
 | **P3 Feature-Buchung mocken** | Provisioning-Store (`bsg_feature_bookings`) + Recht `book_features` + `GET /api/bookings`/`POST /api/features/book` + Admin-UI „Funktionen buchen"; `capabilities` filtert gebucht×freigegeben | **umgesetzt** (offen: Abo/Billing-Gating, P4) |
-| **P4 Mehrmandanten-Backend** | Host-basierte Mandantenauflösung, DB-Persistenz, Onboarding, Billing-Anbindung | offen |
+| **P4 Mehrmandanten-Backend** | **Teil 1 umgesetzt:** JSON-Snapshot-Persistenz (`BSG_DATA_FILE`, `server/store.mjs`), mandantenfähig gekapselt. **Offen (Teil 2):** Host-basierte Mandantenauflösung, pro-Mandant-Stores, Onboarding, Billing | teilweise |
 | **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |
 
 > **Empfehlung:** P2/P3 als nächste, in sich abgeschlossene Schritte (rein additiv, gegen den

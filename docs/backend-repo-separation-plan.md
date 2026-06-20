@@ -252,3 +252,8 @@ wird beim Repo-Split zum verteilten Artefakt mit Versionskosten.
 **Empfohlener Pfad:** Phase 0 + 1 jetzt (Vertrag kapseln, Workspace-Grenze ziehen) und **dort halten**,
 bis ein echter Treiber auftaucht (DB-Persistenz, eigener Deploy-Zyklus, getrennte Teams). Erst dann
 Phase 2–4 — mit Option A (same-origin) als sicherem Default fürs Deployment.
+
+> **Hinweis (P4 Teil 1):** Die optionale JSON-Snapshot-Persistenz (`server/store.mjs`, Env
+> `BSG_DATA_FILE`; siehe `docs/productization-saas-plan.md`) gehört klar zum **Backend** und wandert
+> mit `server/` ins künftige private Repo. Das öffentliche Frontend + der Mock bleiben davon
+> unberührt (Persistenz ist im Mock ohnehin `localStorage`).
