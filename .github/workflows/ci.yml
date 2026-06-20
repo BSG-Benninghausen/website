@@ -2,7 +2,8 @@ name: Tests
 
 # Führt bei jedem PR und bei Pushes auf main die Test-Suiten aus:
 #   • contract – die zero-dependency Contract-Tests im Mock- UND Real-Modus
-#                (Real: echtes Backend aus server/ über HTTP),
+#                (Real: echtes Backend aus server/ über HTTP), plus Syntax-
+#                Check und Versions-Guard (Cache-Busting konsistent).
 #   • e2e      – Browser-End-to-End-Tests (Playwright, isoliert in tests/e2e/).
 # Der Deploy nach GitHub Pages bleibt davon getrennt (siehe deploy-pages.yml).
 on:
@@ -10,6 +11,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,6 +28,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22   # Harness nutzt Headers.getSetCookie() -> Node >= 20
+
+      - name: Syntax-Check (node --check)
+        run: |
+          set -e
+          for f in assets/js/*.js server/*.mjs tests/*.mjs tests/e2e/*.mjs service-worker.js; do
+            echo "check $f"
+            node --check "$f"
+          done
+
+      - name: Versions-Guard (Cache-Busting)
+        run: node tests/guard-versions.mjs
 
       - name: Mock-Modus
         run: node tests/run.mjs

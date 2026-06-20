@@ -211,6 +211,36 @@ TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
 So bleiben Mock und Backend vertraglich in Sync. Details und die Backend-Anforderungen stehen
 in `tests/README.md`.
 
+### UI-/E2E-Tests (Playwright)
+
+Die Contract-Tests decken nur `/api/*` ab. Die UI-/DOM-/PWA-Schicht (Login-Flow,
+Permission-Nav-Reveal, CRUD-Editoren, Service-Worker/Offline) prüft eine **Playwright-Suite**
+unter `tests/e2e/` gegen das echte Backend (Playwright startet `server/index.mjs` selbst,
+`BSG_DEV=1`, `real`-Modus). Die Dev-Abhängigkeit ist **bewusst nach `tests/e2e/` isoliert** –
+Repo-Root und ausgelieferte Website bleiben zero-dep.
+
+```bash
+cd tests/e2e
+npm ci                                   # Playwright installieren (nur hier)
+npx playwright install --with-deps chromium
+npm test                                 # Suite ausführen (startet server/ selbst)
+```
+
+### CI/CD-Stufen
+
+| Stufe | Auslöser | Ziel | API-Modus |
+|-------|----------|------|-----------|
+| **Draft** | Push auf `main` | GitHub Pages (`deploy-pages.yml`) | `mock` |
+| **Beta** | Tag `v*.*.*-beta.*` | Hetzner `beta.<domain>` (`deploy-beta.yml`) | `real` |
+| **Release** | GitHub-Release | Hetzner `<domain>` (`deploy-prod.yml`) | `real` |
+
+`ci.yml` (`Tests`) läuft auf jedem PR und auf `main` mit zwei Jobs: **`contract`** (Syntax-Check,
+Versions-Guard `tests/guard-versions.mjs`, Contract-Tests gegen **Mock und echtes Backend**) und
+**`e2e`** (Playwright-Browser-Tests). Die Real-Tests sind das Promotion-Gate: ein Feature ohne
+Backend fällt durch. Beta/Release deployen per SSH/rsync auf den Node-Server (`server/index.mjs`,
+liefert Static + `/api/*` same-origin). Einrichtung, Secrets und Vorbedingungen: siehe
+`deploy/README.md`.
+
 ## Inhalte pflegen
 
 - **News:** `assets/data/news.json` bearbeiten (neueste werden automatisch zuerst angezeigt).

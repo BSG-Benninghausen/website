@@ -1,0 +1,32 @@
+# systemd-Unit für die RELEASE/PROD-Stufe (Hetzner).
+# Installation:  sudo cp deploy/bsg-prod.service /etc/systemd/system/
+#                sudo systemctl daemon-reload && sudo systemctl enable --now bsg-prod
+#
+# BSG_DEV=0: kein devCode, /api/test/reset liefert 404 (Produktionsmodus).
+# Hinweis: Der passwortlose Login braucht echten E-Mail-Versand (noch nicht
+# implementiert) – bis dahin ist Login in Prod nicht für Endnutzer nutzbar.
+[Unit]
+Description=BSG Benninghausen – Produktion (Node)
+After=network.target
+
+[Service]
+Type=simple
+User=bsgdeploy
+Group=bsgdeploy
+WorkingDirectory=/var/www/bsg-prod
+ExecStart=/usr/bin/node /var/www/bsg-prod/server/index.mjs
+Environment=PORT=8080
+Environment=BSG_DEV=0
+Environment=BSG_STATIC=1
+Environment=BSG_SECURE_COOKIES=1
+Restart=always
+RestartSec=2
+# Härtung
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/bsg-prod
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

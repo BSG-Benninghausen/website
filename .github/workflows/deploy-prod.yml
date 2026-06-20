@@ -1,0 +1,78 @@
+name: Deploy Release (Hetzner)
+
+# Release-Stufe: ausgelöst durch ein veröffentlichtes GitHub-Release oder manuell.
+# Environment "production" mit Required-Reviewer (manuelle Freigabe) – siehe deploy/README.md.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # --- Qualitäts-Gate (gleiches wie CI) ---
+      - name: Syntax-Check
+        run: for f in assets/js/*.js server/*.mjs tests/*.mjs service-worker.js; do node --check "$f"; done
+
+      - name: Versions-Guard
+        run: node tests/guard-versions.mjs
+
+      - name: Contract-Tests · Mock
+        run: node tests/run.mjs
+
+      - name: Contract-Tests · echtes Backend
+        run: |
+          BSG_DEV=1 node server/index.mjs & echo $! > /tmp/srv.pid
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/news >/dev/null 2>&1 && break; sleep 0.5; done
+          TEST_BASE=http://localhost:3000 node tests/run.mjs
+          kill "$(cat /tmp/srv.pid)" 2>/dev/null || true
+
+      # --- Deploy ---
+      - name: API-Default auf "real" setzen (same-origin)
+        run: |
+          sed -i 's/mode: "mock",/mode: "real",/' assets/js/api-config.js
+
+      - name: SSH-Key bereitstellen
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Dateien synchronisieren (rsync)
+        run: |
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            -e "ssh -i ~/.ssh/id_deploy" \
+            ./ "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:${{ secrets.PROD_PATH }}/"
+
+      - name: Dienst neu starten
+        run: ssh -i ~/.ssh/id_deploy "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" "sudo systemctl restart bsg-prod"
+
+      - name: Smoke-Test (unauthentifiziert)
+        run: |
+          set -e
+          BASE="${{ secrets.PROD_URL }}"
+          for path in / /api/news /api/team /api/site; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE$path")
+            echo "$path -> $code"
+            [ "$code" = "200" ] || { echo "Smoke fehlgeschlagen für $path"; exit 1; }
+          done

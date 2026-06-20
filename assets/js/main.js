@@ -155,6 +155,13 @@
       })
       .catch(() => {});
   }
+
+  /* ----- Service Worker registrieren (PWA / Offline) ----- */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js").catch(() => {});
+    });
+  }
 })();
 
 /* ----- gemeinsame Helfer (global) ----- */

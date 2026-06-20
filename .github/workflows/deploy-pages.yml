@@ -1,12 +1,12 @@
 name: Deploy zu GitHub Pages
 
-# Veröffentlicht die statische Website auf GitHub Pages.
-# Läuft beim Push auf den Redesign-Branch sowie auf main (für später nach dem Merge).
+# Veröffentlicht die statische Website (Draft-Stufe, API-Modus "mock") auf GitHub Pages.
+# Läuft beim Push auf main. Beta/Release laufen separat auf dem Hetzner-Server
+# (siehe deploy-beta.yml / deploy-prod.yml).
 on:
   push:
     branches:
       - main
-      - claude/bsg-website-redesign-dio9co
   workflow_dispatch:
 
 # Rechte, die der Deploy benötigt

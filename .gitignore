@@ -3,3 +3,8 @@
 tests/e2e/node_modules/
 tests/e2e/playwright-report/
 tests/e2e/test-results/
+
+# Sicherheitsnetz: keinerlei node_modules im Repo
+node_modules/
+playwright-report/
+test-results/

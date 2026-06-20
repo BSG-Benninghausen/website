@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seite nicht gefunden – BSG Benninghausen e.V.</title>
+  <title>Offline – BSG Benninghausen e.V.</title>
   <meta name="robots" content="noindex">
-  <link rel="icon" type="image/png" href="assets/img/favicon.png">
-  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <meta name="theme-color" content="#0d0d12">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BSG Judo">
@@ -36,13 +36,12 @@
       <span class="hero__glow hero__glow--a" aria-hidden="true"></span>
       <img class="hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
       <div class="wrap center" style="max-width:620px">
-        <span class="eyebrow eyebrow--invert" style="justify-content:center">Fehler 404</span>
-        <h1 style="font-size:clamp(2.4rem,8vw,4.5rem);color:#fff;margin:14px 0 12px">Ippon verfehlt!</h1>
-        <p class="hero__lead" style="margin-inline:auto">Diese Seite konnten wir leider nicht finden. Vielleicht hilft dir einer dieser Wege weiter:</p>
+        <span class="eyebrow eyebrow--invert" style="justify-content:center">Offline</span>
+        <h1 style="font-size:clamp(2.4rem,8vw,4.5rem);color:#fff;margin:14px 0 12px">Keine Verbindung</h1>
+        <p class="hero__lead" style="margin-inline:auto">Diese Seite ist offline gerade nicht verfügbar. Bereits besuchte Seiten funktionieren weiterhin – probiere es sonst erneut, sobald du wieder online bist.</p>
         <div class="hero__cta" style="justify-content:center">
-          <a href="index.html" class="btn btn--gold btn--lg">Zur Startseite</a>
-          <a href="trainingszeiten.html" class="btn btn--ghost btn--lg">Trainingszeiten</a>
-          <a href="kontakt.html" class="btn btn--ghost btn--lg">Kontakt</a>
+          <button type="button" class="btn btn--gold btn--lg" onclick="location.reload()">Erneut versuchen</button>
+          <a href="index.html" class="btn btn--ghost btn--lg">Zur Startseite</a>
         </div>
       </div>
     </section>
