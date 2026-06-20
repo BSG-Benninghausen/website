@@ -1,0 +1,5 @@
+# E2E-Tests (Playwright) – Dev-Abhängigkeiten & Artefakte, NICHT Teil der
+# statischen Website. Die Website selbst bleibt zero-dependency.
+tests/e2e/node_modules/
+tests/e2e/playwright-report/
+tests/e2e/test-results/

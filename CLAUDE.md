@@ -31,6 +31,10 @@ node --check assets/js/<file>.js
 node tests/run.mjs                       # mock mode (default)
 node tests/run.mjs tournaments payouts   # filter by filename substring
 TEST_BASE=http://localhost:3000 node tests/run.mjs   # against a real backend
+
+# Browser-E2E (Playwright) — isolated devDeps under tests/e2e/ (site stays zero-dep)
+cd tests/e2e && npm install && npx playwright install chromium   # one-time (Linux: add --with-deps for system libs, as CI does)
+npx playwright test                      # Playwright boots server/ itself, runs Chromium
 ```
 
 **Contract-test suite (`tests/`).** Same assertions validate either the in-process mock OR a real
@@ -51,7 +55,9 @@ can run against a persistent backend. When you add/change a route, add or update
   `grep -rl "v=N" *.html | xargs sed -i 's/?v=N/?v=N+1/g'`. Forgetting this means users get stale code.
 - **Don't push to `main`.** Work on a feature branch off `origin/main`, open a (draft) PR, then
   squash-merge to `main`. GitHub Pages auto-deploys from `main` via `.github/workflows/deploy-pages.yml`
-  (only `main` and the legacy `claude/bsg-website-redesign-dio9co` branch trigger deploys; PRs run no CI).
+  (only `main` and the legacy `claude/bsg-website-redesign-dio9co` branch trigger deploys). Tests run
+  in CI via `.github/workflows/ci.yml` on every PR and push to `main` (contract job: mock + real;
+  e2e job: Playwright/Chromium) — keep both green.
 - **Editing `assets/data/*.json` only affects fresh `localStorage`.** These files are *seeds*:
   `ensureX()` copies them into the store on first read, after which the store is the source of
   truth (editable via the Redaktion UI). To re-seed in a browser, clear the site's localStorage.

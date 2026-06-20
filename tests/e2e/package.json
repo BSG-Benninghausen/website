@@ -1,0 +1,15 @@
+{
+  "name": "bsg-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser-End-to-End-Tests (Playwright) der BSG-Website. Bewusst isoliert von der zero-dependency Website: nur hier liegen Dev-Abhängigkeiten, der Repo-Root und die ausgelieferte Seite bleiben abhängigkeitsfrei.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}

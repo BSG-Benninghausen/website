@@ -1,0 +1,80 @@
+name: Tests
+
+# Führt bei jedem PR und bei Pushes auf main die Test-Suiten aus:
+#   • contract – die zero-dependency Contract-Tests im Mock- UND Real-Modus
+#                (Real: echtes Backend aus server/ über HTTP),
+#   • e2e      – Browser-End-to-End-Tests (Playwright, isoliert in tests/e2e/).
+# Der Deploy nach GitHub Pages bleibt davon getrennt (siehe deploy-pages.yml).
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Contract-Tests (Mock & Real)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22   # Harness nutzt Headers.getSetCookie() -> Node >= 20
+
+      - name: Mock-Modus
+        run: node tests/run.mjs
+
+      - name: Backend starten (Dev-Modus)
+        run: |
+          node server/index.mjs > /tmp/bsg-server.log 2>&1 &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/api/age-classes >/dev/null && exit 0
+            sleep 0.5
+          done
+          echo "Backend wurde nicht rechtzeitig erreichbar:"; cat /tmp/bsg-server.log; exit 1
+
+      - name: Real-Modus (echtes Backend über HTTP)
+        run: TEST_BASE=http://localhost:3000 node tests/run.mjs
+
+      - name: Backend stoppen
+        if: always()
+        run: kill "${SERVER_PID}" 2>/dev/null || true
+
+  e2e:
+    name: Browser-E2E (Playwright)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/e2e
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Playwright-Browser installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E-Tests (Playwright startet server/ selbst)
+        run: npx playwright test
+
+      - name: Playwright-Report hochladen
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report/
+          retention-days: 7

@@ -58,6 +58,37 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   Seed-Zustand zurück. Der Runner nutzt ihn für die Isolation pro Suite (s. o.). In Produktion
   ist er deaktiviert (404) und gehört nicht zum fachlichen Vertrag.
 
+## Browser-E2E (Playwright)
+
+Ergänzend zu den API-Contract-Tests fahren **Browser-End-to-End-Tests** einen echten Browser
+gegen das Backend aus [`server/`](../server/README.md) – Static **und** `/api/*` über denselben
+Origin. Sie liegen isoliert in [`tests/e2e/`](./e2e/) mit **eigener** `package.json`: nur dort
+gibt es Dev-Abhängigkeiten (`@playwright/test`), Repo-Root und ausgelieferte Website bleiben
+abhängigkeitsfrei.
+
+```bash
+cd tests/e2e
+npm install                       # einmalig (legt node_modules an, ist .gitignore-t)
+npx playwright install chromium   # einmalig (Browser-Binaries)
+npx playwright test               # Playwright startet server/ selbst und fährt Chromium
+npx playwright test --ui          # interaktiv debuggen
+```
+
+Unter **Linux/Ubuntu** ggf. `npx playwright install --with-deps chromium` — das installiert die
+benötigten System-Bibliotheken gleich mit (genau so macht es auch die CI).
+
+Wie es funktioniert (`e2e/fixtures.mjs`): vor jedem Seitenskript wird `localStorage.bsg_api_mode =
+"real"` gesetzt, sodass die gepatchte `fetch` über alle Navigationen hinweg das echte Backend
+anspricht; vor jedem Test setzt `POST /api/test/reset` den Seed-Zustand zurück (Isolation wie bei
+der Contract-Suite). Abgedeckt: öffentliche Seiten rendern Seed-Daten (`public.spec.mjs`) und der
+volle passwortlose Login inkl. rechtebasierter Navigation (`auth.spec.mjs`).
+
+## CI
+
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) führt bei jedem PR und bei Pushes auf
+`main` zwei Jobs aus: **contract** (Mock- **und** Real-Modus, zero-dep) und **e2e** (Playwright,
+Chromium). Der GitHub-Pages-Deploy bleibt davon getrennt (`deploy-pages.yml`).
+
 ## Hinweis
 
 Frühere Wegwerf-Harnesses unter `/tmp/test-*.mjs` sind durch diese Suite ersetzt.
