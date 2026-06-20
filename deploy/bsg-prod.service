@@ -14,7 +14,7 @@ Type=simple
 User=bsgdeploy
 Group=bsgdeploy
 WorkingDirectory=/var/www/bsg-prod
-ExecStart=/usr/bin/node /var/www/bsg-prod/server/index.mjs
+ExecStart=/usr/bin/node /var/www/bsg-prod/packages/backend/index.mjs
 Environment=PORT=8080
 Environment=BSG_DEV=0
 Environment=BSG_STATIC=1

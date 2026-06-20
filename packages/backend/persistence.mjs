@@ -2,15 +2,16 @@
    Prüft den JSON-Snapshot-Roundtrip direkt über createApi + zwei „Neustarts"
    (zwei Instanzen mit demselben dataFile). Exit-Code 0/1 wie guard-versions.mjs.
 
-   Ausführen:  node tests/persistence.mjs
+   Ausführen:  node packages/backend/persistence.mjs
 */
 import { mkdtempSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createApi } from "../server/api.mjs";
-import { loadSnapshot, saveSnapshot } from "../server/store.mjs";
+import { createApi } from "./api.mjs";
+import { loadSnapshot, saveSnapshot } from "./store.mjs";
 
-const DATA_DIR = new URL("../assets/data/", import.meta.url);
+// Kanonische Seeds aus dem Contract-Package (@crypticalcode/api-contract).
+const DATA_DIR = new URL("../api-contract/data/", import.meta.url);
 let pass = 0, fail = 0;
 const ck = (label, ok) => { console.log(`  ${ok ? "✓" : "✗ FAIL"} ${label}`); ok ? pass++ : fail++; };
 

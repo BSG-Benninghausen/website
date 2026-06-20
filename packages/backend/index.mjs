@@ -9,13 +9,13 @@
 
    Nur node:-Builtins, keine Abhängigkeiten.
 
-     node server/index.mjs                 # Port 3000, dient /api/* + statisch
-     PORT=8080 node server/index.mjs
-     BSG_STATIC=0 node server/index.mjs    # nur API, keine statischen Dateien
+     node packages/backend/index.mjs                 # Port 3000, dient /api/* + statisch
+     PORT=8080 node packages/backend/index.mjs
+     BSG_STATIC=0 node packages/backend/index.mjs    # nur API, keine statischen Dateien
 
    Contract-Tests dagegen:
-     node server/index.mjs &
-     TEST_BASE=http://localhost:3000 node tests/run.mjs
+     node packages/backend/index.mjs &
+     TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
    ===================================================================== */
 import http from "node:http";
 import { readFile } from "node:fs/promises";
@@ -30,12 +30,14 @@ const DEV = process.env.BSG_DEV !== "0";   // devCode + /api/test/reset nur in D
 const SECURE_COOKIES = process.env.BSG_SECURE_COOKIES != null ? process.env.BSG_SECURE_COOKIES !== "0" : !DEV;
 // CORS nur für explizit erlaubte Origins (Cookie-Auth!). Leer = kein Cross-Origin (same-origin reicht).
 const CORS_ORIGINS = (process.env.BSG_CORS_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
-const ROOT = fileURLToPath(new URL("../", import.meta.url));           // Repo-Root
-const DATA_DIR = new URL("../assets/data/", import.meta.url);
+const ROOT = fileURLToPath(new URL("../../", import.meta.url));        // Repo-Root (Frontend-Workspace)
+// Kanonische Seeds: das data/ des Contract-Packages (@crypticalcode/api-contract) – dieselbe Quelle,
+// gegen die die Contract-Tests prüfen. Das Frontend vendored eine Kopie nach assets/data/.
+const DATA_DIR = new URL("../api-contract/data/", import.meta.url);
 // Persistenz (opt-in): Pfad zur JSON-Snapshot-Datei. Leer = rein in-memory wie bisher.
 const DATA_FILE = process.env.BSG_DATA_FILE || "";
 // Repo-interne Verzeichnisse, die nie über das Static-Serving erreichbar sein sollen.
-const DENY_STATIC = new Set([".git", ".github", "server", "tests", "node_modules"]);
+const DENY_STATIC = new Set([".git", ".github", "packages", "tests", "tools", "deploy", "docs", "node_modules"]);
 
 const api = createApi({ dataDir: DATA_DIR, dev: DEV, dataFile: DATA_FILE });
 
@@ -186,5 +188,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`BSG-Backend läuft auf http://localhost:${PORT}  (statisch: ${SERVE_STATIC ? "an" : "aus"}, dev: ${DEV ? "an" : "aus"}, persistenz: ${DATA_FILE ? "an (" + DATA_FILE + ")" : "aus"})`);
-  console.log(`Contract-Tests:  TEST_BASE=http://localhost:${PORT} node tests/run.mjs`);
+  console.log(`Contract-Tests:  TEST_BASE=http://localhost:${PORT} node packages/api-contract/run.mjs`);
 });

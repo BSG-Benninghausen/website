@@ -9,9 +9,9 @@
    (kein Zugriff auf localStorage o. Ä.) und sind damit implementierungs-
    unabhängig. So bleibt der Mock-Vertrag und ein echtes Backend in Sync.
 
-   Nutzung:
-     node tests/run.mjs                 # Mock
-     TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
+   Nutzung (aus dem Repo-Root):
+     node packages/api-contract/run.mjs                 # Mock
+     TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # echtes Backend
    ===================================================================== */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -19,17 +19,18 @@ import { pathToFileURL } from "node:url";
 
 const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
 
-/* Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar – Vorbereitung auf
-   ein ausgelagertes Contract-Package (siehe docs/backend-repo-separation-plan.md).
-   Ohne Env greifen die heutigen Repo-Pfade, sodass `node tests/run.mjs` unverändert läuft.
-     BSG_MOCK_SRC  – Pfad zu mock-api.js (abs. oder relativ zum CWD)
-     BSG_DATA_DIR  – Verzeichnis mit den Seed-/Config-JSONs (abs. oder relativ zum CWD) */
+/* Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar – dieses Package
+   (@crypticalcode/api-contract) ist die Single Source of Truth des Vertrags (Tests + Seeds).
+     BSG_MOCK_SRC  – Pfad zu mock-api.js (abs. oder relativ zum CWD).
+                     Default: das mock-api.js des Frontend-Workspaces (../../assets/js).
+     BSG_DATA_DIR  – Verzeichnis mit den Seed-/Config-JSONs (abs. oder relativ zum CWD).
+                     Default: die kanonischen Seeds dieses Packages (./data). */
 const MOCK_SRC_URL = process.env.BSG_MOCK_SRC
   ? pathToFileURL(resolve(process.env.BSG_MOCK_SRC))
-  : new URL("../assets/js/mock-api.js", import.meta.url);
+  : new URL("../../assets/js/mock-api.js", import.meta.url);
 const DATA_DIR = process.env.BSG_DATA_DIR
   ? pathToFileURL(resolve(process.env.BSG_DATA_DIR) + "/")
-  : new URL("../assets/data/", import.meta.url);
+  : new URL("./data/", import.meta.url);
 const MOCK_SRC = readFileSync(MOCK_SRC_URL, "utf8");
 
 /* Pro Test-Lauf eindeutige Adressen, damit dieselbe Suite mehrfach gegen ein

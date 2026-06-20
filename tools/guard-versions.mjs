@@ -11,7 +11,7 @@
    der Service-Worker cached die falschen URLs. Dieser Wächter macht ein
    Vergessen im CI sichtbar (Exit-Code != 0).
 
-   Lauf:  node tests/guard-versions.mjs
+   Lauf:  node tools/guard-versions.mjs
    ===================================================================== */
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

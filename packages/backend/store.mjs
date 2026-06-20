@@ -2,7 +2,7 @@
    store.mjs · Persistenz für den Backend-Store (zero-dep, node:fs).
    ---------------------------------------------------------------------
    Hält den In-Memory-`db` als JSON-Snapshot auf der Platte (spiegelt das
-   localStorage-Modell des Mocks). Opt-in: greift nur, wenn server/index.mjs
+   localStorage-Modell des Mocks). Opt-in: greift nur, wenn packages/backend/index.mjs
    ein `dataFile` (Env BSG_DATA_FILE) durchreicht — ohne das verhält sich das
    Backend exakt wie vorher (rein in-memory).
 

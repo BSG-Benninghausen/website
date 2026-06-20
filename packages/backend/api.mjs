@@ -2,8 +2,8 @@
    api.mjs · BSG Benninghausen – ECHTES Backend (Domänenlogik)
    ---------------------------------------------------------------------
    Implementiert exakt denselben /api/*-Vertrag wie der In-Process-Mock
-   (assets/js/mock-api.js). Die Contract-Test-Suite (tests/) validiert
-   beide Seiten mit denselben Assertions – darum darf hier nichts an
+   (assets/js/mock-api.js). Die Contract-Test-Suite (packages/api-contract/)
+   validiert beide Seiten mit denselben Assertions – darum darf hier nichts an
    Pfaden, Status-Codes oder JSON-Shapes abweichen.
 
    Bewusst ohne Framework und ohne npm-Abhängigkeiten (nur node:-Builtins),
@@ -107,7 +107,7 @@ const CLUB_FIELDS = [
 ];
 const CLUB_KEYS = CLUB_FIELDS.map((f) => f.key);
 
-/* App-Manifest (PWA) aus der Club-Config – 1:1 zum Mock. server/index.mjs liefert
+/* App-Manifest (PWA) aus der Club-Config – 1:1 zum Mock. packages/backend/index.mjs liefert
    /manifest.webmanifest darüber pro Domain aus. */
 function buildManifest(club) {
   const c = club || {};

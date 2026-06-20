@@ -2,8 +2,15 @@
 
 Diese Stufe ergänzt die **Draft**-Stufe (GitHub Pages, API-Modus `mock`). Beta und Release
 laufen auf einem Hetzner-Server als jeweils **ein** Node-Prozess, der gleichzeitig die
-statische Website **und** `/api/*` ausliefert (`server/index.mjs`, `BSG_STATIC=1`). Caddy
-terminiert TLS und leitet pro Subdomain weiter.
+statische Website **und** `/api/*` ausliefert (`packages/backend/index.mjs`, `BSG_STATIC=1`).
+Caddy terminiert TLS und leitet pro Subdomain weiter.
+
+> **Hinweis (Workspace-Umbau, Phase 1):** Das Backend liegt seit der Workspace-Trennung unter
+> `packages/backend/` (vorher `server/`). Die mitgelieferten systemd-Units zeigen bereits auf
+> `…/packages/backend/index.mjs`. Auf einem **bereits eingerichteten** Server müssen die Units
+> nach dem nächsten Deploy einmalig neu installiert werden
+> (`sudo cp deploy/bsg-*.service /etc/systemd/system/ && sudo systemctl daemon-reload &&
+> sudo systemctl restart bsg-beta bsg-prod`), sonst startet der alte `server/index.mjs`-Pfad ins Leere.
 
 | Stufe | Trigger | Dienst | Port | Domain | `BSG_DEV` |
 |-------|---------|--------|------|--------|-----------|

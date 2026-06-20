@@ -40,10 +40,16 @@ assets/
 │   ├── news.js         lädt & rendert News
 │   ├── kalender.js     lädt & rendert Termine
 │   └── forms.js        Anmelde- & Kontaktformular
-├── data/
+├── data/               vendored Seeds (Kopie von packages/api-contract/data/)
 │   ├── news.json       Inhalte für "Aktuelles"
 │   └── events.json     Inhalte für "Termine"
 └── img/                Logo, Favicon, Hintergrundmuster (SVG)
+
+packages/               npm-Workspaces (nur Tooling – das Static bleibt zero-dep)
+├── api-contract/       Vertrag: Contract-Test-Suite, Harness, run.mjs, kanonische data/ (Seeds)
+└── backend/            echtes /api/*-Backend (api.mjs, index.mjs, store.mjs) – ehemals server/
+tools/                  Frontend-Tooling: guard-versions.mjs, vendor-seeds.mjs, gen-demo-data.mjs
+tests/e2e/              Playwright-Browser-E2E (isolierte devDeps)
 ```
 
 ## Lokale Vorschau
@@ -218,22 +224,32 @@ Frontend-Code ändert sich nichts; der `mock-api.js`-Tag bleibt (er ist Mock **u
 
 ### Contract-Tests
 
-Im Ordner `tests/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die dieselben
-Prüfungen wahlweise gegen den Mock oder ein echtes Backend laufen lässt:
+Im Package `packages/api-contract/` liegt eine abhängigkeitsfreie **Contract-Test-Suite** (samt
+kanonischen Seeds unter `packages/api-contract/data/`), die dieselben Prüfungen wahlweise gegen
+den Mock oder ein echtes Backend laufen lässt:
 
 ```bash
-node tests/run.mjs                                   # Mock (Default)
-TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
+node packages/api-contract/run.mjs                                   # Mock (Default)
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # echtes Backend
+npm test                                                             # alle Node-Checks (Root-Workspace)
 ```
 
 So bleiben Mock und Backend vertraglich in Sync. Details und die Backend-Anforderungen stehen
-in `tests/README.md`.
+in `packages/api-contract/README.md`. Die Seeds sind die Single Source of Truth des Vertrags und
+werden mit `node tools/vendor-seeds.mjs` nach `assets/data/` **vendored** (CI prüft per `--check`,
+dass beide identisch sind).
+
+Der Vertrag wird zudem als Package **`@crypticalcode/api-contract`** nach **GitHub Packages**
+veröffentlicht (Tag `contract-vX.Y.Z` → `.github/workflows/publish-contract.yml`), damit Backend und
+Frontend ihn nach dem Repo-Split per Version beziehen können. Im Monorepo bleibt alles install-/token-frei
+(Workspace-Auflösung lokal); das **Runtime-Seed-Laden des Backends bleibt pfadbasiert** (kein
+`node_modules` im Deploy). Release-Flow und externer Konsum: `packages/api-contract/README.md`.
 
 ### UI-/E2E-Tests (Playwright)
 
 Die Contract-Tests decken nur `/api/*` ab. Die UI-/DOM-/PWA-Schicht (Login-Flow,
 Permission-Nav-Reveal, CRUD-Editoren, Service-Worker/Offline) prüft eine **Playwright-Suite**
-unter `tests/e2e/` gegen das echte Backend (Playwright startet `server/index.mjs` selbst,
+unter `tests/e2e/` gegen das echte Backend (Playwright startet `packages/backend/index.mjs` selbst,
 `BSG_DEV=1`, `real`-Modus). Die Dev-Abhängigkeit ist **bewusst nach `tests/e2e/` isoliert** –
 Repo-Root und ausgelieferte Website bleiben zero-dep.
 
@@ -241,7 +257,7 @@ Repo-Root und ausgelieferte Website bleiben zero-dep.
 cd tests/e2e
 npm ci                                   # Playwright installieren (nur hier)
 npx playwright install --with-deps chromium
-npm test                                 # Suite ausführen (startet server/ selbst)
+npm test                                 # Suite ausführen (startet packages/backend/ selbst)
 ```
 
 ### CI/CD-Stufen
@@ -253,9 +269,10 @@ npm test                                 # Suite ausführen (startet server/ sel
 | **Release** | GitHub-Release | Hetzner `<domain>` (`deploy-prod.yml`) | `real` |
 
 `ci.yml` (`Tests`) läuft auf jedem PR und auf `main` mit zwei Jobs: **`contract`** (Syntax-Check,
-Versions-Guard `tests/guard-versions.mjs`, Contract-Tests gegen **Mock und echtes Backend**) und
-**`e2e`** (Playwright-Browser-Tests). Die Real-Tests sind das Promotion-Gate: ein Feature ohne
-Backend fällt durch. Beta/Release deployen per SSH/rsync auf den Node-Server (`server/index.mjs`,
+Versions-Guard `tools/guard-versions.mjs`, Seed-Vendoring-Check, Contract-Tests gegen **Mock und
+echtes Backend**) und **`e2e`** (Playwright-Browser-Tests). Die Real-Tests sind das Promotion-Gate:
+ein Feature ohne Backend fällt durch. Beta/Release deployen per SSH/rsync auf den Node-Server
+(`packages/backend/index.mjs`,
 liefert Static + `/api/*` same-origin). Einrichtung, Secrets und Vorbedingungen: siehe
 `deploy/README.md`.
 

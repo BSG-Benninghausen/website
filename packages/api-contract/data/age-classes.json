@@ -1,0 +1,25 @@
+{
+  "_hinweis": "Wettkampf-Altersklassen nach dem Alter, das im laufenden KALENDERJAHR erreicht wird (Jahrgangsprinzip). Mehrere Klassen pro Jahrgang = Übergangsjahrgänge. Diese Tabelle ist eine anpassbare Vorlage – bitte an die aktuell gültigen Regeln eures Verbandes (z. B. DJB/Landesverband) angleichen. Beispiele der hinterlegten Regeln: oberster U15-Jahrgang ist NICHT U18; U21 ist zugleich Senioren.",
+  "classes": [
+    { "label": "U9",  "minAge": 0,  "maxAge": 8 },
+    { "label": "U11", "minAge": 9,  "maxAge": 10 },
+    { "label": "U12", "minAge": 10, "maxAge": 11 },
+    { "label": "U13", "minAge": 11, "maxAge": 12 },
+    { "label": "U14", "minAge": 12, "maxAge": 13 },
+    { "label": "U15", "minAge": 13, "maxAge": 14 },
+    { "label": "U18", "minAge": 15, "maxAge": 17 },
+    { "label": "U21", "minAge": 18, "maxAge": 20 },
+    { "label": "Senioren", "minAge": 18, "maxAge": 120 }
+  ],
+  "veterans": [
+    { "minAge": 30, "maxAge": 34, "male": "M1", "female": "F1" },
+    { "minAge": 35, "maxAge": 39, "male": "M2", "female": "F2" },
+    { "minAge": 40, "maxAge": 44, "male": "M3", "female": "F3" },
+    { "minAge": 45, "maxAge": 49, "male": "M4", "female": "F4" },
+    { "minAge": 50, "maxAge": 54, "male": "M5", "female": "F5" },
+    { "minAge": 55, "maxAge": 59, "male": "M6", "female": "F6" },
+    { "minAge": 60, "maxAge": 64, "male": "M7", "female": "F7" },
+    { "minAge": 65, "maxAge": 69, "male": "M8", "female": "F8" },
+    { "minAge": 70, "maxAge": 120, "male": "M9", "female": "F9" }
+  ]
+}

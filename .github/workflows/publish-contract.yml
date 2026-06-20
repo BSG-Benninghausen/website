@@ -1,0 +1,75 @@
+name: Publish @crypticalcode/api-contract
+
+# Veröffentlicht das Contract-Package (@crypticalcode/api-contract) nach GitHub Packages.
+# Eigener Tag-Namespace `contract-v*.*.*` – kollidiert NICHT mit den Hetzner-Deploys
+# (`v*.*.*-beta.*` / Release). Der Tag MUSS der `version` in packages/api-contract/package.json
+# entsprechen. Erst-Publish: Version bumpen, committen, Tag `contract-vX.Y.Z` setzen.
+on:
+  push:
+    tags:
+      - "contract-v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Nur npm publish --dry-run (nichts in die Registry schreiben)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write   # Publish nach GitHub Packages (kein PAT nötig: GITHUB_TOKEN reicht für dasselbe Repo)
+
+concurrency:
+  group: publish-contract
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten (mit GitHub-Packages-Registry)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@crypticalcode"
+
+      # --- Quality-Gate (fail-closed: ein kaputter Vertrag darf nie in die Registry) ---
+      - name: Versions-Guard (Cache-Busting)
+        run: node tools/guard-versions.mjs
+
+      - name: Seeds vendored == kanonisch
+        run: node tools/vendor-seeds.mjs --check
+
+      - name: Contract-Tests · Mock
+        run: node packages/api-contract/run.mjs
+
+      - name: Contract-Tests · echtes Backend
+        run: |
+          BSG_DEV=1 node packages/backend/index.mjs & echo $! > /tmp/srv.pid
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/news >/dev/null 2>&1 && break; sleep 0.5; done
+          TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
+          kill "$(cat /tmp/srv.pid)" 2>/dev/null || true
+
+      # --- Tag == package.json-Version (nur beim Tag-Push) ---
+      - name: Tag-/Versions-Abgleich
+        if: github.event_name == 'push'
+        run: |
+          PKG=$(node -p "require('./packages/api-contract/package.json').version")
+          TAG="${GITHUB_REF_NAME#contract-v}"
+          echo "package.json=$PKG  tag=$TAG"
+          [ "$PKG" = "$TAG" ] || { echo "::error::Tag ($TAG) != package.json version ($PKG)"; exit 1; }
+
+      # --- Publish ---
+      - name: npm publish (GitHub Packages)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            npm publish -w packages/api-contract --dry-run
+          else
+            npm publish -w packages/api-contract
+          fi
