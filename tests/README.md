@@ -56,7 +56,12 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   `{ ok, fields: [{key,label,type}], values: { <key>: string } }` (Seed aus `assets/data/club.json`);
   `POST /api/club` `{ values: { <key>: string } }` speichert (nur bekannte Keys) und erfordert das
   Recht `manage_club` (ohne Login → 401, ohne Recht → 403). Treibt im Frontend Name, Sport, Adresse,
-  Kontakt, Impressum & Logo über `[data-club="key"]`.
+  Kontakt, Impressum & Logo über `[data-club="key"]`. `GET /api/manifest` liefert das **rohe**
+  PWA-Manifest-Objekt (ohne `{ok}`-Wrapper) aus der Club-Config (`name`, `short_name`, `description`,
+  `theme_color`, drei Default-Icons) und spiegelt `POST /api/club`-Änderungen. Im echten Backend
+  liefert die HTTP-Schicht zusätzlich **`GET /manifest.webmanifest`** (Content-Type
+  `application/manifest+json`) über genau diese Route aus — pro Domain. `<title>`/`theme-color`/
+  App-Titel setzt `main.js` client-seitig aus `/api/club` (nicht Teil des `/api/*`-Vertrags).
 - **Feature-Gating & Beta-Freigabe.** `GET /api/capabilities` antwortet **nutzer-spezifisch**
   `{ ok, features: { <key>: { status: "stable"|"beta", public: boolean } } }` und enthält nur
   Features, die der aktuelle Nutzer sehen darf (Reifegrad aus dem Feature-Katalog × Freigabe-Scope).

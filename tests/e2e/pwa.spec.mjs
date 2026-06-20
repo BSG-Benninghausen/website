@@ -21,6 +21,18 @@ test("Manifest ist verlinkt und ladbar (mit Icons)", async ({ page }) => {
   const manifest = await res.json();
   expect(manifest.icons.length).toBeGreaterThanOrEqual(2);
   expect(manifest.display).toBe("standalone");
+  // Vom Backend pro Domain aus der Club-Config gerendert (P2): Name/Kurzname aus /api/club.
+  const club = await (await page.request.get("/api/club")).json();
+  expect(manifest.name).toContain(club.values.name);
+  expect(manifest.short_name).toBe(club.values.short_name);
+});
+
+test("Seitentitel wird client-seitig aus der Club-Config zusammengesetzt", async ({ page }) => {
+  await page.goto("/kontakt.html");
+  const club = await (await page.request.get("/api/club")).json();
+  // data-page-title="Kontakt & Impressum" -> "<Seite> – <Vereinsname>"
+  await expect.poll(() => page.title()).toContain(club.values.name);
+  await expect.poll(() => page.title()).toContain("Kontakt");
 });
 
 test("Offline: bekannte Seite kommt aus dem Cache, unbekannte → offline.html", async ({ page, context }) => {

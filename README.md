@@ -78,7 +78,8 @@ Bereitgestellte Endpunkte:
 | `GET /api/team` | Team & Vorstand – **aus den Vereinsämtern × Nutzern** berechnet (öffentlich) |
 | `GET /api/positions` · `POST /api/positions`(`/update`,`/delete`) | Vereinsämter (Team-Seite) lesen & pflegen (`manage_team`) |
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
-| `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Impressum, Logo) |
+| `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Impressum, Logo, Tagline, Markenfarbe) |
+| `GET /api/manifest` | PWA-Manifest aus der Club-Config (rohes Objekt, öffentlich). Das echte Backend liefert `/manifest.webmanifest` pro Domain darüber aus; `<title>`/`theme-color`/App-Titel setzt `main.js` client-seitig aus `/api/club` |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
 | `GET /api/admin/registrations` | Anmeldungen je Turnier inkl. Gebührensummen & Veranstalter (Recht `manage_events` **oder** `manage_payouts`) |

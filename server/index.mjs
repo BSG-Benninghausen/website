@@ -157,6 +157,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // PWA-Manifest dynamisch aus der Club-Config (pro Domain). Überschreibt die
+  // statische manifest.webmanifest-Datei; der <link rel="manifest"> bleibt gleich.
+  if (path === "/manifest.webmanifest" && (method === "GET" || method === "HEAD")) {
+    const token = readCookie(req.headers.cookie, "bsg_session");
+    const result = await api.handle({ method: "GET", path: "/api/manifest", body: {} }, token);
+    const headers = { "Content-Type": "application/manifest+json; charset=utf-8", "Cache-Control": "no-cache" };
+    applyCors(req, headers);
+    res.writeHead(result.status, headers);
+    res.end(method === "HEAD" ? "" : JSON.stringify(result.body));
+    return;
+  }
+
   if (!SERVE_STATIC) {
     res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify({ ok: false, message: "Nur /api/* aktiviert (BSG_STATIC=0)." }));

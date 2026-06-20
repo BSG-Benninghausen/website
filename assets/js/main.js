@@ -183,6 +183,23 @@
           const u = safeUrl(v.instagram_url);
           if (u) el.setAttribute("href", u);
         });
+
+        /* <head>-White-Labeling (was [data-club] nicht erreicht): Titel,
+           theme-color, App-Titel. Statischer <title> bleibt No-JS-Fallback. */
+        if (v.name && v.name.trim()) {
+          const pt = (document.documentElement.getAttribute("data-page-title") || "").trim();
+          const tag = (v.tagline || "").trim();
+          document.title = pt ? pt + " – " + v.name : v.name + (tag ? " – " + tag : "");
+        }
+        const tc = /^#[0-9a-fA-F]{3,8}$/.test((v.theme_color || "").trim()) ? v.theme_color.trim() : "";
+        if (tc) {
+          const m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", tc);
+        }
+        if (v.short_name && v.short_name.trim()) {
+          const a = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+          if (a) a.setAttribute("content", v.short_name.trim());
+        }
       })
       .catch(() => {});
   }

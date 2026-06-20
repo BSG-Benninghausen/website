@@ -85,6 +85,7 @@ const CLUB_FIELDS = [
   { key: "short_name", label: "Kurzname (App/PWA)", type: "text" },
   { key: "sport", label: "Sportart", type: "text" },
   { key: "brand_sub", label: "Logo-Unterzeile", type: "text" },
+  { key: "tagline", label: "Tagline (Titel-Zusatz Startseite)", type: "text" },
   { key: "locality", label: "Ort", type: "text" },
   { key: "email", label: "Kontakt-E-Mail", type: "text" },
   { key: "instagram_url", label: "Instagram · URL", type: "text" },
@@ -94,8 +95,30 @@ const CLUB_FIELDS = [
   { key: "city", label: "PLZ & Ort", type: "text" },
   { key: "description", label: "Kurzbeschreibung (Meta/SEO)", type: "textarea" },
   { key: "logo", label: "Logo-Pfad/URL", type: "text" },
+  { key: "theme_color", label: "Markenfarbe (Hex, Browser/PWA)", type: "text" },
 ];
 const CLUB_KEYS = CLUB_FIELDS.map((f) => f.key);
+
+/* App-Manifest (PWA) aus der Club-Config – 1:1 zum Mock. server/index.mjs liefert
+   /manifest.webmanifest darüber pro Domain aus. */
+function buildManifest(club) {
+  const c = club || {};
+  const tc = /^#[0-9a-fA-F]{3,8}$/.test(String(c.theme_color || "").trim()) ? c.theme_color.trim() : "#0d0d12";
+  const name = norm(c.name) + (norm(c.sport) ? " – " + norm(c.sport) : "");
+  return {
+    name: name || "Verein",
+    short_name: norm(c.short_name) || "Verein",
+    description: norm(c.description),
+    lang: "de", dir: "ltr", start_url: ".", scope: "./",
+    display: "standalone", orientation: "portrait-primary",
+    background_color: tc, theme_color: tc,
+    icons: [
+      { src: "assets/img/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "assets/img/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "assets/img/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}
 
 // Rollen sind reine Rechte-Objekte; die öffentliche Team-Anzeige läuft über Vereinsämter (positions).
 const EXAMPLE_ROLES = [
@@ -568,6 +591,9 @@ export function createApi({ dataDir, dev = true }) {
       CLUB_FIELDS.forEach((f) => { out[f.key] = norm(db.club[f.key]); });
       return J({ ok: true, values: out, message: "Vereinsdaten gespeichert." });
     },
+    // Rohes PWA-Manifest aus der Club-Config (kein {ok:…}-Wrapper). index.mjs
+    // liefert /manifest.webmanifest darüber pro Domain aus.
+    "GET /api/manifest": async () => J(buildManifest(db.club)),
 
     /* ---------- Termine ---------- */
     "GET /api/events": async () => {

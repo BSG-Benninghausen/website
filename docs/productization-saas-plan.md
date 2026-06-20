@@ -42,10 +42,13 @@ Branding ist nicht mehr im Markup hartcodiert, sondern **Laufzeit-Konfiguration*
   ausgelieferte Seed `club.json` trägt die BSG-Werte (BSG = erster Kunde), sodass die bestehende
   GitHub-Pages-Seite optisch unverändert bleibt.
 
-**Noch offen (nächste Phase):** `<title>`, `manifest.webmanifest` und Favicon/Logo-Binärdateien
-liegen im `<head>` bzw. als statische Dateien und lassen sich nicht via `[data-club]` füllen. Im
-SaaS-Betrieb rendert das **Backend diese pro Domain** (templated `index.html`/manifest, Asset-Pfade
-aus der Mandanten-Config). Bis dahin bleiben sie der Deploy-/BSG-Default.
+**`<head>` & PWA (P2, umgesetzt):** `<title>`, `theme-color` und der App-Titel werden von `main.js`
+zur Laufzeit aus `/api/club` gesetzt (client-seitig, wirkt in Static **und** Real; pro Seite über
+`data-page-title`). Das **`manifest.webmanifest`** rendert das echte Backend pro Domain
+(`server/index.mjs` → `GET /api/manifest` aus der Club-Config); im Static-Deploy bleibt die
+committete Default-Datei. **Noch offen:** crawler-korrekte `<title>`/Description ohne JS (Backend-
+HTML-Templating, sinnvoll erst mit Multi-Mandant, P4) und **per-Verein-Icon-/Favicon-Dateien**
+(Binär-Asset-Hosting).
 
 ---
 
@@ -114,7 +117,7 @@ eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
 | Phase | Inhalt | Status |
 |---|---|---|
 | **P1 White-Label-Extraktion** | `club.json` + `GET/POST /api/club`, `[data-club]`, `theme.css`, Recht `manage_club`, generische Defaults, Contract-Test | **umgesetzt (diese Iteration)** |
-| **P2 Branding pro Domain** | Backend rendert `manifest`/`<title>`/Favicon/Logo aus der Mandanten-`club`-Config | offen |
+| **P2 Branding pro Domain** | Dynamisches `manifest.webmanifest` (Backend, `/api/manifest`) + client-seitiges `<title>`/`theme-color`/App-Titel aus `/api/club`; Felder `tagline`/`theme_color` | **umgesetzt** (offen: Crawler-SEO-Templating, per-Verein-Icon-Dateien) |
 | **P3 Feature-Buchung mocken** | Provisioning-Store + Recht `book_features` + `POST /api/features/book`; `capabilities` filtert gebucht×freigegeben | offen |
 | **P4 Mehrmandanten-Backend** | Host-basierte Mandantenauflösung, DB-Persistenz, Onboarding, Billing-Anbindung | offen |
 | **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |

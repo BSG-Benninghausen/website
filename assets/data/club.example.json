@@ -4,6 +4,7 @@
   "short_name": "Musterverein",
   "sport": "Sport",
   "brand_sub": "Sport · Musterstadt",
+  "tagline": "Sport in Musterstadt",
   "locality": "Musterstadt",
   "email": "info@musterverein.de",
   "instagram_url": "https://www.instagram.com/",
@@ -12,5 +13,6 @@
   "street": "Musterstraße 1",
   "city": "12345 Musterstadt",
   "description": "Vereinssport für Kinder, Jugendliche und Erwachsene in Musterstadt. Komm vorbei und probier ein kostenloses Training aus.",
-  "logo": "assets/img/drache.png"
+  "logo": "assets/img/drache.png",
+  "theme_color": "#2563eb"
 }
