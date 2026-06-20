@@ -6,8 +6,15 @@
 import { test, expect } from "./fixtures.mjs";
 
 test.describe("Öffentliche Seiten", () => {
-  test("Startseite zeigt den Hero-Text", async ({ page }) => {
+  test("Produkt-Portal listet das BSG-Referenz-Beispiel", async ({ page }) => {
+    // Startseite ("/") ist jetzt das generische Produkt-Portal; die Vereinsseite
+    // (BSG) ist eines von mehreren Referenz-Beispielen und über home.html erreichbar.
     await page.goto("/");
+    await expect(page.getByRole("link", { name: /BSG-Beispiel/i }).first()).toBeVisible();
+  });
+
+  test("Vereins-Startseite (home.html) zeigt den Hero-Text", async ({ page }) => {
+    await page.goto("/home.html");
     await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 

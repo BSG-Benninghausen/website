@@ -106,6 +106,23 @@ This single file is the backend. Key pieces:
 - `redaktion.js` is the dynamic-content editor hub; reuse its `setupEditor({listEl, form, api, render,
   collect, onFill, onReset})` helper (CRUD list+form with hooks) for any new editable content type.
 
+### Product portal & reference examples
+- **`index.html` is a generic product portal**, not the club site. The BSG club homepage lives at
+  **`home.html`**; all other club pages stay at the root and link to `home.html` for "Start". The
+  portal is fully static (no `mock-api.js`/`main.js`), renders example cards via `portal.js`, and
+  registers the service worker itself.
+- **`assets/js/club-config.js`** (loaded **synchronously in `<head>`**, before `styles.css` and
+  `mock-api.js`) is the example **registry + resolver**. It picks the active example from
+  `?club=<id>` → `localStorage bsg_example` → default, exposes `window.BSG_CLUB = {id,name,clubSeed,
+  theme,ns}` + `window.BSG_EXAMPLES`, and on club pages (`<html data-club-site>`) injects the
+  example's theme FOUC-free. The cache-bust `?v=N` for the injected theme is read from its own
+  script tag, so the standard HTML bump keeps it in sync.
+- **One frontend, many configs:** `mock-api.js` namespaces every `localStorage` key with
+  `BSG_CLUB.ns` (the default `bsg` keeps the legacy `bsg_*` keys, so tests/existing deployments are
+  untouched), and `ensureClub()` seeds from `BSG_CLUB.clubSeed`. **New example = one entry in
+  `club-config.js` + `assets/data/club.<id>.json` + a theme**, no other code. See
+  `docs/productization-saas-plan.md` §5a.
+
 ### Feature gating & Beta releases
 A capability layer hides features that have no real backend (so production never suggests
 non-existent functionality) and marks new ones as Beta. **Two orthogonal axes** per feature:

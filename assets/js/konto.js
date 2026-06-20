@@ -316,7 +316,7 @@
     $("#logout").addEventListener("click", async () => {
       if (window.BSGNavAuth) window.BSGNavAuth.clear();
       await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "index.html";
+      window.location.href = "home.html";
     });
 
     // Adresse speichern

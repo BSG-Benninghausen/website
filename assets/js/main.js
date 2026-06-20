@@ -4,8 +4,12 @@
 (function () {
   "use strict";
 
-  /* ----- Auth-Snapshot-Cache (für sofortiges, sprungfreies Rendern der Navigation) ----- */
-  const AUTH_CACHE_KEY = "bsg_nav_auth";
+  /* ----- Auth-Snapshot-Cache (für sofortiges, sprungfreies Rendern der Navigation) -----
+     Pro Referenz-Beispiel namespacen (analog mock-api: Default "bsg" ohne Prefix),
+     damit der optimistische Cache nicht club-übergreifend einen falschen
+     eingeloggten Zustand rendert. */
+  const AUTH_NS = (window.BSG_CLUB && window.BSG_CLUB.ns) || "bsg";
+  const AUTH_CACHE_KEY = (AUTH_NS === "bsg" ? "" : AUTH_NS + ":") + "bsg_nav_auth";
   const readAuthCache = () => { try { return JSON.parse(localStorage.getItem(AUTH_CACHE_KEY) || "null"); } catch (e) { return null; } };
   const writeAuthCache = (s) => { try { s ? localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(s)) : localStorage.removeItem(AUTH_CACHE_KEY); } catch (e) {} };
   window.BSGNavAuth = { write: writeAuthCache, clear: () => writeAuthCache(null) };
@@ -48,15 +52,16 @@
     b.addEventListener("click", async () => {
       writeAuthCache(null);
       try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
-      window.location.href = "index.html";
+      window.location.href = "home.html";
     });
   });
 
-  /* ----- Aktiven Navigationspunkt markieren ----- */
-  const here = location.pathname.split("/").pop() || "index.html";
+  /* ----- Aktiven Navigationspunkt markieren -----
+     Vereins-Startseite ist home.html (index.html ist das Produkt-Portal). */
+  const here = location.pathname.split("/").pop() || "home.html";
   document.querySelectorAll(".nav__links a, .nav__dropdown a").forEach((a) => {
     const target = a.getAttribute("href");
-    if (target === here || (here === "index.html" && target === "index.html")) {
+    if (target === here || (here === "home.html" && target === "home.html")) {
       a.classList.add("is-active");
       a.setAttribute("aria-current", "page");
     }

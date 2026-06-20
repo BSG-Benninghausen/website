@@ -1,68 +1,38 @@
 <!DOCTYPE html>
-<html lang="de" data-page-title="">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BSG Benninghausen e.V. – Judo in Benninghausen</title>
-  <meta name="description" content="Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte willkommen – kostenloses Probetraining bei der BSG Benninghausen e.V.">
+  <title>Vereins-Baukasten – Open-Source Vereins-Website</title>
+  <meta name="description" content="Eine generische, white-label-fähige Vereins-Website (HTML/CSS/JS, zero-dep) mit vollständigem Mock-Backend. BSG Benninghausen ist das erste von mehreren Referenz-Beispielen.">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
-  <meta name="theme-color" content="#0d0d12">
+  <meta name="theme-color" content="#1c2230">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BSG Judo">
-  <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/theme.css?v=31">
-  <link rel="stylesheet" href="assets/css/styles.css?v=31">
+  <link rel="stylesheet" href="assets/css/theme.example.css?v=33">
+  <link rel="stylesheet" href="assets/css/styles.css?v=33">
+  <script src="assets/js/club-config.js?v=33"></script>
 </head>
-<body>
+<body class="portal">
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
   <header class="site-header">
     <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
     <nav class="nav wrap" aria-label="Hauptnavigation">
       <a href="index.html" class="brand">
-        <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
-        <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
+        <span class="brand__name"><span>Vereins-Baukasten</span><small>Open-Source · White-Label</small></span>
       </a>
       <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
       <div class="nav__menu" id="nav-menu">
         <ul class="nav__links">
-          <li><a href="index.html">Start</a></li>
-          <li><a href="trainingszeiten.html">Training</a></li>
-          <li><a href="team.html">Team</a></li>
-          <li><a href="aktuelles.html">Aktuelles</a></li>
-          <li><a href="kalender.html">Termine</a></li>
-          <li><a href="kontakt.html">Kontakt</a></li>
+          <li><a href="#beispiele">Referenz-Beispiele</a></li>
+          <li><a href="#funktionen">Funktionen</a></li>
+          <li><a href="#technik">Technik</a></li>
         </ul>
-
-        <!-- Konto: ausgeloggt = Login-Link, eingeloggt = Konto-Menü -->
-        <div class="nav__account">
-          <a href="login.html" class="nav__login" data-account-link>Login</a>
-          <div class="nav__user" data-account-menu hidden>
-            <button type="button" class="nav__user-btn" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu">
-              <span class="nav__avatar" data-account-avatar aria-hidden="true"></span>
-              <span class="nav__user-name" data-account-name>Mein Konto</span>
-              <svg class="nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <ul class="nav__dropdown" id="account-menu" role="menu">
-              <li role="none" class="nav__dropdown-head" data-account-head hidden>
-                <strong data-account-fullname></strong>
-                <span data-account-email></span>
-              </li>
-              <li role="none"><a role="menuitem" href="konto.html">Mein Konto</a></li>
-              <li role="none"><a role="menuitem" href="mitglieder.html" data-members-link hidden>Mitglieder</a></li>
-              <li role="none"><a role="menuitem" href="redaktion.html" data-redaktion-link hidden>Redaktion</a></li>
-              <li role="none"><a role="menuitem" href="admin.html" data-admin-link hidden>Admin</a></li>
-              <li role="none" class="nav__dropdown-sep"><button type="button" role="menuitem" class="nav__logout" data-logout>Abmelden</button></li>
-            </ul>
-          </div>
-        </div>
-        <div class="nav__cta"><a href="anmeldung.html" class="btn btn--primary">Probetraining</a></div>
+        <div class="nav__cta"><a href="https://github.com/crypticalcode/bsg2" class="btn btn--primary" target="_blank" rel="noopener">Auf GitHub</a></div>
       </div>
     </nav>
   </header>
@@ -73,206 +43,171 @@
       <img class="hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
       <span class="hero__glow hero__glow--a" aria-hidden="true"></span>
       <span class="hero__glow hero__glow--b" aria-hidden="true"></span>
-      <img class="hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
       <div class="wrap hero__inner">
         <div>
-          <span class="eyebrow eyebrow--invert" data-site="hero_eyebrow">Judo in Benninghausen</span>
-          <h1><span data-site="hero_title">Stark auf der Matte.</span> <span class="hl" data-site="hero_title_hl">Stark im Leben.</span></h1>
-          <p class="hero__lead" data-site="hero_subtitle">Judo für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
+          <span class="eyebrow eyebrow--invert">Open-Source Vereins-Website</span>
+          <h1>Eine Website-Basis. <span class="hl">Viele Vereine.</span></h1>
+          <p class="hero__lead">Ein generisches, white-label-fähiges Frontend (HTML/CSS/JS, ganz ohne Build &amp; Abhängigkeiten) mit komplett gemocktem Backend im Browser. Jeder Verein ist nur <strong>Konfiguration</strong> – kein eigener Code. Unten laufen mehrere Referenz-Beispiele auf <em>demselben</em> Frontend.</p>
           <div class="hero__cta">
-            <a href="anmeldung.html" class="btn btn--gold btn--lg">
-              Kostenloses Probetraining
+            <a href="#beispiele" class="btn btn--gold btn--lg">
+              Beispiele ansehen
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
-            <a href="trainingszeiten.html" class="btn btn--ghost btn--lg">Trainingszeiten</a>
+            <a href="https://github.com/crypticalcode/bsg2" class="btn btn--ghost btn--lg" target="_blank" rel="noopener">Quellcode</a>
           </div>
           <div class="hero__stats">
-            <div><strong>3</strong><span>Trainingsgruppen</span></div>
-            <div><strong>5+</strong><span>Kreismeister:innen</span></div>
-            <div><strong>ab 5</strong><span>Jahren dabei</span></div>
+            <div><strong>0</strong><span>Build-Schritte</span></div>
+            <div><strong>0</strong><span>Abhängigkeiten</span></div>
+            <div><strong>1</strong><span>Frontend für alle</span></div>
           </div>
         </div>
-        <aside class="hero__card" aria-label="Nächstes Training">
-          <h3 data-site="hero_card_title">Nächstes Training</h3>
-          <p class="muted" data-site="hero_card_note">Mittwochs &amp; freitags · Sporthalle Grundschule Benninghausen</p>
-          <ul class="train-mini" data-training-mini>
-            <li><div><b>Kinder</b><br><span>ab 5 Jahre</span></div><time>17:00–18:00</time></li>
-            <li><div><b>Judoka</b><br><span>ab Gelb-Gurt / ca. 8 J.</span></div><time>18:00–19:30</time></li>
-            <li><div><b>Erwachsene</b><br><span>Judo &amp; Fitness</span></div><time>18:15–19:45</time></li>
+        <aside class="hero__card" aria-label="So funktioniert es">
+          <h3>Mock ⇄ Real</h3>
+          <p class="muted">Dasselbe <code>/api/*</code>-Frontend läuft gegen ein Browser-Mock (Standard) oder ein echtes Backend – pro Route umschaltbar.</p>
+          <ul class="train-mini">
+            <li><div><b>Mock</b><br><span>Alles im Browser, localStorage</span></div><time>Standard</time></li>
+            <li><div><b>Hybrid</b><br><span>Reife Routen live, Rest Mock</span></div><time>?api=hybrid</time></li>
+            <li><div><b>Real</b><br><span>Echtes Backend pro Domain</span></div><time>?api=real</time></li>
           </ul>
         </aside>
       </div>
     </section>
 
-    <!-- ÜBER UNS -->
-    <section class="section">
-      <div class="wrap split">
-        <div class="split__media reveal">
-          <div class="media-frame">
-            <div class="photo-slot" style="position:absolute;inset:0;padding:24px">
-              <svg viewBox="0 0 80 80" width="64" height="64" fill="none" stroke="#f6c453" stroke-width="3" aria-hidden="true"><circle cx="40" cy="26" r="10"/><path d="M18 64c0-14 9-22 22-22s22 8 22 22" stroke-linecap="round"/></svg>
-              <span>Foto-Platzhalter · hier kommt ein Bild aus dem Vereinsleben hin</span>
-            </div>
-            <div class="media-badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>
-              Gemeinschaft, Respekt &amp; Spaß seit vielen Jahren
-            </div>
-          </div>
-        </div>
-        <div class="reveal">
-          <span class="eyebrow" data-site="about_eyebrow">Über uns</span>
-          <h2 data-site="about_title">Mehr als ein Sport – eine Gemeinschaft</h2>
-          <p data-site="about_text">Bei der BSG Benninghausen e.V. dreht sich alles um Judo – den „sanften Weg“. Wir stärken Kinder auf ihrem Weg, vermitteln Werte und zeigen, dass wahre Größe nichts mit Körpergröße zu tun hat.</p>
-          <ul class="checklist">
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Werte, die bleiben.</b> Freundschaft, Respekt und Rücksichtnahme sind die Basis unseres Trainings.</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Selbstvertrauen.</b> Wir begleiten die Persönlichkeitsentwicklung jedes Kindes.</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Für alle.</b> Vom Vorschulkind bis zum Erwachsenen, vom Einstieg bis zum Wettkampf.</span></li>
-          </ul>
-          <a href="team.html" class="btn btn--outline">Lerne unser Team kennen</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ANGEBOT / DAS LERNST DU -->
-    <section class="section section--sand">
+    <!-- REFERENZ-BEISPIELE -->
+    <section class="section section--mist" id="beispiele">
       <div class="wrap">
         <div class="section-head center">
-          <span class="eyebrow">Das lernst du bei uns</span>
-          <h2>Judo von Grund auf</h2>
-          <p>Technik, Kondition und Kopf – Judo trainiert den ganzen Menschen.</p>
+          <span class="eyebrow">Referenz-Beispiele</span>
+          <h2>Vereine auf einem Frontend</h2>
+          <p>Jede Karte öffnet dasselbe Frontend mit einer anderen Vereins-Konfiguration (Marke, Theme, Daten). Weitere Beispiele sind in Vorbereitung.</p>
         </div>
-        <div class="grid grid--4">
-          <article class="card reveal">
-            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/></svg></div>
-            <h3>Falltechnik</h3>
-            <p>Sicher fallen lernen (Ukemi) – die wichtigste Grundlage für Sport und Alltag.</p>
+        <div class="grid grid--3" data-examples>
+          <!-- live Beispiele werden aus window.BSG_EXAMPLES gerendert -->
+          <article class="card" aria-hidden="true" hidden data-example-template>
+            <div class="card__icon" data-ex-mark></div>
+            <span class="badge" data-ex-status>Live</span>
+            <h3 data-ex-name></h3>
+            <p class="muted" data-ex-meta></p>
+            <p data-ex-summary></p>
+            <a class="btn btn--outline btn--sm" data-ex-link>Beispiel öffnen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
           </article>
-          <article class="card reveal">
-            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/></svg></div>
-            <h3>Wurftechniken</h3>
-            <p>Nage-waza: kontrolliert werfen mit Timing, Balance und Körperspannung.</p>
+
+          <!-- geplante (noch zu implementierende) Beispiele -->
+          <article class="card card--planned">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+            <span class="badge badge--intern">Geplant</span>
+            <h3>Weitere Sportvereine</h3>
+            <p class="muted">Fußball · Turnen · Schwimmen</p>
+            <p>Weitere Referenz-Vereine zeigen, wie sich Branding, Sparten und Inhalte rein über die Konfiguration ändern.</p>
+            <span class="btn btn--outline btn--sm" aria-disabled="true">In Vorbereitung</span>
           </article>
-          <article class="card reveal">
-            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg></div>
-            <h3>Bodentechniken</h3>
-            <p>Ne-waza: Halte-, Hebel- und Würgegriffe – mit Köpfchen statt Kraft.</p>
+          <article class="card card--planned">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg></div>
+            <span class="badge badge--intern">Geplant</span>
+            <h3>Dein Verein?</h3>
+            <p class="muted">Mandant per Domain</p>
+            <p>Im SaaS-Modell bucht ein Verein ein Backend pro Domain – das Frontend bleibt unverändert. Siehe Produkt-Plan.</p>
+            <a class="btn btn--outline btn--sm" href="https://github.com/crypticalcode/bsg2/blob/main/docs/productization-saas-plan.md" target="_blank" rel="noopener">Produkt-Plan</a>
           </article>
-          <article class="card reveal">
+        </div>
+      </div>
+    </section>
+
+    <!-- FUNKTIONEN -->
+    <section class="section" id="funktionen">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="eyebrow">Funktionen</span>
+          <h2>Was jeder Verein bekommt</h2>
+          <p>Fertige Bausteine eines Vereinsauftritts – im Mock sofort ausprobierbar.</p>
+        </div>
+        <div class="grid grid--3">
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>
+            <h3>Öffentlicher Auftritt</h3>
+            <p>Start, Aktuelles, Termine, Trainingszeiten, Team &amp; Vorstand, Kontakt – redaktionell pflegbar.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+            <h3>Mitglieder &amp; Konten</h3>
+            <p>Login per E-Mail-Code, Mitgliederverwaltung, Haushalte, Mitgliedschaften.</p>
+          </article>
+          <article class="card">
             <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/></svg></div>
-            <h3>Selbstverteidigung</h3>
-            <p>Sich behaupten können – das stärkt Selbstbewusstsein und Sicherheit.</p>
+            <h3>Rollen &amp; Rechte</h3>
+            <p>Feingranulare Rechte pro Bereich, Rollen-Editor, Vereinsämter für die Team-Seite.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/></svg></div>
+            <h3>Turniere &amp; Auszahlungen</h3>
+            <p>Turnier-Anmeldungen mit Alters-/Gewichtsklassen und (gemockten) Auszahlungen an Veranstalter.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/></svg></div>
+            <h3>Feature-Gating &amp; Beta</h3>
+            <p>Funktionen als Beta an einzelne Rollen freigeben, pro Mandant buchen – ohne Redeploy.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg></div>
+            <h3>PWA &amp; Offline</h3>
+            <p>Installierbar, voll offline-fähig per Service-Worker – ohne Build.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- TRAININGS-TEASER -->
-    <section class="section">
-      <div class="wrap split split--reverse">
-        <div class="split__media reveal">
-          <div class="schedule" data-training-teaser>
-            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
-          </div>
-        </div>
-        <div class="reveal">
-          <span class="eyebrow">Trainingszeiten</span>
-          <h2>Drei Gruppen, ein Verein</h2>
-          <p>Wir trainieren mittwochs und freitags in der Sporthalle der Grundschule Benninghausen. Egal ob neugieriges Vorschulkind, ambitionierte:r Wettkämpfer:in oder fitnessbegeisterte:r Erwachsene:r – bei uns findest du deine Gruppe.</p>
-          <div class="notice" style="margin:22px 0 26px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-            <p><b>Probetraining ist kostenlos</b> und ohne Voranmeldung möglich – komm einfach in Sportkleidung vorbei.</p>
-          </div>
-          <a href="trainingszeiten.html" class="btn btn--primary">Alle Trainingszeiten &amp; Ort</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- AKTUELLES TEASER -->
-    <section class="section section--mist">
-      <div class="wrap">
-        <div class="section-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;max-width:100%">
-          <div style="max-width:560px">
-            <span class="eyebrow">Aktuelles</span>
-            <h2>Neues aus dem Verein</h2>
-            <p>Turniererfolge, Prüfungen und Vereinsleben – das tut sich bei der BSG.</p>
-          </div>
-          <a href="aktuelles.html" class="btn btn--outline">Alle Beiträge</a>
-        </div>
-        <div class="news-grid" data-news data-news-limit="3">
-          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="section--tight">
-      <div class="wrap">
-        <div class="cta-band reveal">
-          <span class="cta-band__glow" aria-hidden="true"></span>
-          <span class="eyebrow eyebrow--invert" style="justify-content:center">Mach mit</span>
-          <h2 data-site="cta_title">Deine erste Judo-Stunde wartet</h2>
-          <p data-site="cta_text">Probier Judo kostenlos und unverbindlich aus. Wir freuen uns auf dich auf der Matte!</p>
+    <!-- TECHNIK -->
+    <section class="section section--sand" id="technik">
+      <div class="wrap split">
+        <div class="split__text">
+          <span class="eyebrow">Technik</span>
+          <h2>Rein statisch, white-label, testgetrieben</h2>
+          <p>Das Frontend spricht ausschließlich <code>/api/*</code>. Im Standard beantwortet ein in den Browser gepatchtes Mock-Backend (<code>mock-api.js</code>) jede Anfrage lokal und legt Daten in <code>localStorage</code> ab. Branding (<code>club.json</code>) und Theme (<code>theme.css</code>) sind reine Konfiguration.</p>
+          <ul class="check-list">
+            <li>Kein Build, keine Abhängigkeiten – nur HTML, CSS, Vanilla-JS.</li>
+            <li>Mock ⇄ Real-Router: reife Backend-Routen einzeln „live" schalten.</li>
+            <li>Zero-dep Contract-Tests prüfen Mock und echtes Backend identisch.</li>
+            <li>Neues Beispiel = ein Eintrag in <code>club-config.js</code> + <code>club.&lt;id&gt;.json</code>.</li>
+          </ul>
           <div class="hero__cta">
-            <a href="anmeldung.html" class="btn btn--gold btn--lg">Jetzt zum Probetraining anmelden</a>
-            <a href="kontakt.html" class="btn btn--ghost btn--lg">Frag uns etwas</a>
+            <a href="home.html?club=bsg" class="btn btn--primary">BSG-Beispiel öffnen</a>
+            <a href="https://github.com/crypticalcode/bsg2" class="btn btn--ghost" target="_blank" rel="noopener">Repository</a>
           </div>
         </div>
+        <aside class="split__media">
+          <div class="media-frame media-frame--code">
+            <pre class="code-snip"><code>// club-config.js – ein Beispiel hinzufügen
+{
+  id: "mein-verein",
+  name: "Mein Verein e.V.",
+  clubSeed: "club.mein-verein.json",
+  theme: "assets/css/theme.mein-verein.css"
+}</code></pre>
+          </div>
+        </aside>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">
-      <div class="footer-grid">
-        <div class="footer-about">
-          <a href="index.html" class="brand">
-            <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
-            <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
-          </a>
-          <p>Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
-          <div class="socials">
-            <a href="https://www.instagram.com/bsg_benninghausen/" aria-label="Instagram" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            </a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Verein</h4>
-          <ul>
-            <li><a href="index.html">Start</a></li>
-            <li><a href="team.html">Team &amp; Vorstand</a></li>
-            <li><a href="aktuelles.html">Aktuelles</a></li>
-            <li><a href="kalender.html">Termine</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Mitmachen</h4>
-          <ul>
-            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
-            <li><a href="anmeldung.html">Probetraining</a></li>
-            <li><a href="kontakt.html">Kontakt</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Training</h4>
-          <ul>
-            <li data-club="venue">Sporthalle Grundschule Benninghausen</li>
-            <li><span data-club="street">Im Brühl 29</span>, <span data-club="city">59556 Lippstadt</span></li>
-            <li>Mittwochs &amp; freitags</li>
-          </ul>
-        </div>
-      </div>
       <div class="footer-bottom">
-        <span>© <span data-year>2026</span> <span data-club="name">BSG Benninghausen e.V.</span> · <span data-club="sport">Judo</span> in <span data-club="locality">Benninghausen</span></span>
-        <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
+        <span>© <span data-year>2026</span> Vereins-Baukasten · Open-Source-Frontend mit Mock-Backend</span>
+        <span><a href="https://github.com/crypticalcode/bsg2" target="_blank" rel="noopener">GitHub</a> · <a href="home.html">BSG-Beispiel</a></span>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=31" defer></script>
-  <script src="assets/js/mock-api.js?v=31" defer></script>
-  <script src="assets/js/main.js?v=31" defer></script>
-  <script src="assets/js/news.js?v=31" defer></script>
-  <script src="assets/js/trainingszeiten.js?v=31" defer></script>
+  <script src="assets/js/portal.js?v=33" defer></script>
+  <script>
+    /* App-Shell auch vom Portal aus offline-fähig machen (PWA). */
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("service-worker.js").catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

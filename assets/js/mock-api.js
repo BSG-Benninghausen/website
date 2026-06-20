@@ -97,13 +97,25 @@
     });
   }
 
-  /* ----- generische Storage-Helfer ----- */
+  /* ----- generische Storage-Helfer -----
+     Multi-Mandant/Referenz-Beispiel: jedes Beispiel (window.BSG_CLUB.ns, gesetzt
+     von club-config.js) bekommt einen eigenen localStorage-Namespace, damit
+     z. B. BSG- und Musterverein-Demo getrennte Stores/Seeds haben. Das
+     Default-Beispiel ("bsg") behält die Legacy-Schlüssel (bsg_*) unverändert –
+     so bleiben bestehende Deployments und die Contract-Tests unberührt. */
+  const STORE_NS =
+    (typeof window !== "undefined" && window.BSG_CLUB && window.BSG_CLUB.ns) || "bsg";
+  const STORE_PREFIX = STORE_NS === "bsg" ? "" : STORE_NS + ":";
+  const nsKey = (key) => STORE_PREFIX + key;
   function getStore(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    try { return JSON.parse(localStorage.getItem(nsKey(key))) ?? fallback; }
     catch (e) { return fallback; }
   }
   function setStore(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(nsKey(key), JSON.stringify(val)); } catch (e) { /* ignore */ }
+  }
+  function delStore(key) {
+    try { localStorage.removeItem(nsKey(key)); } catch (e) { /* ignore */ }
   }
   function saveLocal(key, entry) {
     const list = getStore(key, []);
@@ -340,7 +352,7 @@
   }
   const getSession = () => getStore(KEYS.session, null);
   const setSession = (userId) => setStore(KEYS.session, { token: genId("tok"), userId });
-  const clearSession = () => { try { localStorage.removeItem(KEYS.session); } catch (e) {} };
+  const clearSession = () => delStore(KEYS.session);
   function currentUser() {
     const s = getSession();
     return s ? getUserById(s.userId) : null;
@@ -541,7 +553,15 @@
   }
   async function ensureClub() {
     let values = getStore(KEYS.club, null);
-    if (!values) { values = await loadData("club.json"); setStore(KEYS.club, values); }
+    if (!values) {
+      /* Pro Referenz-Beispiel eine eigene Seed-Datei (White-Label): das aktive
+         Beispiel bestimmt club-config.js -> window.BSG_CLUB.clubSeed. */
+      const seedFile =
+        (typeof window !== "undefined" && window.BSG_CLUB && window.BSG_CLUB.clubSeed) ||
+        "club.json";
+      values = await loadData(seedFile);
+      setStore(KEYS.club, values);
+    }
     return values;
   }
   /* Beispiel-Stammdaten (Nutzer/Vereinsämter/Mitgliedschaften) einmalig einspielen.

@@ -118,6 +118,34 @@ eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
 
 ---
 
+## 5a. Produkt-Portal & Referenz-Beispiele (umgesetzt)
+
+Die GitHub-Pages-Startseite ist nicht mehr der BSG-Auftritt, sondern ein **generisches
+Produkt-Portal** (`index.html`): es erklärt das Produkt und listet mehrere **Referenz-Beispiele**.
+BSG ist das erste; die bisherige Vereins-Startseite liegt jetzt unter **`home.html`**.
+
+Die Beispiele laufen **config-getrieben auf demselben Frontend** („BSG = Konfiguration, kein Code"):
+
+- **`assets/js/club-config.js`** (synchron im `<head>`, vor `styles.css`/`mock-api.js`) ist Registry
+  **und** Resolver. Das aktive Beispiel kommt aus `?club=<id>` → `localStorage bsg_example` → Default
+  (eigener Key, **nicht** `bsg_club` – das ist die Club-Branding-Config `KEYS.club`).
+  Ergebnis: `window.BSG_CLUB = { id, name, clubSeed, theme, ns }` und `window.BSG_EXAMPLES`
+  (für die Portal-Karten). Es injiziert auf Vereinsseiten (`<html data-club-site>`) FOUC-frei das
+  passende Theme.
+- **Pro Beispiel ein eigener Store-Namespace**: `mock-api.js` präfixt alle `localStorage`-Schlüssel
+  mit `BSG_CLUB.ns`; das Default-Beispiel `bsg` behält die Legacy-Schlüssel (`bsg_*`) — bestehende
+  Deployments und die Contract-Tests bleiben unberührt. So haben BSG- und Musterverein-Demo
+  getrennte Daten/Seeds.
+- **Pro Beispiel ein eigener Club-Seed**: `ensureClub()` lädt `window.BSG_CLUB.clubSeed`
+  (`club.json` für BSG, `club.example.json` für „Musterverein") statt fest `club.json`.
+
+**Neues Beispiel = ein Eintrag in `club-config.js` + `assets/data/club.<id>.json` + ein Theme** —
+ohne den Rest des Frontends anzufassen. Das ist die Pages-/Mock-Vorstufe der späteren
+host-basierten Mehrmandanten-Auflösung (§4): dort liefert ein Backend pro Domain die Config,
+hier wählt der Besucher das Beispiel per Query.
+
+---
+
 ## 6. Phasen-Roadmap
 
 | Phase | Inhalt | Status |
@@ -125,6 +153,7 @@ eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
 | **P1 White-Label-Extraktion** | `club.json` + `GET/POST /api/club`, `[data-club]`, `theme.css`, Recht `manage_club`, generische Defaults, Contract-Test | **umgesetzt (diese Iteration)** |
 | **P2 Branding pro Domain** | Dynamisches `manifest.webmanifest` (Backend, `/api/manifest`) + client-seitiges `<title>`/`theme-color`/App-Titel aus `/api/club`; Felder `tagline`/`theme_color` | **umgesetzt** (offen: Crawler-SEO-Templating, per-Verein-Icon-Dateien) |
 | **P3 Feature-Buchung mocken** | Provisioning-Store (`bsg_feature_bookings`) + Recht `book_features` + `GET /api/bookings`/`POST /api/features/book` + Admin-UI „Funktionen buchen"; `capabilities` filtert gebucht×freigegeben | **umgesetzt** (offen: Abo/Billing-Gating, P4) |
+| **P3b Produkt-Portal & Referenz-Beispiele** | Generisches `index.html`-Portal; BSG → `home.html`; `club-config.js` (Registry+Resolver, `?club=<id>`), Store-Namespace + Club-Seed pro Beispiel (§5a) | **umgesetzt** |
 | **P4 Mehrmandanten-Backend** | **Teil 1 umgesetzt:** JSON-Snapshot-Persistenz (`BSG_DATA_FILE`, `server/store.mjs`), mandantenfähig gekapselt. **Offen (Teil 2):** Host-basierte Mandantenauflösung, pro-Mandant-Stores, Onboarding, Billing | teilweise |
 | **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |
 

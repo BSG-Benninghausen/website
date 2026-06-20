@@ -4,11 +4,22 @@ Neue, moderne und **rein statische** Website für den Judo-Verein **BSG Benningh
 Kein Build-Schritt, keine Abhängigkeiten – nur HTML, CSS und etwas JavaScript. Läuft auf
 jedem Webspace, GitHub Pages, Netlify o. Ä.
 
+## Produkt-Portal & Referenz-Beispiele
+
+Die GitHub-Pages-**Startseite** (`index.html`) ist ein generisches **Produkt-Portal**: dasselbe
+white-label-fähige Frontend bedient mehrere **Referenz-Beispiele**. **BSG** ist das erste; seine
+Vereins-Startseite liegt unter **`home.html`**. Welches Beispiel aktiv ist, wählt
+`assets/js/club-config.js` über `?club=<id>` (z. B. `home.html?club=bsg`, `home.html?club=demo`) –
+jedes Beispiel hat eigenen Club-Seed (`club.<id>.json`), eigenes Theme und einen eigenen
+`localStorage`-Namespace. **Neues Beispiel = ein Eintrag in `club-config.js` + `club.<id>.json` +
+Theme**, kein weiterer Code. Details: [`docs/productization-saas-plan.md`](docs/productization-saas-plan.md) §5a.
+
 ## Inhalt & Seiten
 
 | Seite | Datei | Inhalt |
 | --- | --- | --- |
-| Start | `index.html` | Hero, Über uns, Angebot, Trainings-Teaser, News-Teaser, CTA |
+| Produkt-Portal | `index.html` | Generische Startseite: Produkt-Pitch + Referenz-Beispiele |
+| Vereins-Start (BSG) | `home.html` | Hero, Über uns, Angebot, Trainings-Teaser, News-Teaser, CTA |
 | Trainingszeiten | `trainingszeiten.html` | Trainingsgruppen, Zeiten, Ort |
 | Team | `team.html` | Vorstand & Trainerteam |
 | Aktuelles | `aktuelles.html` | News-Liste (aus Mock-API) |
