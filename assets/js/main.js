@@ -28,7 +28,7 @@
     });
     menu.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-    window.addEventListener("resize", () => { if (window.innerWidth > 900) close(); });
+    window.addEventListener("resize", () => { if (window.innerWidth > 1080) close(); });
   }
 
   /* ----- Konto-Dropdown ----- */

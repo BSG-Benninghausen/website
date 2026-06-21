@@ -8,6 +8,16 @@
 (function () {
   "use strict";
 
+  /* ----- Nav-Link-Cache (sprungfreier Menü-Link, analog Auth-Cache in main.js) -----
+     Der Sponsoren-Menüpunkt wird per JS eingehängt; ohne Cache poppt er bei jeder
+     Navigation erst nach zwei /api-Anfragen nach. Wir merken uns die Entscheidung
+     (anzeigen ja/nein) pro Referenz-Beispiel und hängen den Link beim Skriptstart
+     SOFORT (vor den Anfragen) ein – die Anfrage bestätigt/korrigiert danach nur. */
+  const NAV_NS = (window.BSG_CLUB && window.BSG_CLUB.ns) || "bsg";
+  const NAV_CACHE_KEY = (NAV_NS === "bsg" ? "" : NAV_NS + ":") + "bsg_sponsors_nav";
+  const navCacheShown = () => { try { return localStorage.getItem(NAV_CACHE_KEY) === "1"; } catch (e) { return false; } };
+  const writeNavCache = (v) => { try { v ? localStorage.setItem(NAV_CACHE_KEY, "1") : localStorage.removeItem(NAV_CACHE_KEY); } catch (e) {} };
+
   // Immer HTML-escapen: BSG.escape ist eine globale const-Bindung (kein window.BSG),
   // daher direkt referenzieren; Fallback escapt selbst (nie unescaped in innerHTML).
   function esc(v) {
@@ -88,12 +98,22 @@
       const a = document.createElement("a");
       a.href = "sponsoren.html";
       a.textContent = "Sponsoren";
-      if (onPage) a.setAttribute("aria-current", "page");
+      if (onPage) { a.setAttribute("aria-current", "page"); a.classList.add("is-active"); }
       li.appendChild(a);
       const ref = ul.querySelector('a[href="kalender.html"]');
       if (ref && ref.parentElement && ref.parentElement.parentElement === ul) ul.insertBefore(li, ref.parentElement.nextSibling);
       else ul.appendChild(li);
     });
+  }
+
+  function removeNavLink() {
+    document.querySelectorAll("[data-sponsors-nav]").forEach((el) => el.remove());
+  }
+
+  // Cache schreiben und Menü-Link einhängen/entfernen (idempotent).
+  function setNavShown(show) {
+    writeNavCache(show);
+    if (show) addNavLink(); else removeNavLink();
   }
 
   function setTitles(cfg) {
@@ -102,21 +122,27 @@
   }
 
   async function load() {
-    let cfg, sponsors;
+    let cfg = null;
+    let sponsors = [];
     try {
       // Erst die Config laden; ist die Funktion aus (Default), sparen wir die zweite Anfrage.
       const cData = await (await fetch("/api/sponsors-config")).json();
-      if (!cData.ok || !cData.values || !cData.values.enabled) return;
-      cfg = cData.values;
+      if (cData && cData.ok && cData.values) cfg = cData.values;
+    } catch (e) { return; } // Netzfehler: optimistisch gecachten Zustand behalten
+
+    // Funktion aus (oder keine Config): Menü-Link sicher wieder entfernen.
+    if (!cfg || !cfg.enabled) { setNavShown(false); return; }
+
+    try {
       const sData = await (await fetch("/api/sponsors")).json();
-      if (!sData.ok) return;
-      sponsors = sData.items || [];
-    } catch (e) { return; }
+      if (sData && sData.ok) sponsors = sData.items || [];
+    } catch (e) { return; } // Netzfehler: optimistischen Zustand behalten
+
+    // Menü-Link zur eigenen Sponsoren-Seite – nur wenn aktiviert UND Sponsoren da.
+    // Schreibt zugleich den Cache für die nächste, sprungfreie Navigation.
+    setNavShown(!!(cfg.showPage && sponsors.length));
 
     if (!sponsors.length) return;
-
-    // Menü-Link zur eigenen Sponsoren-Seite
-    if (cfg.showPage) addNavLink();
 
     setTitles(cfg);
 
@@ -130,5 +156,9 @@
     if (cfg.showFooter) renderFooter(sponsors, cfg);
   }
 
+  // Sprungfrei: den Menü-Link sofort aus dem optimistischen Cache zeigen (vor den
+  // /api-Anfragen), sonst poppt er bei jeder Navigation sichtbar nach. load()
+  // bestätigt oder korrigiert danach.
+  if (navCacheShown()) addNavLink();
   load();
 })();
