@@ -24,6 +24,11 @@ export default async function run(api, ck) {
   ck("Haushalts-Benutzer hat membershipCount > 0", d.items.some((u) => u.membershipCount > 0));
   const ninaRow = d.items.find((u) => u.id === ninaId);
   ck("frischer Benutzer: aktiv, 0 Mitgliedschaften, nicht self", !!ninaRow && ninaRow.active === true && ninaRow.membershipCount === 0 && ninaRow.isSelf === false);
+  ck("activeMembershipCount: Zahl, frisch 0, <= membershipCount", typeof ninaRow.activeMembershipCount === "number" && ninaRow.activeMembershipCount === 0 && ninaRow.activeMembershipCount <= ninaRow.membershipCount);
+  ck("Haushalts-Benutzer hat activeMembershipCount > 0", d.items.some((u) => u.activeMembershipCount > 0));
+  // ownerId auf Mitglieds-Zeilen (Join-Schlüssel für die verschachtelte Ansicht)
+  let [ms, md] = await api.getJ("/api/admin/members");
+  ck("GET /api/admin/members: jede Zeile hat ownerId == User", ms === 200 && md.items.length > 0 && md.items.every((m) => typeof m.ownerId === "string" && m.ownerId) && d.items.some((u) => u.id === md.items[0].ownerId));
 
   // ---- Status (sperren/entsperren): Zugriffsschutz ----
   await api.logout();
