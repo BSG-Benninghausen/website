@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v33";
+const VERSION = "v35";
 const CACHE = "bsg-cache-" + VERSION;
 const RUNTIME = "bsg-runtime-" + VERSION;
 const OFFLINE_URL = "offline.html";
@@ -42,6 +42,7 @@ const PRECACHE_URLS = [
   "manifest.webmanifest",
 
   "assets/css/theme.css?v=" + VERSION.slice(1),
+  "assets/css/theme.bsg.css?v=" + VERSION.slice(1),
   "assets/css/theme.example.css?v=" + VERSION.slice(1),
   "assets/css/styles.css?v=" + VERSION.slice(1),
 
@@ -70,11 +71,13 @@ const PRECACHE_URLS = [
   "assets/data/news.json",
   "assets/data/site.json",
   "assets/data/club.json",
+  "assets/data/club.bsg.json",
   "assets/data/club.example.json",
   "assets/data/trainingszeiten.json",
 
   "assets/img/drache.png",
   "assets/img/drache-light.png",
+  "assets/img/bsg-logo.png",
   "assets/img/favicon.png",
   "assets/img/apple-touch-icon.png",
   "assets/img/hero-pattern.svg",
@@ -134,7 +137,10 @@ self.addEventListener("fetch", (event) => {
           return res;
         })
         .catch(() =>
-          caches.match(req).then((cached) => cached || caches.match(OFFLINE_URL))
+          // ignoreSearch: Navigationen mit Query (z. B. "/" -> home.html?club=bsg)
+          // sollen den precachten Seiten-Eintrag (ohne Query) treffen, statt auf
+          // offline.html zu fallen.
+          caches.match(req, { ignoreSearch: true }).then((cached) => cached || caches.match(OFFLINE_URL))
         )
     );
     return;

@@ -6,11 +6,13 @@
 import { test, expect } from "./fixtures.mjs";
 
 test.describe("Öffentliche Seiten", () => {
-  test("Produkt-Portal listet das BSG-Referenz-Beispiel", async ({ page }) => {
-    // Startseite ("/") ist jetzt das generische Produkt-Portal; die Vereinsseite
-    // (BSG) ist eines von mehreren Referenz-Beispielen und über home.html erreichbar.
+  test("Wurzel (/) leitet auf die BSG-Vereinsseite", async ({ page }) => {
+    // Dieser Fork IST die BSG-Vereinsseite: "/" leitet direkt auf
+    // home.html?club=bsg (statt auf das generische Produkt-Portal des Upstreams).
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /BSG-Beispiel/i }).first()).toBeVisible();
+    // Club-Pinning per Query muss erhalten bleiben (?club=bsg), nicht nur home.html.
+    await expect(page).toHaveURL(/home\.html\?club=bsg/);
+    await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 
   test("Vereins-Startseite (home.html) zeigt den Hero-Text", async ({ page }) => {
