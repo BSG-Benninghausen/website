@@ -1,0 +1,16 @@
+{
+  "name": "bsg-astro-poc",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "sync-assets": "mkdir -p public && rm -rf public/assets && cp -r ../assets public/assets",
+    "predev": "npm run sync-assets",
+    "prebuild": "npm run sync-assets",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "devDependencies": {
+    "astro": "^6.4.8"
+  }
+}

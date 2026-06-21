@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.astro/
+# Wird per `npm run sync-assets` aus ../assets kopiert (Single Source of Truth):
+public/assets/

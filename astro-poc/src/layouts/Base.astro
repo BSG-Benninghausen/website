@@ -1,0 +1,149 @@
+---
+/* =====================================================================
+   Base.astro – EINE Layout-Komponente für alle Seiten.
+   Ersetzt die ~100 Zeilen head+nav+footer, die heute in JEDER der 17
+   *.html dupliziert sind. Das Marken-/Layout-Branding kommt zur BUILD-ZEIT
+   aus club.json (Single Source of Truth) – kein Regex-Stempel, kein
+   Laufzeit-/api/club-Branding, FOUC-frei und ohne JS korrekt.
+
+   Schnell ändernde Inhalte (editierbare Texte via data-site, News, Termine,
+   Sponsoren) bleiben dynamisch: dieselben Vanilla-JS-Skripte werden geladen.
+   ===================================================================== */
+import club from "../data/club.json";
+
+interface Props {
+  pageTitle?: string;
+  description?: string;
+}
+const { pageTitle = "", description = club.description } = Astro.props;
+const title = pageTitle ? `${pageTitle} – ${club.name}` : `${club.name} – ${club.tagline}`;
+const logo = "/" + club.logo;
+const year = new Date().getFullYear();
+
+// Die Hauptnavigation als Daten – statt 17× kopiertem Markup.
+const navLinks = [
+  ["index.html", "Start"],
+  ["trainingszeiten.html", "Training"],
+  ["team.html", "Team"],
+  ["aktuelles.html", "Aktuelles"],
+  ["kalender.html", "Termine"],
+  ["kontakt.html", "Kontakt"],
+];
+---
+<!DOCTYPE html>
+<html lang="de" data-club-site>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" type="image/png" href="/assets/img/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <meta name="theme-color" content={club.theme_color} />
+  <meta name="apple-mobile-web-app-title" content={club.short_name} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+  <!-- Single-Tenant: BSG_CLUB direkt setzen (mock-api.js liest es) – ersetzt club-config.js -->
+  <script is:inline set:html={`window.BSG_CLUB={id:"bsg",name:${JSON.stringify(club.name)},clubSeed:"club.bsg.json",ns:"bsg"};window.BSG_ADMIN_EMAIL="admin@bsg-benninghausen.de";`}></script>
+  <link rel="stylesheet" href="/assets/css/theme.bsg.css" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="site-header">
+    <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    <nav class="nav wrap" aria-label="Hauptnavigation">
+      <a href="index.html" class="brand">
+        <img class="brand__logo" src={logo} alt="" width="42" height="42" />
+        <span class="brand__name"><span>{club.brand_name}</span><small>{club.brand_sub}</small></span>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
+      <div class="nav__menu" id="nav-menu">
+        <ul class="nav__links">
+          {navLinks.map(([href, label]) => <li><a href={href}>{label}</a></li>)}
+        </ul>
+
+        <div class="nav__account">
+          <a href="login.html" class="nav__login" data-account-link>Login</a>
+          <div class="nav__user" data-account-menu hidden>
+            <button type="button" class="nav__user-btn" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu">
+              <span class="nav__avatar" data-account-avatar aria-hidden="true"></span>
+              <span class="nav__user-name" data-account-name>Mein Konto</span>
+              <svg class="nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <ul class="nav__dropdown" id="account-menu" role="menu">
+              <li role="none" class="nav__dropdown-head" data-account-head hidden>
+                <strong data-account-fullname></strong>
+                <span data-account-email></span>
+              </li>
+              <li role="none"><a role="menuitem" href="konto.html">Mein Konto</a></li>
+              <li role="none"><a role="menuitem" href="mitglieder.html" data-members-link hidden>Mitglieder</a></li>
+              <li role="none"><a role="menuitem" href="redaktion.html" data-redaktion-link hidden>Redaktion</a></li>
+              <li role="none"><a role="menuitem" href="admin.html" data-admin-link hidden>Admin</a></li>
+              <li role="none" class="nav__dropdown-sep"><button type="button" role="menuitem" class="nav__logout" data-logout>Abmelden</button></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nav__cta"><a href="anmeldung.html" class="btn btn--primary">Probetraining</a></div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main"><slot /></main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-about">
+          <a href="index.html" class="brand">
+            <img class="brand__logo" src={logo} alt="" width="42" height="42" />
+            <span class="brand__name"><span>{club.brand_name}</span><small>{club.brand_sub}</small></span>
+          </a>
+          <p>{club.description}</p>
+          <div class="socials">
+            <a href={club.instagram_url} aria-label="Instagram" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Verein</h4>
+          <ul>
+            <li><a href="index.html">Start</a></li>
+            <li><a href="team.html">Team &amp; Vorstand</a></li>
+            <li><a href="aktuelles.html">Aktuelles</a></li>
+            <li><a href="kalender.html">Termine</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Mitmachen</h4>
+          <ul>
+            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
+            <li><a href="anmeldung.html">Probetraining</a></li>
+            <li><a href="kontakt.html">Kontakt</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Training</h4>
+          <ul>
+            <li>{club.venue}</li>
+            <li>{club.street}, {club.city}</li>
+            <li>Mittwochs &amp; freitags</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© {year} {club.name} · {club.sport} in {club.locality}</span>
+        <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script is:inline src="/assets/js/api-config.js"></script>
+  <script is:inline src="/assets/js/mock-api.js"></script>
+  <script is:inline src="/assets/js/main.js"></script>
+  <slot name="scripts" />
+</body>
+</html>
