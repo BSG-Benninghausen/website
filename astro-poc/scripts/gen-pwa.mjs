@@ -23,7 +23,7 @@ const club = JSON.parse(readFileSync(clubPath, "utf8"));
 
 // Cache-Bust der App-Shell: bei jedem Release erhöhen (Astro hasht im PoC noch
 // nicht). 🔜 Mit Asset-Hashing entfällt das.
-const VERSION = "astro-v5";
+const VERSION = "astro-v6";
 
 const ns = club.ns || club.id || "app";
 const themeCss = club.theme_css || "assets/css/theme.css";
