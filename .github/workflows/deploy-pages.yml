@@ -35,10 +35,13 @@ jobs:
         with:
           enablement: true
 
+      - name: Branding vorkompilieren (aus club.bsg.json ins HTML stempeln)
+        run: node tools/prerender-branding.mjs
+
       - name: Statische Dateien als Artefakt hochladen
         uses: actions/upload-pages-artifact@v3
         with:
-          # Die Seite liegt im Repo-Root (rein statisch, kein Build nötig)
+          # Branding wird oben ins HTML gestempelt; sonst reines Static-Root.
           path: "."
 
       - name: Auf GitHub Pages deployen

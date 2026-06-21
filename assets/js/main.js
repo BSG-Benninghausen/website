@@ -52,16 +52,16 @@
     b.addEventListener("click", async () => {
       writeAuthCache(null);
       try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
-      window.location.href = "home.html";
+      window.location.href = "index.html";
     });
   });
 
   /* ----- Aktiven Navigationspunkt markieren -----
-     Vereins-Startseite ist home.html (index.html ist das Produkt-Portal). */
-  const here = location.pathname.split("/").pop() || "home.html";
+     Vereins-Startseite ist index.html (Single-Tenant-Fork, kein Produkt-Portal). */
+  const here = location.pathname.split("/").pop() || "index.html";
   document.querySelectorAll(".nav__links a, .nav__dropdown a").forEach((a) => {
     const target = a.getAttribute("href");
-    if (target === here || (here === "home.html" && target === "home.html")) {
+    if (target === here || (here === "index.html" && target === "index.html")) {
       a.classList.add("is-active");
       a.setAttribute("aria-current", "page");
     }

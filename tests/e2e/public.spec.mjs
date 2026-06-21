@@ -6,17 +6,16 @@
 import { test, expect } from "./fixtures.mjs";
 
 test.describe("Öffentliche Seiten", () => {
-  test("Wurzel (/) leitet auf die BSG-Vereinsseite", async ({ page }) => {
-    // Dieser Fork IST die BSG-Vereinsseite: "/" leitet direkt auf
-    // home.html?club=bsg (statt auf das generische Produkt-Portal des Upstreams).
+  test("Wurzel (/) ist direkt die BSG-Vereinsseite (kein Redirect)", async ({ page }) => {
+    // Single-Tenant-Fork: index.html IST die Startseite – kein Redirect mehr
+    // auf home.html?club=bsg (Produkt-Portal + ?club=-Resolver entfallen).
     await page.goto("/");
-    // Club-Pinning per Query muss erhalten bleiben (?club=bsg), nicht nur home.html.
-    await expect(page).toHaveURL(/home\.html\?club=bsg/);
+    await expect(page).toHaveURL(/\/(index\.html)?$/);
     await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 
-  test("Vereins-Startseite (home.html) zeigt den Hero-Text", async ({ page }) => {
-    await page.goto("/home.html");
+  test("Startseite (index.html) zeigt den Hero-Text", async ({ page }) => {
+    await page.goto("/index.html");
     await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 

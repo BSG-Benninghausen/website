@@ -1,123 +1,47 @@
 /* =====================================================================
-   club-config.js – Auflösung des aktiven Referenz-Beispiels (White-Label).
-   MUSS synchron im <head> geladen werden: VOR styles.css (für FOUC-freie
-   Theme-Injektion) und VOR mock-api.js (das window.BSG_CLUB liest).
+   club-config.js – Single-Tenant-Konfiguration (BSG Benninghausen).
+   MUSS synchron im <head> geladen werden: VOR styles.css (für die
+   FOUC-freie Theme-Injektion) und VOR mock-api.js (das window.BSG_CLUB liest).
 
-   Ein einziges, generisches Frontend bedient mehrere "Referenz-Beispiele"
-   (Mandanten). Welches Beispiel aktiv ist, wird hier aufgelöst (stark → schwach):
-     1. URL-Query   ?club=<id>   (wird in localStorage persistiert)
-     2. localStorage bsg_example   (eigener Key – NICHT bsg_club: das ist im
-        Mock die Club-Branding-Config KEYS.club und würde sonst kollidieren)
-     3. Deploy-Default  window.BSG_CLUB_DEFAULT = "<id>"  (vor diesem Skript
-        gesetzt, analog window.BSG_API in api-config.js) – so stellt ein Fork
-        seinen Default-Verein, ohne die geteilte DEFAULT_ID-Zeile zu editieren.
-     4. Eingebauter Default DEFAULT_ID (erstes "live" Beispiel)
-
-   Ergebnis:
-     window.BSG_CLUB     = { id, name, clubSeed, theme, ns }
-       - clubSeed : Seed-Datei für GET /api/club (mock-api -> ensureClub)
-       - theme    : austauschbare Theme-CSS (Marken-Schicht)
-       - ns       : localStorage-Namespace; jedes Beispiel hat einen eigenen
-                    Store. Das Default-Beispiel ("bsg") behält die Legacy-
-                    Schlüssel (bsg_*), siehe mock-api.js.
-     window.BSG_EXAMPLES = ganze Registry (für das Produkt-Portal index.html)
-
-   Neues Referenz-Beispiel = EIN Eintrag hier + assets/data/club.<id>.json
-   + ein Theme — ohne den Rest des Frontends anzufassen ("BSG = Konfiguration").
+   Dieser Fork ist eine Single-Tenant-Seite (genau ein Verein). Das frühere
+   White-Label-Portal mit mehreren Beispielen + ?club=-Resolver ist entfallen;
+   das Layout-/Marken-Branding wird beim Deploy per
+   tools/prerender-branding.mjs aus assets/data/club.bsg.json ins HTML
+   gestempelt. Hier bleibt nur die Laufzeit-Minimalkonfig:
+     - window.BSG_CLUB : { id, name, clubSeed, theme, ns } – mock-api liest das
+       (clubSeed -> ensureClub; ns -> localStorage-Namespace).
+     - window.BSG_ADMIN_EMAIL : Seed-Admin (mock-api liest es beim Laden).
+     - Theme-CSS FOUC-frei injizieren (auf <html data-club-site>).
    ===================================================================== */
 (function () {
   "use strict";
 
-  var EXAMPLES = [
-    {
-      id: "bsg",
-      name: "BSG Benninghausen e.V.",
-      sport: "Judo",
-      locality: "Benninghausen",
-      status: "live",
-      clubSeed: "club.bsg.json",
-      theme: "assets/css/theme.bsg.css",
-      accent: "#e3141b",
-      summary:
-        "Judo-Verein im Kreis Soest – der erste Referenzkunde, vollständig " +
-        "eingerichtet: Training, Termine, Team, Mitgliederbereich, Turnier-" +
-        "Anmeldungen und Auszahlungen.",
-    },
-    {
-      id: "demo",
-      name: "Musterverein",
-      sport: "Mehrspartenverein",
-      locality: "Musterstadt",
-      status: "live",
-      clubSeed: "club.example.json",
-      theme: "assets/css/theme.example.css",
-      accent: "#2563eb",
-      summary:
-        "Die neutrale White-Label-Vorlage – ein generisches Frontend mit " +
-        "Musterverein-Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
-    },
-  ];
-  var DEFAULT_ID = "bsg";
-
-  function find(id) {
-    for (var i = 0; i < EXAMPLES.length; i++) {
-      if (EXAMPLES[i].id === id) return EXAMPLES[i];
-    }
-    return null;
-  }
-
-  /* Eigener Persistenz-Key – bewusst NICHT "bsg_club" (das ist im Mock die
-     Club-Branding-Config, KEYS.club). */
-  var SELECT_KEY = "bsg_example";
-
-  /* Deploy-Default (vor diesem Skript setzbar) überschreibt den eingebauten
-     DEFAULT_ID, ist aber schwächer als localStorage und ?club=. So setzt ein
-     Fork seinen Verein konfliktfrei, ohne die geteilte DEFAULT_ID-Zeile zu ändern. */
-  var deployDefault =
-    (typeof window.BSG_CLUB_DEFAULT === "string" && window.BSG_CLUB_DEFAULT) || "";
-
-  var id = deployDefault || DEFAULT_ID;
-  try {
-    var ls = localStorage.getItem(SELECT_KEY);
-    if (ls) id = ls;
-  } catch (e) {}
-  try {
-    var p = new URLSearchParams(location.search).get("club");
-    if (p) {
-      id = p;
-      try { localStorage.setItem(SELECT_KEY, p); } catch (e2) {}
-    }
-  } catch (e3) {}
-
-  var ex = find(id) || find(deployDefault) || find(DEFAULT_ID);
-
-  window.BSG_EXAMPLES = EXAMPLES;
   window.BSG_CLUB = {
-    id: ex.id,
-    name: ex.name,
-    clubSeed: ex.clubSeed,
-    theme: ex.theme,
-    ns: ex.id,
+    id: "bsg",
+    name: "BSG Benninghausen e.V.",
+    clubSeed: "club.bsg.json",
+    theme: "assets/css/theme.bsg.css",
+    ns: "bsg",
   };
 
-  /* Fork-Deploy: Seed-Admin-Adresse für BSG setzen (mock-api.js liest
-     window.BSG_ADMIN_EMAIL beim Laden; dieses Skript läuft davor). So bleibt
-     der generische Default im Upstream unangetastet. */
-  if (ex.id === "bsg") window.BSG_ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+  /* Seed-Admin-Adresse für den Fork (mock-api.js liest window.BSG_ADMIN_EMAIL
+     beim Laden; dieses Skript läuft davor). */
+  window.BSG_ADMIN_EMAIL = "admin@bsg-benninghausen.de";
 
   /* Theme nur auf den eigentlichen Vereinsseiten injizieren (<html data-club-site>).
-     Das Produkt-Portal bindet seine neutrale Theme-CSS selbst statisch ein.
-     FOUC-frei: dieses Skript läuft synchron im <head> vor styles.css. */
+     FOUC-frei: dieses Skript läuft synchron im <head> vor styles.css. Die
+     Cache-Bust-Version wird aus dem eigenen <script>-Tag gelesen, damit der
+     Standard-HTML-Bump sie automatisch mitzieht. */
   if (document.documentElement.hasAttribute("data-club-site")) {
     var ver = "";
     try {
       var src = document.currentScript && document.currentScript.src;
       var m = src && src.match(/[?&]v=([0-9A-Za-z._-]+)/);
       if (m) ver = "?v=" + m[1];
-    } catch (e4) {}
+    } catch (e) {}
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = ex.theme + ver;
+    link.href = window.BSG_CLUB.theme + ver;
     document.head.appendChild(link);
   }
 })();

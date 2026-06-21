@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v40";
+const VERSION = "v41";
 /* Cache-Namespace: der Fork behält den BSG-Prefix, damit Caches getrennter
    Deployments nicht kollidieren. */
 const CACHE_NS = "bsg";
@@ -26,7 +26,7 @@ const OFFLINE_URL = "offline.html";
 const PRECACHE_URLS = [
   ".",
   "index.html",
-  "home.html",
+  "index.html",
   "trainingszeiten.html",
   "team.html",
   "aktuelles.html",
@@ -46,11 +46,9 @@ const PRECACHE_URLS = [
   "manifest.webmanifest",
 
   "assets/css/theme.bsg.css?v=" + VERSION.slice(1),
-  "assets/css/theme.example.css?v=" + VERSION.slice(1),
   "assets/css/styles.css?v=" + VERSION.slice(1),
 
   "assets/js/club-config.js?v=" + VERSION.slice(1),
-  "assets/js/portal.js?v=" + VERSION.slice(1),
   "assets/js/api-config.js?v=" + VERSION.slice(1),
   "assets/js/mock-api.js?v=" + VERSION.slice(1),
   "assets/js/main.js?v=" + VERSION.slice(1),
@@ -79,7 +77,6 @@ const PRECACHE_URLS = [
   "assets/data/site.bsg.json",
   "assets/data/club.json",
   "assets/data/club.bsg.json",
-  "assets/data/club.example.json",
   "assets/data/trainingszeiten.json",
   "assets/data/trainingszeiten.bsg.json",
   "assets/data/events.bsg.json",
@@ -146,9 +143,8 @@ self.addEventListener("fetch", (event) => {
           return res;
         })
         .catch(() =>
-          // ignoreSearch: Navigationen mit Query (z. B. "/" -> home.html?club=bsg)
-          // sollen den precachten Seiten-Eintrag (ohne Query) treffen, statt auf
-          // offline.html zu fallen.
+          // ignoreSearch: Navigationen mit Query sollen den precachten
+          // Seiten-Eintrag (ohne Query) treffen, statt auf offline.html zu fallen.
           caches.match(req, { ignoreSearch: true }).then((cached) => cached || caches.match(OFFLINE_URL))
         )
     );

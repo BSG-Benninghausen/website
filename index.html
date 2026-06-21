@@ -1,17 +1,291 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-club-site data-page-title="">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BSG Benninghausen e.V. – Judo in Benninghausen</title>
-  <link rel="canonical" href="home.html">
+  <meta name="description" content="Sport für Kinder, Jugendliche und Erwachsene in Musterstadt. Anfänger, Wiedereinsteiger und Sportbegeisterte willkommen – kostenloses Probetraining bei der Musterverein e.V.">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
-  <!-- Dieser Fork ist die BSG-Vereinsseite: Wurzel leitet direkt auf die
-       Vereins-Startseite (?club=bsg verankert das BSG-Beispiel, sync-fest). -->
-  <meta http-equiv="refresh" content="0; url=home.html?club=bsg">
-  <script>location.replace("home.html?club=bsg");</script>
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0d0d12">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BSG Judo">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <script src="assets/js/club-config.js?v=41"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=41">
 </head>
 <body>
-  <noscript><a href="home.html?club=bsg">Weiter zur BSG Benninghausen e.V.</a></noscript>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="site-header">
+    <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    <nav class="nav wrap" aria-label="Hauptnavigation">
+      <a href="index.html" class="brand">
+        <img class="brand__logo" src="assets/img/bsg-logo.png" alt="" width="42" height="42" data-club-logo>
+        <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
+      <div class="nav__menu" id="nav-menu">
+        <ul class="nav__links">
+          <li><a href="index.html">Start</a></li>
+          <li><a href="trainingszeiten.html">Training</a></li>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="aktuelles.html">Aktuelles</a></li>
+          <li><a href="kalender.html">Termine</a></li>
+          <li><a href="kontakt.html">Kontakt</a></li>
+        </ul>
+
+        <!-- Konto: ausgeloggt = Login-Link, eingeloggt = Konto-Menü -->
+        <div class="nav__account">
+          <a href="login.html" class="nav__login" data-account-link>Login</a>
+          <div class="nav__user" data-account-menu hidden>
+            <button type="button" class="nav__user-btn" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu">
+              <span class="nav__avatar" data-account-avatar aria-hidden="true"></span>
+              <span class="nav__user-name" data-account-name>Mein Konto</span>
+              <svg class="nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <ul class="nav__dropdown" id="account-menu" role="menu">
+              <li role="none" class="nav__dropdown-head" data-account-head hidden>
+                <strong data-account-fullname></strong>
+                <span data-account-email></span>
+              </li>
+              <li role="none"><a role="menuitem" href="konto.html">Mein Konto</a></li>
+              <li role="none"><a role="menuitem" href="mitglieder.html" data-members-link hidden>Mitglieder</a></li>
+              <li role="none"><a role="menuitem" href="redaktion.html" data-redaktion-link hidden>Redaktion</a></li>
+              <li role="none"><a role="menuitem" href="admin.html" data-admin-link hidden>Admin</a></li>
+              <li role="none" class="nav__dropdown-sep"><button type="button" role="menuitem" class="nav__logout" data-logout>Abmelden</button></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nav__cta"><a href="anmeldung.html" class="btn btn--primary">Probetraining</a></div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero">
+      <img class="hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+      <span class="hero__glow hero__glow--a" aria-hidden="true"></span>
+      <span class="hero__glow hero__glow--b" aria-hidden="true"></span>
+      <img class="hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+      <div class="wrap hero__inner">
+        <div>
+          <span class="eyebrow eyebrow--invert" data-site="hero_eyebrow">Sport in Musterstadt</span>
+          <h1><span data-site="hero_title">Stark im Team.</span> <span class="hl" data-site="hero_title_hl">Stark im Leben.</span></h1>
+          <p class="hero__lead" data-site="hero_subtitle">Sport für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
+          <div class="hero__cta">
+            <a href="anmeldung.html" class="btn btn--gold btn--lg">
+              Kostenloses Probetraining
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="trainingszeiten.html" class="btn btn--ghost btn--lg">Trainingszeiten</a>
+          </div>
+          <div class="hero__stats">
+            <div><strong>3</strong><span>Trainingsgruppen</span></div>
+            <div><strong>5+</strong><span>Aktive</span></div>
+            <div><strong>ab 5</strong><span>Jahren dabei</span></div>
+          </div>
+        </div>
+        <aside class="hero__card" aria-label="Nächstes Training">
+          <h3 data-site="hero_card_title">Nächstes Training</h3>
+          <p class="muted" data-site="hero_card_note">Mittwochs &amp; freitags · Vereinsheim Musterstadt</p>
+          <ul class="train-mini" data-training-mini>
+            <li><div><b>Kinder</b><br><span>ab 5 Jahre</span></div><time>17:00–18:00</time></li>
+            <li><div><b>Aktive</b><br><span>ab Gelb-Gurt / ca. 8 J.</span></div><time>18:00–19:30</time></li>
+            <li><div><b>Erwachsene</b><br><span>Sport &amp; Fitness</span></div><time>18:15–19:45</time></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ÜBER UNS -->
+    <section class="section">
+      <div class="wrap split">
+        <div class="split__media reveal">
+          <div class="media-frame">
+            <div class="photo-slot" style="position:absolute;inset:0;padding:24px">
+              <svg viewBox="0 0 80 80" width="64" height="64" fill="none" stroke="#f6c453" stroke-width="3" aria-hidden="true"><circle cx="40" cy="26" r="10"/><path d="M18 64c0-14 9-22 22-22s22 8 22 22" stroke-linecap="round"/></svg>
+              <span>Foto-Platzhalter · hier kommt ein Bild aus dem Vereinsleben hin</span>
+            </div>
+            <div class="media-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>
+              Gemeinschaft, Respekt &amp; Spaß seit vielen Jahren
+            </div>
+          </div>
+        </div>
+        <div class="reveal">
+          <span class="eyebrow" data-site="about_eyebrow">Über uns</span>
+          <h2 data-site="about_title">Mehr als ein Sport – eine Gemeinschaft</h2>
+          <p data-site="about_text">Beim Musterverein e.V. dreht sich alles um den Sport und das Miteinander. Wir begleiten Kinder und Jugendliche auf ihrem Weg, vermitteln Werte und bringen Menschen jeden Alters zusammen.</p>
+          <ul class="checklist">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Werte, die bleiben.</b> Freundschaft, Respekt und Rücksichtnahme sind die Basis unseres Trainings.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Selbstvertrauen.</b> Wir begleiten die Persönlichkeitsentwicklung jedes Kindes.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Für alle.</b> Vom Vorschulkind bis zum Erwachsenen, vom Einstieg bis zum Wettkampf.</span></li>
+          </ul>
+          <a href="team.html" class="btn btn--outline">Lerne unser Team kennen</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANGEBOT / DAS LERNST DU -->
+    <section class="section section--sand">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="eyebrow">Das lernst du bei uns</span>
+          <h2>Sport von Grund auf</h2>
+          <p>Technik, Kondition und Kopf – Sport trainiert den ganzen Menschen.</p>
+        </div>
+        <div class="grid grid--4">
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/></svg></div>
+            <h3>Falltechnik</h3>
+            <p>Sicher fallen lernen (Ukemi) – die wichtigste Grundlage für Sport und Alltag.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/></svg></div>
+            <h3>Wurftechniken</h3>
+            <p>Nage-waza: kontrolliert werfen mit Timing, Balance und Körperspannung.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg></div>
+            <h3>Bodentechniken</h3>
+            <p>Ne-waza: Halte-, Hebel- und Würgegriffe – mit Köpfchen statt Kraft.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/></svg></div>
+            <h3>Selbstverteidigung</h3>
+            <p>Sich behaupten können – das stärkt Selbstbewusstsein und Sicherheit.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRAININGS-TEASER -->
+    <section class="section">
+      <div class="wrap split split--reverse">
+        <div class="split__media reveal">
+          <div class="schedule" data-training-teaser>
+            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+          </div>
+        </div>
+        <div class="reveal">
+          <span class="eyebrow">Trainingszeiten</span>
+          <h2>Drei Gruppen, ein Verein</h2>
+          <p>Wir trainieren mittwochs und freitags in der Sporthalle der Grundschule Musterstadt. Egal ob neugieriges Vorschulkind, ambitionierte:r Wettkämpfer:in oder fitnessbegeisterte:r Erwachsene:r – bei uns findest du deine Gruppe.</p>
+          <div class="notice" style="margin:22px 0 26px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            <p><b>Probetraining ist kostenlos</b> und ohne Voranmeldung möglich – komm einfach in Sportkleidung vorbei.</p>
+          </div>
+          <a href="trainingszeiten.html" class="btn btn--primary">Alle Trainingszeiten &amp; Ort</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- AKTUELLES TEASER -->
+    <section class="section section--mist">
+      <div class="wrap">
+        <div class="section-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;max-width:100%">
+          <div style="max-width:560px">
+            <span class="eyebrow">Aktuelles</span>
+            <h2>Neues aus dem Verein</h2>
+            <p>Turniererfolge, Prüfungen und Vereinsleben – das tut sich im Verein.</p>
+          </div>
+          <a href="aktuelles.html" class="btn btn--outline">Alle Beiträge</a>
+        </div>
+        <div class="news-grid" data-news data-news-limit="3">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPONSOREN -->
+    <section class="section section--sand" data-sponsors-section hidden>
+      <div class="wrap">
+        <div class="section-head center" style="max-width:600px;margin:0 auto 42px">
+          <span class="eyebrow" style="justify-content:center">Partner</span>
+          <h2 data-sponsors-title>Unsere Sponsoren</h2>
+          <p data-sponsors-subtitle hidden></p>
+        </div>
+        <div data-sponsors data-sponsors-home></div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="cta-band reveal">
+          <span class="cta-band__glow" aria-hidden="true"></span>
+          <span class="eyebrow eyebrow--invert" style="justify-content:center">Mach mit</span>
+          <h2 data-site="cta_title">Deine erste Trainingsstunde wartet</h2>
+          <p data-site="cta_text">Probier ein Training kostenlos und unverbindlich aus. Wir freuen uns auf dich!</p>
+          <div class="hero__cta">
+            <a href="anmeldung.html" class="btn btn--gold btn--lg">Jetzt zum Probetraining anmelden</a>
+            <a href="kontakt.html" class="btn btn--ghost btn--lg">Frag uns etwas</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-about">
+          <a href="index.html" class="brand">
+            <img class="brand__logo" src="assets/img/bsg-logo.png" alt="" width="42" height="42" data-club-logo>
+            <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
+          </a>
+          <p>Sport für Kinder, Jugendliche und Erwachsene in Musterstadt. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
+          <div class="socials">
+            <a href="https://www.instagram.com/" aria-label="Instagram" target="_blank" rel="noopener" data-club-instagram>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Verein</h4>
+          <ul>
+            <li><a href="index.html">Start</a></li>
+            <li><a href="team.html">Team &amp; Vorstand</a></li>
+            <li><a href="aktuelles.html">Aktuelles</a></li>
+            <li><a href="kalender.html">Termine</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Mitmachen</h4>
+          <ul>
+            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
+            <li><a href="anmeldung.html">Probetraining</a></li>
+            <li><a href="kontakt.html">Kontakt</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Training</h4>
+          <ul>
+            <li data-club="venue">Vereinsheim Musterstadt</li>
+            <li><span data-club="street">Musterstraße 1</span>, <span data-club="city">12345 Musterstadt</span></li>
+            <li>Mittwochs &amp; freitags</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> <span data-club="name">Musterverein e.V.</span> · <span data-club="sport">Sport</span> in <span data-club="locality">Musterstadt</span></span>
+        <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/api-config.js?v=41" defer></script>
+  <script src="assets/js/mock-api.js?v=41" defer></script>
+  <script src="assets/js/main.js?v=41" defer></script>
+  <script src="assets/js/sponsors.js?v=41" defer></script>
+  <script src="assets/js/news.js?v=41" defer></script>
+  <script src="assets/js/trainingszeiten.js?v=41" defer></script>
 </body>
 </html>
