@@ -32,6 +32,7 @@ on:
 permissions:
   contents: read
   pull-requests: write           # Kommentar zurück auf den Fork-PR
+  id-token: write                # OIDC für anthropics/claude-code-action (Agent-Auth)
 
 concurrency:
   group: mergeback-propose-${{ github.event.pull_request.number }}
@@ -53,6 +54,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false   # sonst überschreibt der github-actions[bot]-Credential den App-Token beim Upstream-Push
 
       - uses: actions/setup-node@v4
         with:
