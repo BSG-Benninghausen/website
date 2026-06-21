@@ -122,13 +122,15 @@ const memberships = [
 
 const out = {
   _generatedBy: "tools/gen-demo-data.mjs",
-  _hinweis: "Beispiel-Stammdaten (Demo-Seed). Wird von mock-api.js (ensureDemo) und server/api.mjs (init) eingespielt. Nicht von Hand editieren – über den Generator neu erzeugen.",
+  _hinweis: "Beispiel-Stammdaten (Demo-Seed). Wird von mock-api.js (ensureDemo) und packages/backend/api.mjs (init) eingespielt. Nicht von Hand editieren – über den Generator neu erzeugen, danach `node tools/vendor-seeds.mjs` ausführen.",
   passCounter: memberships.length,
   users,
   positions,
   memberships,
 };
 
-const target = new URL("../assets/data/demo-data.json", import.meta.url);
+// Kanonische Seed-Quelle = data/ des Contract-Packages. Danach nach assets/data/ vendoren.
+const target = new URL("../packages/api-contract/data/demo-data.json", import.meta.url);
 writeFileSync(target, JSON.stringify(out, null, 2) + "\n");
 console.log("demo-data.json geschrieben:", users.length, "Nutzer,", positions.length, "Ämter,", memberships.length, "Mitgliedschaften.");
+console.log("Hinweis: `node tools/vendor-seeds.mjs` ausführen, um assets/data/ zu aktualisieren.");

@@ -1,13 +1,13 @@
+#!/usr/bin/env node
 /* =====================================================================
    run.mjs – führt alle *.test.mjs aus (Mock oder echtes Backend).
-     node tests/run.mjs                 # Mock-Modus (Default)
-     node tests/run.mjs tournaments     # nur Suites mit "tournaments" im Dateinamen
-     TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
+     node packages/api-contract/run.mjs                 # Mock-Modus (Default)
+     node packages/api-contract/run.mjs tournaments     # nur Suites mit "tournaments" im Namen
+     TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # echtes Backend
    Exit-Code != 0, wenn mindestens eine Prüfung fehlschlägt.
 
-   Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar (Vorbereitung auf
-   ein ausgelagertes Contract-Package, s. docs/backend-repo-separation-plan.md):
-     BSG_MOCK_SRC=/pfad/zu/mock-api.js  BSG_DATA_DIR=/pfad/zu/data  node tests/run.mjs
+   Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar (s. harness.mjs):
+     BSG_MOCK_SRC=/pfad/zu/mock-api.js  BSG_DATA_DIR=/pfad/zu/data  node packages/api-contract/run.mjs
    ===================================================================== */
 import { readdirSync } from "node:fs";
 import { createClient } from "./harness.mjs";

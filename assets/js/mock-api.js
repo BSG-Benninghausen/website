@@ -67,7 +67,10 @@
     { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
-  const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+  /* Seed-Admin-Adresse; per window.BSG_ADMIN_EMAIL (Deploy/Fork) überschreibbar.
+     Default bleibt BSG, damit bestehende Deployments und Contract-Tests greifen. */
+  const ADMIN_EMAIL =
+    (typeof window !== "undefined" && window.BSG_ADMIN_EMAIL) || "admin@bsg-benninghausen.de";
 
   /* Feature-Katalog (Reifegrad). Quelle der Wahrheit für „welche Features kennt
      das Backend" – im Mock sind alle implementiert. Im echten (privaten) Backend

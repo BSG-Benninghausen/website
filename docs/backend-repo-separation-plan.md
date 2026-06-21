@@ -1,14 +1,38 @@
 # Migrations-Plan: Backend in eigenes Repo + Contract-Package
 
-Status: **Vorschlag / Diskussionsgrundlage**. Dieses Dokument beschreibt, *wie* das
-heute im Monorepo liegende echte Backend (`server/`) in ein eigenes Repository ausgelagert
-werden kann, ohne den Mechanismus zu verlieren, der diese Architektur trägt: **einen
-gemeinsamen Vertrag, an dem Mock und echtes Backend mit identischen Tests gemessen werden.**
+Status: **Phase 0 + 1 + 2 umgesetzt** (Vertrag gekapselt, Workspace-Grenze gezogen, Vertrag als
+Package veröffentlichbar). Dieses Dokument beschreibt, *wie* das echte Backend in ein eigenes
+Repository ausgelagert werden kann, ohne den Mechanismus zu verlieren, der diese Architektur trägt:
+**einen gemeinsamen Vertrag, an dem Mock und echtes Backend mit identischen Tests gemessen werden.**
 
-> **Empfehlung vorab:** Die Trennung erst vollziehen, wenn ein konkreter Treiber existiert
-> (echte Persistenz/DB, eigener Deploy-Zyklus, getrennte Zuständigkeiten, zu schwere CI).
-> Bis dahin **Phase 0–1** umsetzen (Vertrag sauber kapseln, Grenze über npm-Workspaces
-> ziehen) — das bringt 80 % des Nutzens bei ~10 % des Risikos und ist jederzeit reversibel.
+> **Empfehlung vorab:** Die Git-Trennung (Phase 3) erst vollziehen, wenn ein konkreter Treiber
+> existiert (echte Persistenz/DB, eigener Deploy-Zyklus, getrennte Zuständigkeiten, zu schwere
+> CI). **Phase 0–2 sind erledigt.** Hier halten, bis ein Treiber Phase 3–4 rechtfertigt.
+
+> **Stand der Umsetzung (Phase 1, im Monorepo):**
+> - Root-`package.json` mit `"workspaces": ["packages/*"]` + Orchestrierungs-Skripten.
+> - `packages/api-contract/` = Contract-Suite + Harness + `run.mjs` + **kanonische Seeds**
+>   (`data/`) + Prosa-Vertrag (`README.md`).
+> - `packages/backend/` = ehemals `server/` (`api.mjs`, `index.mjs`, `store.mjs`, `persistence.mjs`).
+> - Frontend bleibt die Repo-Wurzel (zero-dep). `assets/data/` ist eine **vendored Kopie** der
+>   kanonischen Seeds; `tools/vendor-seeds.mjs` kopiert sie und prüft per `--check` auf Drift (CI-Gate).
+> - `tools/guard-versions.mjs` (Cache-Busting) bleibt Frontend-Belang.
+> - E2E (`tests/e2e/`) bleibt im Frontend und bootet `packages/backend/`.
+
+> **Stand der Umsetzung (Phase 2, im Monorepo — „lean"):**
+> - Package heißt **`@crypticalcode/api-contract`** (Scope = GitHub-Owner, Pflicht für GitHub Packages),
+>   ist nicht mehr `private`, hat `exports`/`files`/`publishConfig`/`bin`-Shebang.
+> - **Publish-on-Tag:** `.github/workflows/publish-contract.yml` läuft auf `contract-vX.Y.Z`
+>   (Quality-Gate → Tag/Version-Abgleich → `npm publish` nach GitHub Packages, `GITHUB_TOKEN`).
+>   Root-`.npmrc` mappt nur Scope→Registry; Auth spritzt `setup-node` job-lokal ein.
+> - **Konsum per Name nur Dev/Test:** Backend deklariert `@crypticalcode/api-contract` als
+>   **devDependency `*`** (Workspace-lokal aufgelöst) und nutzt den `bsg-contract`-Bin im
+>   `test:contract`-Script. **Runtime-Seed-Laden bleibt pfadbasiert** → Hetzner-Deploy bleibt
+>   **install-frei** (kein `node_modules`, systemd startet `node packages/backend/index.mjs`).
+>   *Invariante:* `packages/backend/*.mjs` importiert das Package **nie**.
+> - `renovate.json` eingerichtet (wirkt real erst ab Phase 3).
+> - **Offen für Phase 3–4:** `git subtree split` der Pakete in eigene Repos, Runtime-Konsum per
+>   Name (dann `npm ci` im Deploy), getrennte CI/CD.
 
 ---
 
@@ -50,7 +74,7 @@ von dem beide Implementierungen abhängen:
 
 ```
         ┌─────────────────────────┐
-        │  @bsg/api-contract       │   ← Single Source of Truth des Vertrags
+        │  @crypticalcode/api-contract       │   ← Single Source of Truth des Vertrags
         │  • contract/*.test.mjs   │      (Suiten, Harness, kanonische Seeds, Prosa)
         │  • harness.mjs (param.)  │
         │  • data/*.json (Seeds)   │
@@ -67,7 +91,7 @@ von dem beide Implementierungen abhängen:
 └────────────────────┘       └────────────────────┘
 ```
 
-- **`@bsg/api-contract`** — die Tests **und** die kanonischen Seeds **und** die Prosa-Spezifikation.
+- **`@crypticalcode/api-contract`** — die Tests **und** die kanonischen Seeds **und** die Prosa-Spezifikation.
   Wird über **GitHub Packages** (oder als git-Dependency per Tag) verteilt und **semver-versioniert**.
 - **`bsg-website`** — Frontend + Mock. `npm test` lädt das Contract-Package und führt die Suiten im
   Mock-Modus gegen das *lokale* `mock-api.js`. Seeds werden aus dem Package nach `assets/data/`
@@ -93,7 +117,7 @@ kann, muss die Quelle des Mocks ein **Parameter** werden — die HTTP-Seite ist 
 const MOCK_SRC = readFileSync(new URL("../assets/js/mock-api.js", import.meta.url), "utf8");
 
 // nachher (vom Konsumenten injiziert):
-//   BSG_MOCK_SRC=/abs/pfad/zu/mock-api.js   node node_modules/@bsg/api-contract/run.mjs
+//   BSG_MOCK_SRC=/abs/pfad/zu/mock-api.js   node node_modules/@crypticalcode/api-contract/run.mjs
 //   BSG_DATA_DIR=/abs/pfad/zu/data          (Default: das data/ des Packages)
 const MOCK_SRC_PATH = process.env.BSG_MOCK_SRC;                 // Frontend setzt das
 const DATA_DIR = new URL(process.env.BSG_DATA_DIR ?? "./data/", import.meta.url);
@@ -118,7 +142,7 @@ Diese Änderung ist **rückwärtskompatibel** und kann **sofort im Monorepo** pa
 
 ```
 bsg-api-contract/
-├── package.json            # name "@bsg/api-contract", bin: { "bsg-contract": "run.mjs" }, zero deps
+├── package.json            # name "@crypticalcode/api-contract", bin: { "bsg-contract": "run.mjs" }, zero deps
 ├── run.mjs                 # ← aus tests/run.mjs
 ├── harness.mjs             # ← aus tests/harness.mjs (mit §3-Parametrisierung)
 ├── contract/
@@ -206,10 +230,10 @@ die E2E-Suite stark wächst.
 
 | Phase | Inhalt | Git-Trennung? | Risiko | Reversibel |
 |-------|--------|---------------|--------|------------|
-| **0. Harness entkoppeln** | `BSG_MOCK_SRC`/`BSG_DATA_DIR`-Parametrisierung (§3); `run.mjs` setzt Defaults. CI unverändert grün. | nein | sehr gering | trivial |
-| **1. Workspace-Grenze** | npm-Workspaces: `packages/api-contract/` (Tests+Seeds+Prosa), `packages/backend/`, Root=Frontend. Seeds zentral, FE+Backend referenzieren sie. **Empfohlener Halte-/Endpunkt ohne echten Treiber.** | nein | gering | leicht |
-| **2. Package veröffentlichen** | `@bsg/api-contract` nach GitHub Packages; beide Workspaces konsumieren per Version statt per Pfad. Renovate einrichten. | nein | mittel | mittel |
-| **3. Repos splitten** | `git subtree split --prefix=packages/backend` → `bsg-backend` (Historie erhalten!); dito Contract. Frontend bleibt im Ursprungs-Repo. | **ja** | mittel–hoch | aufwändig |
+| **0. Harness entkoppeln** ✅ | `BSG_MOCK_SRC`/`BSG_DATA_DIR`-Parametrisierung (§3); `run.mjs` setzt Defaults. CI unverändert grün. | nein | sehr gering | trivial |
+| **1. Workspace-Grenze** ✅ | npm-Workspaces: `packages/api-contract/` (Tests+Seeds+Prosa), `packages/backend/`, Root=Frontend. Seeds zentral, FE+Backend referenzieren sie. **Empfohlener Halte-/Endpunkt ohne echten Treiber.** | nein | gering | leicht |
+| **2. Package veröffentlichen** ✅ | `@crypticalcode/api-contract` nach GitHub Packages (Publish-on-Tag). **Lean:** Konsum per Name nur Dev/Test (Backend-Runtime bleibt pfadbasiert/install-frei); voller Per-Version-Konsum folgt mit Phase 3. Renovate eingerichtet. | nein | mittel | mittel |
+| **3. Repos splitten** | `git filter-repo` (volle Historie) `packages/backend` → `bsg-backend`; **inkrementell: Backend zuerst**, Contract folgt (3b), Frontend bleibt. Deploy Option A (same-origin). **Runbook: [`phase-3-backend-split-runbook.md`](phase-3-backend-split-runbook.md).** | **ja** | mittel–hoch | aufwändig |
 | **4. CI/CD verdrahten** | Pro Repo eigene `ci.yml` (jeweils Contract-Suite gegen die eigene Seite); Deploy nach Option A/B; E2E im FE-Repo gegen gepinntes Backend. | ja | hoch | aufwändig |
 
 **Konkrete Schritte Phase 0 (sofort umsetzbar, im aktuellen Branch):**
@@ -224,7 +248,7 @@ die E2E-Suite stark wächst.
 2. `tests/` → `packages/api-contract/` (Tests, Harness, `run.mjs`), `assets/data/` → dort `data/`.
 3. Frontend **vendored** `data/` nach `assets/data/` (kleines `cp`-Script + CI-Check
    „vendored == kanonisch"; **kein** echter Build-Schritt fürs Static).
-4. `server/` → `packages/backend/`, liest Seeds aus `@bsg/api-contract/data`.
+4. `server/` → `packages/backend/`, liest Seeds aus `@crypticalcode/api-contract/data`.
 5. CI-Jobs auf Workspace-Skripte umstellen, beide Contract-Läufe + E2E grün halten.
 
 ---
@@ -236,8 +260,11 @@ die E2E-Suite stark wächst.
 - **Seed-Drift:** Sobald Seeds nicht mehr im selben Verzeichnis liegen, braucht es den CI-Check
   „vendored == Package" — sonst läuft FE-Mock gegen andere Daten als die Tests annehmen.
 - **Cookie-/CSRF-Modell** bei Cross-Origin (Option B) — nicht unterschätzen (`SameSite=None`).
-- **Verteilung des Packages:** GitHub Packages braucht Auth-Token in CI beider Repos; git-Dependency
-  per Tag ist simpler, aber ohne Semver-Range-Komfort.
+- **Verteilung des Packages:** **Entschieden in Phase 2 → GitHub Packages** (Scope `@crypticalcode`,
+  = Owner-Pflicht). Reads brauchen ein Token (`read:packages`); im Monorepo irrelevant, da der Name
+  Workspace-lokal aufgelöst wird. Provenance (`--provenance`) wird von GitHub Packages **nicht**
+  unterstützt — daher ausgelassen. Die git-Dependency-per-Tag-Alternative bleibt für externe Consumer
+  ohne Registry-Auth offen, falls nötig.
 - **Entscheidung Deployment-Topologie** (A vs. B) bestimmt den Auth-Aufwand und sollte **vor** Phase 3
   fallen.
 

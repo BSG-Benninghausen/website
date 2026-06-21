@@ -10,10 +10,10 @@ Kein Build-Schritt, keine npm-Pakete – nur `node:`-Builtins (`http`, `fs`, `pa
 ## Starten
 
 ```bash
-node server/index.mjs                 # Port 3000, liefert /api/* + statische Website
-PORT=8080 node server/index.mjs       # anderer Port
-BSG_STATIC=0 node server/index.mjs    # nur API, keine statischen Dateien
-BSG_DEV=0 node server/index.mjs       # Produktionsmodus (s. u.)
+node packages/backend/index.mjs                 # Port 3000, liefert /api/* + statische Website
+PORT=8080 node packages/backend/index.mjs       # anderer Port
+BSG_STATIC=0 node packages/backend/index.mjs    # nur API, keine statischen Dateien
+BSG_DEV=0 node packages/backend/index.mjs       # Produktionsmodus (s. u.)
 ```
 
 ### Env-Variablen
@@ -45,7 +45,8 @@ Damit funktioniert das Frontend gegen das echte Backend end-to-end: gleicher Ori
 | `api.mjs`     | Reine Domänenlogik: Store, Seed/Migrationen, alle Route-Handler. `createApi()`.     |
 | `index.mjs`   | HTTP-Schale: Cookie-Session, JSON-I/O für `/api/*`, statisches Ausliefern, CORS.    |
 
-`createApi({ dataDir, dev })` lädt die Seed-/Config-JSONs aus `assets/data/`, seedet System-Rollen
+`createApi({ dataDir, dev })` lädt die Seed-/Config-JSONs aus den **kanonischen Seeds** des
+Contract-Packages (`../api-contract/data/`; identisch zur vendored Kopie in `assets/data/`), seedet System-Rollen
 (`admin`, `member`), Beispiel-Rollen (`vorstand`, `pressewart`, `kassenwart`, `trainer`) und die
 Board-Rollen (`vorsitz1`, …) als **reine Rechte-Rollen** – identisch zum Mock. Die öffentliche
 Team-Anzeige läuft über die **Vereinsämter** (`db.positions`, `GET /api/positions` unter
@@ -62,7 +63,7 @@ tauscht ihn gegen eine Session. Die Session wird serverseitig (Token → userId)
 
 Standardmäßig **in-memory** (Prozess-Lebensdauer) – das genügt für die Contract-Tests und einen
 Demo-/Dev-Betrieb. Für **Durability** setzt man `BSG_DATA_FILE` auf einen Dateipfad: dann hält
-`server/store.mjs` den `db` als **JSON-Snapshot** auf der Platte (spiegelt das localStorage-Modell
+`packages/backend/store.mjs` den `db` als **JSON-Snapshot** auf der Platte (spiegelt das localStorage-Modell
 des Mocks).
 
 - **Boot:** existiert die Snapshot-Datei, wird sie geladen und `seed()` zieht idempotente
@@ -74,7 +75,7 @@ des Mocks).
   nach Neustart meldet man sich neu an. Statische Config-Templates (`age-classes.json` etc.) werden
   weiterhin bei jedem Start frisch geladen.
 - Ohne `BSG_DATA_FILE` ändert sich **nichts** gegenüber früher (Contract-Tests/E2E unverändert).
-  Test: `node tests/persistence.mjs`.
+  Test: `node packages/backend/persistence.mjs`.
 
 **Ausblick Mehrmandantenfähigkeit:** `store.mjs` + die `db`/`dataFile`-Kapselung in `createApi` sind
 die Naht dafür. Ein Multi-Tenant-Server hält eine `Map<tenantId, createApi({dataFile: …})>`, löst den
@@ -92,12 +93,12 @@ In **Produktion** (`BSG_DEV=0`) ist `devCode` deaktiviert und `/api/test/reset` 
 ## Contract-Tests dagegen laufen lassen
 
 ```bash
-node server/index.mjs &                                   # Backend starten
-TEST_BASE=http://localhost:3000 node tests/run.mjs        # Suite im Real-Modus
+node packages/backend/index.mjs &                                   # Backend starten
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs  # Suite im Real-Modus
 ```
 
 **Isolation pro Suite.** Im Mock-Modus bekommt jede Suite eine frische Sandbox. Das Real-Modus-
-Pendant ist `/api/test/reset`: Der Runner (`tests/run.mjs`) ruft vor jeder Suite `api.reset()` auf,
+Pendant ist `/api/test/reset`: Der Runner (`packages/api-contract/run.mjs`) ruft vor jeder Suite `api.reset()` auf,
 sodass jede Suite auf einem frisch geseedeten Backend startet. Ohne diese Isolation würden Suites,
 die dieselben E-Mails/Namen wiederverwenden (`carla`, `kasse`, `Tina Trainer`, …), über den
 gemeinsamen Backend-Prozess hinweg kollidieren.

@@ -8,3 +8,7 @@ tests/e2e/test-results/
 node_modules/
 playwright-report/
 test-results/
+
+# Kein Lockfile committen: die Site bleibt zero-dep/install-frei; die Workspaces haben keine
+# externen Laufzeit-Deps (npm install verlinkt nur lokal). Bei Bedarf neu erzeugbar.
+package-lock.json

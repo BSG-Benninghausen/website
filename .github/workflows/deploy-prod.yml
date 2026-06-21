@@ -29,19 +29,22 @@ jobs:
 
       # --- Qualitäts-Gate (gleiches wie CI) ---
       - name: Syntax-Check
-        run: for f in assets/js/*.js server/*.mjs tests/*.mjs service-worker.js; do node --check "$f"; done
+        run: for f in assets/js/*.js packages/backend/*.mjs packages/api-contract/*.mjs tools/*.mjs service-worker.js; do node --check "$f"; done
 
       - name: Versions-Guard
-        run: node tests/guard-versions.mjs
+        run: node tools/guard-versions.mjs
+
+      - name: Seeds vendored == kanonisch
+        run: node tools/vendor-seeds.mjs --check
 
       - name: Contract-Tests · Mock
-        run: node tests/run.mjs
+        run: node packages/api-contract/run.mjs
 
       - name: Contract-Tests · echtes Backend
         run: |
-          BSG_DEV=1 node server/index.mjs & echo $! > /tmp/srv.pid
+          BSG_DEV=1 node packages/backend/index.mjs & echo $! > /tmp/srv.pid
           for i in $(seq 1 30); do curl -sf http://localhost:3000/api/news >/dev/null 2>&1 && break; sleep 0.5; done
-          TEST_BASE=http://localhost:3000 node tests/run.mjs
+          TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
           kill "$(cat /tmp/srv.pid)" 2>/dev/null || true
 
       # --- Deploy ---

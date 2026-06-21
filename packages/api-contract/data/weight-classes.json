@@ -1,0 +1,40 @@
+{
+  "_hinweis": "Gewichtsklassen je Altersklasse und Geschlecht (nach Jahrgang/Alter im laufenden Kalenderjahr). Es werden nur die zu Geburtsjahr UND Geschlecht passenden Klassen zur Auswahl angezeigt. Diese Tabelle ist eine anpassbare Vorlage – bitte an die aktuell gültigen Regeln eures Verbandes (z. B. DJB/Landesverband) und das Wettkampfjahr angleichen. 'männlich' = male, 'weiblich' = female; bei 'divers'/keiner Angabe werden beide Listen zusammengeführt.",
+  "categories": [
+    {
+      "label": "U11",
+      "minAge": 0,
+      "maxAge": 10,
+      "male":   ["-21 kg", "-24 kg", "-27 kg", "-30 kg", "-34 kg", "-38 kg", "-42 kg", "-46 kg", "-50 kg", "+50 kg"],
+      "female": ["-21 kg", "-24 kg", "-27 kg", "-30 kg", "-34 kg", "-38 kg", "-42 kg", "-46 kg", "-50 kg", "+50 kg"]
+    },
+    {
+      "label": "U13",
+      "minAge": 11,
+      "maxAge": 12,
+      "male":   ["-28 kg", "-31 kg", "-34 kg", "-37 kg", "-40 kg", "-43 kg", "-46 kg", "-50 kg", "-55 kg", "-60 kg", "+60 kg"],
+      "female": ["-28 kg", "-31 kg", "-34 kg", "-37 kg", "-40 kg", "-43 kg", "-46 kg", "-50 kg", "-55 kg", "-60 kg", "+60 kg"]
+    },
+    {
+      "label": "U15",
+      "minAge": 13,
+      "maxAge": 14,
+      "male":   ["-34 kg", "-37 kg", "-40 kg", "-43 kg", "-46 kg", "-50 kg", "-55 kg", "-60 kg", "-66 kg", "-73 kg", "+73 kg"],
+      "female": ["-32 kg", "-36 kg", "-40 kg", "-44 kg", "-48 kg", "-52 kg", "-57 kg", "-63 kg", "-70 kg", "+70 kg"]
+    },
+    {
+      "label": "U18",
+      "minAge": 15,
+      "maxAge": 17,
+      "male":   ["-46 kg", "-50 kg", "-55 kg", "-60 kg", "-66 kg", "-73 kg", "-81 kg", "-90 kg", "+90 kg"],
+      "female": ["-40 kg", "-44 kg", "-48 kg", "-52 kg", "-57 kg", "-63 kg", "-70 kg", "+70 kg"]
+    },
+    {
+      "label": "U21 / Senioren",
+      "minAge": 18,
+      "maxAge": 120,
+      "male":   ["-60 kg", "-66 kg", "-73 kg", "-81 kg", "-90 kg", "-100 kg", "+100 kg"],
+      "female": ["-48 kg", "-52 kg", "-57 kg", "-63 kg", "-70 kg", "-78 kg", "+78 kg"]
+    }
+  ]
+}

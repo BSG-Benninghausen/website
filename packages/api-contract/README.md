@@ -8,20 +8,65 @@ zukünftiges Backend vertraglich in Sync – kein Build-Schritt, keine Abhängig
 
 ```bash
 # Mock-Modus (Default) – aus dem Repo-Root:
-node tests/run.mjs
+node packages/api-contract/run.mjs
 
 # Nur bestimmte Suites (Teilstring des Dateinamens):
-node tests/run.mjs tournaments payouts
+node packages/api-contract/run.mjs tournaments payouts
 
 # Gegen ein laufendes echtes Backend:
-node server/index.mjs &                                # siehe server/README.md
-TEST_BASE=http://localhost:3000 node tests/run.mjs
+node packages/backend/index.mjs &                                # siehe packages/backend/README.md
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
 ```
 
 Exit-Code `0` = alles grün, sonst `1` (CI-tauglich).
 
-Ein referenz-implementiertes echtes Backend liegt unter [`server/`](../server/README.md) – es
+Ein referenz-implementiertes echtes Backend liegt unter [`packages/backend/`](../backend/README.md) – es
 erfüllt genau diesen Vertrag und macht die Suite im `TEST_BASE`-Modus grün.
+
+Dieses Package ist die **Single Source of Truth des Vertrags**: die Suiten **und** die kanonischen
+Seed-Daten (`data/`). Mock-Quelle und Seed-Verzeichnis sind per `BSG_MOCK_SRC` / `BSG_DATA_DIR`
+überschreibbar (Defaults: das `mock-api.js` des Frontend-Workspaces bzw. das `data/` dieses Packages).
+Das Frontend hält unter `assets/data/` eine **vendored Kopie** der Seeds (`tools/vendor-seeds.mjs`).
+
+## Veröffentlichung (GitHub Packages)
+
+Der Vertrag wird als versioniertes Package **`@crypticalcode/api-contract`** nach **GitHub Packages**
+publiziert (`https://npm.pkg.github.com`). So können Backend und Frontend ihn nach dem Repo-Split
+(Phase 3, s. `docs/backend-repo-separation-plan.md`) **per Version statt per Pfad** beziehen.
+
+**Release-Flow:**
+1. `version` in `packages/api-contract/package.json` bumpen — **Semver:** additive Route = `minor`,
+   Breaking Change = `major`, reine Fixes = `patch`.
+2. Commit, dann Tag **`contract-vX.Y.Z`** setzen (eigener Namespace, kollidiert nicht mit den
+   Hetzner-Deploy-Tags `v*.*.*-beta.*`/Release). Der Tag **muss** der `version` entsprechen.
+3. Der Workflow `.github/workflows/publish-contract.yml` läuft auf den Tag: Quality-Gate
+   (Guard + Vendoring-Check + Contract-Suite Mock & Real) → Tag/Version-Abgleich → `npm publish`.
+   `workflow_dispatch` mit `dry_run: true` testet das Publish ohne Registry-Schreibzugriff.
+
+Auto-Bump-PRs in Konsumenten übernimmt Renovate (`renovate.json`; greift praktisch erst nach dem
+Repo-Split — im Monorepo trackt der Workspace die Version automatisch).
+
+## Externer Konsum
+
+GitHub Packages verlangt **Auth auch für Reads**. Ein Konsument braucht eine `~/.npmrc` mit:
+
+```
+@crypticalcode:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+
+und ein Token mit `read:packages` (in GitHub Actions reicht `secrets.GITHUB_TOKEN` bei
+`permissions: packages: read`). Danach:
+
+```bash
+npm i -D @crypticalcode/api-contract
+# Suiten gegen das eigene Backend fahren:
+TEST_BASE=http://localhost:3000 npx bsg-contract
+```
+
+**Innerhalb dieses Monorepos** ist all das **nicht** nötig: der einzige `@crypticalcode`-Name wird
+über den npm-Workspace **lokal** aufgelöst (`npm install` verlinkt `packages/api-contract`), nie aus
+der Registry geladen — daher bleiben CI und Dev install-frei bzw. token-frei.
 
 ## Aufbau
 
@@ -85,8 +130,8 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
 ## Browser-E2E (Playwright)
 
 Ergänzend zu den API-Contract-Tests fahren **Browser-End-to-End-Tests** einen echten Browser
-gegen das Backend aus [`server/`](../server/README.md) – Static **und** `/api/*` über denselben
-Origin. Sie liegen isoliert in [`tests/e2e/`](./e2e/) mit **eigener** `package.json`: nur dort
+gegen das Backend aus [`packages/backend/`](../backend/README.md) – Static **und** `/api/*` über denselben
+Origin. Sie liegen isoliert in [`tests/e2e/`](../../tests/e2e/) mit **eigener** `package.json`: nur dort
 gibt es Dev-Abhängigkeiten (`@playwright/test`), Repo-Root und ausgelieferte Website bleiben
 abhängigkeitsfrei.
 
