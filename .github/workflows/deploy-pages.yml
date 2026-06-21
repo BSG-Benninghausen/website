@@ -1,8 +1,9 @@
 name: Deploy zu GitHub Pages
 
-# Veröffentlicht die statische Website (API-Modus "mock") auf GitHub Pages.
-# Läuft beim Push auf main. Echte Backend-Deployments (Real-Modus pro Domain)
-# liegen in den jeweiligen Vereins-Forks, nicht in diesem generischen Repo.
+# Baut die Astro-Seite (astro-poc/) und veröffentlicht das statische dist/ auf
+# GitHub Pages (API-Modus "mock"). Läuft beim Push auf main. Branding kommt zur
+# Build-Zeit aus assets/data/club.bsg.json; die Seiten-Assets/JS liegen weiter
+# unter assets/ (Single Source of Truth) und werden in den Build kopiert.
 on:
   push:
     branches:
@@ -30,19 +31,26 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: GitHub Pages konfigurieren (aktiviert Pages bei Bedarf)
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      - name: Branding vorkompilieren (aus club.bsg.json ins HTML stempeln)
-        run: node tools/prerender-branding.mjs
+      - name: Astro bauen (Branding aus club.bsg.json, Assets aus ../assets)
+        run: |
+          cd astro-poc
+          npm ci
+          npm run build
 
-      - name: Statische Dateien als Artefakt hochladen
+      - name: dist als Artefakt hochladen
         uses: actions/upload-pages-artifact@v3
         with:
-          # Branding wird oben ins HTML gestempelt; sonst reines Static-Root.
-          path: "."
+          path: "astro-poc/dist"
 
       - name: Auf GitHub Pages deployen
         id: deployment
