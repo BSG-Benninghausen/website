@@ -110,11 +110,13 @@ Teil des Tooling-PRs:
 3. **Branch Protection auf `main`:** Required Checks = `Contract-Tests (Mock & Real)`,
    `Browser-E2E (Playwright)`, `mergeback/agent-review`; „up to date before merge"; Squash-only;
    Direct-Push einschränken. (Erst in den letzten Rollout-Schritten scharf schalten.)
-4. **Vorbedingung — Identität im Hauptrepo neutralisieren:** die ausgelieferten HTML-Seiten linken
-   noch hart auf `instagram.com/bsg_benninghausen` (14 Dateien). Vor dem Scharfschalten in einem
-   eigenen PR auf die neutralen `club.example.json`-Werte umstellen, sonst flaggt das Gate `main`
-   selbst. Prüfen mit `tools/classify-diff.mjs --verify` gegen einen entsprechenden Diff.
-5. **Backend-Stufe — Phase-3-Split** gemäß [`phase-3-backend-split-runbook.md`](phase-3-backend-split-runbook.md)
+4. **Vorbedingung — Identität im Hauptrepo neutralisieren:** weitgehend erledigt — die HTML-Seiten
+   ziehen Instagram-Handle/Vereinsdaten zur Laufzeit aus `club.json` (`data-club-instagram`,
+   `@musterverein`), das Impressum nutzt `[BITTE ERGÄNZEN]`-Platzhalter. Einzige bewusste Ausnahme ist
+   die **Referenz-Fork-Karte** für BSG in `index.html` (Produkt-Portal). Vor dem Scharfschalten
+   sicherstellen, dass das Manifest diese Ausnahme kennt, und mit `tools/classify-diff.mjs --verify`
+   gegen einen entsprechenden Diff prüfen.
+5. **Backend-Stufe — Phase-3-Split** gemäß [`backend-repo-separation-plan.md`](backend-repo-separation-plan.md)
    ausführen; danach [`mergeback/contract-implement.yml`](mergeback/contract-implement.yml) ins
    Backend-Repo nach `.github/workflows/` kopieren.
 

@@ -1,5 +1,5 @@
 # TEMPLATE für das Backend-Repo (crypticalcode/bsg-backend) — NICHT im Frontend-/
-# Monorepo aktiv. Beim Phase-3-Split (docs/phase-3-backend-split-runbook.md) nach
+# Monorepo aktiv. Beim Phase-3-Split (docs/backend-repo-separation-plan.md §4) nach
 # `.github/workflows/contract-implement.yml` im Backend-Repo kopieren.
 #
 # Zweck (Stage 4 der Mergeback-Pipeline): Sobald im Hauptrepo eine Vertragsänderung
@@ -29,6 +29,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write                # OIDC für anthropics/claude-code-action (Agent)
 
 jobs:
   implement:

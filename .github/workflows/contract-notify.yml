@@ -27,7 +27,8 @@ concurrency:
 jobs:
   notify-backend:
     if: >-
-      vars.MERGEBACK_ENABLED == 'true'
+      github.repository == 'crypticalcode/vereins-baukasten'
+      && vars.MERGEBACK_ENABLED == 'true'
       && !startsWith(github.event.head_commit.message, 'chore(contract): bump')
     runs-on: ubuntu-latest
     steps:
