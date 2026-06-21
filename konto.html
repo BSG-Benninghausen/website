@@ -76,7 +76,7 @@
       <div class="wrap page-hero__inner">
         <p class="crumbs"><a href="index.html">Start</a> · Mein Konto</p>
         <span class="eyebrow eyebrow--invert">Dashboard</span>
-        <h1>Hallo <span id="greet-name">…</span></h1>
+        <h1 data-mock-badge="GET /api/auth/me">Hallo <span id="greet-name">…</span></h1>
         <p>Verwalte hier deine Vereinsmitgliedschaften, deine Anschrift und deine Kontoverbindung.</p>
       </div>
     </section>
@@ -125,7 +125,7 @@
             <div class="dash-head">
               <div>
                 <span class="eyebrow">Mitgliedschaften</span>
-                <h2 style="font-size:1.3rem;margin-top:6px">Meine Mitgliedschaften</h2>
+                <h2 style="font-size:1.3rem;margin-top:6px" data-mock-badge="GET /api/memberships">Meine Mitgliedschaften</h2>
               </div>
               <button id="add-membership-btn" class="btn btn--primary">+ Mitglied anmelden</button>
             </div>
@@ -248,7 +248,7 @@
           <!-- Turniere & Meisterschaften -->
           <div id="tournaments-section" class="card" style="margin-bottom:24px" hidden>
             <span class="eyebrow">Wettkampf</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 6px">Turniere &amp; Meisterschaften</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 6px" data-mock-badge="GET /api/tournaments">Turniere &amp; Meisterschaften</h2>
             <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Melde passende Mitglieder deines Haushalts zu kommenden Turnieren an. Es werden nur Mitglieder angezeigt, deren Wettkampf-Altersklasse zum Turnier passt.</p>
             <div id="tournaments-list"></div>
           </div>

@@ -91,7 +91,7 @@
           <!-- News -->
           <div id="news-section" class="card" style="margin-bottom:24px" hidden>
             <span class="eyebrow">Aktuelles</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 16px">Newsmeldungen</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 16px" data-mock-badge="GET /api/news">Newsmeldungen</h2>
             <div id="news-list" class="adm-roles"></div>
 
             <form id="news-form" class="sub-form" novalidate>
@@ -148,7 +148,7 @@
           <!-- Termine -->
           <div id="events-section" class="card" hidden>
             <span class="eyebrow">Kalender</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 16px">Termine</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 16px" data-mock-badge="GET /api/events">Termine</h2>
             <div id="events-list" class="adm-roles"></div>
 
             <form id="event-form" class="sub-form" novalidate>
@@ -225,21 +225,21 @@
           <!-- Turnier-Anmeldungen (Organisator) -->
           <div id="registrations-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Wettkampf</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 16px">Turnier-Anmeldungen</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 16px" data-mock-badge="GET /api/admin/registrations">Turnier-Anmeldungen</h2>
             <div id="registrations-list" class="adm-roles"></div>
           </div>
 
           <!-- Auszahlungs-Historie -->
           <div id="payouts-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Finanzen</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 16px">Veranlasste Überweisungen</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 16px" data-mock-badge="GET /api/payouts">Veranlasste Überweisungen</h2>
             <div id="payouts-list" class="adm-roles"></div>
           </div>
 
           <!-- Trainingszeiten -->
           <div id="training-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Training</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 16px">Trainingszeiten</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 16px" data-mock-badge="GET /api/training">Trainingszeiten</h2>
             <div id="training-list" class="adm-roles"></div>
 
             <form id="training-form" class="sub-form" novalidate>
@@ -282,7 +282,7 @@
           <!-- Startseiten-Texte -->
           <div id="site-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Startseite</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 6px">Startseiten-Texte</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 6px" data-mock-badge="GET /api/site">Startseiten-Texte</h2>
             <p class="muted-note" style="margin-bottom:16px">Diese Texte erscheinen auf der Startseite. Leere Felder verwenden die Standardtexte.</p>
             <form id="site-form" class="sub-form" novalidate>
               <div id="site-fields"></div>
@@ -296,7 +296,7 @@
           <!-- Sponsoren -->
           <div id="sponsors-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Partner</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 6px">Sponsoren</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 6px" data-mock-badge="GET /api/sponsors">Sponsoren</h2>
             <p class="muted-note" style="margin-bottom:16px">Logos &amp; Partner des Vereins. Über die Einstellungen unten bestimmst du, ob und wie sie auf der Website erscheinen.</p>
 
             <!-- Anzeige-Einstellungen -->

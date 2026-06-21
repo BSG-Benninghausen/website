@@ -552,6 +552,9 @@ button { font: inherit; cursor: pointer; }
 .badge--beta { background: rgba(243, 184, 54, .28); color: #7a4f00; }
 .badge--intern { background: rgba(20, 20, 26, .08); color: var(--text-soft); }
 .feature-badge { margin-left: 8px; vertical-align: middle; font-size: .68rem; padding: 3px 9px; }
+/* „Mock"-Kennzeichnung: Feature ohne echten Backend-Zugriff (siehe assets/js/main.js, [data-mock-badge]) */
+.badge--mock { background: rgba(227, 20, 27, .12); color: #b3141b; }
+.badge--mock::before { content: "\25CF"; font-size: .7em; margin-right: 5px; vertical-align: middle; }
 .btn--sm { padding: 9px 16px; font-size: .88rem; }
 .sub-form { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--line); }
 .muted-note { color: var(--text-soft); }
