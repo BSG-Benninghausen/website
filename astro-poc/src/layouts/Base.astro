@@ -14,8 +14,9 @@ import club from "../data/club.json";
 interface Props {
   pageTitle?: string;
   description?: string;
+  noindex?: boolean;
 }
-const { pageTitle = "", description = club.description } = Astro.props;
+const { pageTitle = "", description = club.description, noindex = false } = Astro.props;
 const title = pageTitle ? `${pageTitle} – ${club.name}` : `${club.name} – ${club.tagline}`;
 const logo = "/" + club.logo;
 const year = new Date().getFullYear();
@@ -37,6 +38,7 @@ const navLinks = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  {noindex && <meta name="robots" content="noindex" />}
   <link rel="icon" type="image/png" href="/assets/img/favicon.png" />
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content={club.theme_color} />

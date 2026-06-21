@@ -1,0 +1,55 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+---
+<Base pageTitle="Datenschutz">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Datenschutz</p>
+      <span class="eyebrow eyebrow--invert">Rechtliches</span>
+      <h1>Datenschutzerklärung</h1>
+      <p>Wir nehmen den Schutz deiner persönlichen Daten ernst.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap legal" style="max-width:760px">
+      <div class="notice notice--mock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p><b>Hinweis:</b> Diese Datenschutzerklärung ist eine vereinfachte Vorlage und ersetzt keine Rechtsberatung. Bitte vor der Veröffentlichung an die tatsächlichen Gegebenheiten anpassen und die mit <b>[BITTE ERGÄNZEN]</b> markierten Stellen ausfüllen.</p>
+      </div>
+
+      <h3>1. Verantwortlicher</h3>
+      <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist die {club.name}, {club.street}, {club.city}, E-Mail: <a href={`mailto:${club.email}`}>{club.email}</a>.</p>
+
+      <h3>2. Hosting &amp; statische Website</h3>
+      <p>Diese Website wird als statisches HTML ausgeliefert. Beim Aufruf werden durch den Hosting-Anbieter technisch notwendige Server-Logdaten (z. B. IP-Adresse, Datum/Uhrzeit, abgerufene Datei) verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren Betrieb).</p>
+
+      <h3>3. Kontakt- und Anmeldeformulare</h3>
+      <p>Wenn du uns über das Kontakt- oder Anmeldeformular eine Anfrage schickst, verarbeiten wir die von dir angegebenen Daten (z. B. Name, E-Mail, Telefon, Nachricht) ausschließlich zur Bearbeitung deiner Anfrage. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a und b DSGVO.</p>
+      <p><b>Technischer Hinweis zu dieser Demo:</b> In der aktuellen Demo-Version werden Formulareingaben nicht an einen echten Server übertragen, sondern durch einen im Browser laufenden Mock ausschließlich lokal (localStorage) gespeichert. Beim Anbinden eines echten Backends ist dieser Abschnitt entsprechend anzupassen.</p>
+
+      <h3>4. Benutzerkonten &amp; Mitgliedschaften</h3>
+      <p>Du kannst ein Benutzerkonto anlegen (Name und E-Mail). Der Login erfolgt passwordlos über einen per E-Mail versendeten Anmeldecode. Im Dashboard kannst du Vereinsmitgliedschaften (für dich oder Familienmitglieder) verwalten sowie Anschrift und Kontoverbindung (IBAN) hinterlegen. Für den Abschluss einer Mitgliedschaft sind Anschrift und IBAN erforderlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a und b DSGVO.</p>
+      <p>Zur Vereinsverwaltung können <b>berechtigte Funktionsträger</b> (z. B. Vorstand, Kassenwart) abhängig von ihrer Rolle auf Mitgliederdaten zugreifen. Finanz-/Bankdaten (IBAN, Beiträge) sind nur Rollen mit der Berechtigung dazu zugänglich; Zugriffe erfolgen nur im erforderlichen Umfang.</p>
+      <p>Für den <b>Mitgliedsausweis</b> verarbeiten wir je Mitglied ein <b>Foto</b> (Pflicht) sowie ggf. weitere Angaben (Gürtelgrad, Gewichtsklasse, Geschlecht, Nationalität). In dieser Demo wird das Foto clientseitig verkleinert und ausschließlich lokal im Browser gespeichert.</p>
+      <p><b>Technischer Hinweis zu dieser Demo:</b> Es gibt keinen echten Server, keinen echten E-Mail-Versand und keine Zahlungsabwicklung. Konto-, Mitglieds-, Adress- und IBAN-Daten werden durch einen im Browser laufenden Mock ausschließlich lokal (localStorage) auf deinem Gerät gespeichert und nicht übertragen. Der Anmeldecode wird zu Demozwecken direkt angezeigt.</p>
+
+      <h3>5. Externe Dienste</h3>
+      <ul class="bullets">
+        <li><b>Google Fonts:</b> Schriftarten werden von Google-Servern geladen. Dabei kann deine IP-Adresse an Google übermittelt werden. Zur Vermeidung können die Schriften lokal eingebunden werden. [Vor Veröffentlichung prüfen.]</li>
+        <li><b>Instagram:</b> Unsere Seite verlinkt auf unser Instagram-Profil. Erst beim Klick werden Daten an Meta übertragen.</li>
+      </ul>
+
+      <h3>6. Deine Rechte</h3>
+      <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie ein Beschwerderecht bei einer Aufsichtsbehörde. Wende dich dazu an die oben genannte Adresse.</p>
+
+      <h3>7. Stand</h3>
+      <p>Stand dieser Erklärung: [Monat/Jahr – BITTE ERGÄNZEN].</p>
+
+      <p style="margin-top:24px"><a href="kontakt.html" class="btn btn--outline">Zurück zum Kontakt</a></p>
+    </div>
+  </section>
+</Base>

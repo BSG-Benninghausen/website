@@ -1,0 +1,101 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+---
+<Base pageTitle="Probetraining & Anmeldung">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Probetraining</p>
+      <span class="eyebrow eyebrow--invert">Kostenlos &amp; unverbindlich</span>
+      <h1>Zum Probetraining anmelden</h1>
+      <p>Sag uns kurz Bescheid, dann freuen wir uns auf dich. Du kannst auch einfach spontan zum nächsten Training vorbeikommen.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="reveal">
+        <span class="eyebrow">So läuft's ab</span>
+        <h2>In drei Schritten auf die Matte</h2>
+        <ul class="info-list" style="margin-top:24px">
+          <li>
+            <span class="ico"><b style="font-family:var(--font-display)">1</b></span>
+            <div><b>Anmelden</b><span>Formular ausfüllen – oder einfach unangemeldet vorbeischauen.</span></div>
+          </li>
+          <li>
+            <span class="ico"><b style="font-family:var(--font-display)">2</b></span>
+            <div><b>Vorbeikommen</b><span>In bequemer Sportkleidung zum Training. Einen Judo-Anzug brauchst du anfangs noch nicht.</span></div>
+          </li>
+          <li>
+            <span class="ico"><b style="font-family:var(--font-display)">3</b></span>
+            <div><b>Ausprobieren</b><span>Ein oder mehrere kostenlose Probetrainings – ganz ohne Verpflichtung.</span></div>
+          </li>
+        </ul>
+        <div class="notice" style="margin-top:24px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <p>{club.venue}, {club.street}, {club.city} · mittwochs &amp; freitags.</p>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <form class="form-card" data-api-form="/api/anmeldung" novalidate>
+          <h2 style="font-size:1.4rem;margin-bottom:6px">Anmeldung</h2>
+          <p style="color:var(--text-soft);margin-bottom:22px;font-size:.95rem">Felder mit <span class="req">*</span> sind Pflichtfelder.</p>
+          <div class="field">
+            <label for="name">Name (des Teilnehmers) <span class="req">*</span></label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="email">E-Mail <span class="req">*</span></label>
+              <input id="email" name="email" type="email" autocomplete="email" required>
+              <p class="field__error"></p>
+            </div>
+            <div class="field">
+              <label for="phone">Telefon</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="group">Trainingsgruppe <span class="req">*</span></label>
+              <select id="group" name="group" required>
+                <option value="">Bitte wählen…</option>
+                <option>Kinder (ab 5 Jahre)</option>
+                <option>Aktive (ab Gelb-Gurt / ca. 8 J.)</option>
+                <option>Erwachsene (Sport &amp; Fitness)</option>
+                <option>Noch unsicher – beratet mich</option>
+              </select>
+              <p class="field__error"></p>
+            </div>
+            <div class="field">
+              <label for="age">Alter</label>
+              <input id="age" name="age" type="number" min="3" max="99" inputmode="numeric">
+            </div>
+          </div>
+          <div class="field">
+            <label for="message">Nachricht (optional)</label>
+            <textarea id="message" name="message" placeholder="Erfahrung, Fragen, Wunschtermin …"></textarea>
+          </div>
+          <div class="field check-row">
+            <input id="privacy" name="privacy" type="checkbox" required>
+            <label for="privacy">Ich bin mit der Verarbeitung meiner Daten zur Bearbeitung der Anfrage einverstanden. <span class="req">*</span></label>
+          </div>
+          <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+            <span class="spinner" aria-hidden="true"></span>
+            Anmeldung absenden
+          </button>
+          <div class="form-status" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/forms.js"></script>
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>
