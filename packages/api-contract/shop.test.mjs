@@ -121,7 +121,11 @@ export default async function run(api, ck) {
   ck("Config gespeichert, ungültige IBAN verworfen", s === 200 && d.values.enabled === true && d.values.operatorIban === "" && d.values.creditorId === "DE98ZZZ09999999999");
   [s, d] = await api.postJ("/api/shop-config", { values: { enabled: true, operatorName: "Julian Becker", operatorIban: IBAN } });
   ck("gültige Betreiber-IBAN übernommen", /^DE/.test(d.values.operatorIban));
+  // Betreiber (manage_shop) sieht die vollständige Config inkl. Bankdaten.
+  [s, d] = await api.getJ("/api/shop-config");
+  ck("Betreiber-GET enthält Bankdaten", /^DE/.test(d.values.operatorIban) && "creditorId" in d.values);
+  // Öffentliche GET liefert KEINE sensiblen Betreiber-Bankdaten.
   await api.logout();
   [s, d] = await api.getJ("/api/shop-config");
-  ck("GET zeigt gespeicherte Config", d.values.enabled === true && d.values.operatorName === "Julian Becker");
+  ck("öffentliche Config ohne Bankdaten (IBAN/Gläubiger-ID)", d.values.enabled === true && d.values.operatorName === "Julian Becker" && d.values.operatorIban === undefined && d.values.creditorId === undefined);
 }

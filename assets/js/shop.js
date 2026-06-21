@@ -195,22 +195,29 @@
     if (!consent || !consent.checked) { status("err", "Bitte das SEPA-Lastschriftmandat bestätigen."); return; }
     if (!state.cart.length) { status("err", "Dein Warenkorb ist leer."); return; }
     const btn = form.querySelector("[type=submit]"); if (btn) btn.setAttribute("aria-busy", "true");
+    const noteEl = form.querySelector("[name=note]");
+    const payload = { items: state.cart.map((it) => ({ productId: it.productId, qty: it.qty })), consent: true, note: noteEl ? noteEl.value : "" };
+    const placeOrder = () => postJSON("/api/shop/orders", payload);
     try {
-      // 1) Mandat sicherstellen (nutzt die IBAN am Konto)
-      const m = await postJSON("/api/shop/mandate", { consent: true });
-      if (!m.res.ok || !m.data.ok) {
-        if (m.data && m.data.code === "ACCOUNT_INCOMPLETE") status("err", "Bitte zuerst deine IBAN im Konto hinterlegen.");
-        else status("err", (m.data && m.data.message) || "Mandat konnte nicht erteilt werden.");
-        return;
+      // Bestellung zuerst versuchen; bestehendes Mandat wird wiederverwendet.
+      let o = await placeOrder();
+      // Nur wenn noch KEIN aktives Mandat existiert: einmalig erteilen und erneut bestellen.
+      if (o.res.status === 409 && o.data && o.data.code === "NO_MANDATE") {
+        const m = await postJSON("/api/shop/mandate", { consent: true });
+        if (!m.res.ok || !m.data.ok) {
+          if (m.data && m.data.code === "ACCOUNT_INCOMPLETE") status("err", "Bitte zuerst deine IBAN im Konto hinterlegen.");
+          else status("err", (m.data && m.data.message) || "Mandat konnte nicht erteilt werden.");
+          return;
+        }
+        o = await placeOrder();
       }
-      // 2) Bestellung
-      const items = state.cart.map((it) => ({ productId: it.productId, qty: it.qty }));
-      const o = await postJSON("/api/shop/orders", { items, consent: true, note: form.querySelector("[name=note]") ? form.querySelector("[name=note]").value : "" });
       if (o.res.ok && o.data.ok) {
         state.cart = [];
         renderCart();
         status("ok", o.data.message || "Bestellung aufgegeben.");
         await loadOrders();
+      } else if (o.data && o.data.code === "ACCOUNT_INCOMPLETE") {
+        status("err", "Bitte zuerst deine IBAN im Konto hinterlegen.");
       } else {
         status("err", (o.data && o.data.message) || "Bestellung fehlgeschlagen.");
       }

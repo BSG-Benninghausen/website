@@ -332,6 +332,12 @@ function normShopConfig(raw) {
     legalWiderruf: norm(r.legalWiderruf),
   };
 }
+// Öffentliches Subset der Shop-Config: ohne sensible Betreiber-Bankdaten
+// (operatorIban/creditorId). Diese liefert GET nur an manage_shop aus.
+function shopConfigPublic(cfg) {
+  const { operatorIban, creditorId, ...pub } = cfg;
+  return pub;
+}
 function productErrors(b) {
   const e = {};
   if (norm(b.name).length < 2) e.name = "Bitte einen Produktnamen angeben.";
@@ -698,7 +704,12 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
     },
 
     /* ---------- Webshop: Konfiguration (Betreiber & Recht) ---------- */
-    "GET /api/shop-config": async () => J({ ok: true, fields: SHOP_CONFIG_FIELDS, values: normShopConfig(db.shopConfig) }),
+    "GET /api/shop-config": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      const cfg = normShopConfig(db.shopConfig);
+      const values = hasPerm(user, "manage_shop") ? cfg : shopConfigPublic(cfg);
+      return J({ ok: true, fields: SHOP_CONFIG_FIELDS, values });
+    },
     "POST /api/shop-config": async (body, ctx) => {
       const user = ctx.currentUser();
       if (!hasPerm(user, "manage_shop")) return deny(user);

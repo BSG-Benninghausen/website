@@ -296,6 +296,12 @@
       legalWiderruf: norm(r.legalWiderruf),
     };
   }
+  // Öffentliches Subset der Shop-Config: ohne sensible Betreiber-Bankdaten
+  // (operatorIban/creditorId). Diese liefert GET nur an manage_shop aus.
+  function shopConfigPublic(cfg) {
+    const { operatorIban, creditorId, ...pub } = cfg;
+    return pub;
+  }
   function productErrors(b) {
     const e = {};
     if (norm(b.name).length < 2) e.name = "Bitte einen Produktnamen angeben.";
@@ -879,8 +885,10 @@
 
     /* ---------- Webshop: Konfiguration (Betreiber & Recht) ---------- */
     "GET /api/shop-config": async () => {
-      const cfg = await ensureShopConfig();
-      return json({ ok: true, fields: SHOP_CONFIG_FIELDS, values: normShopConfig(cfg) });
+      const user = currentUser();
+      const cfg = normShopConfig(await ensureShopConfig());
+      const values = hasPerm(user, "manage_shop") ? cfg : shopConfigPublic(cfg);
+      return json({ ok: true, fields: SHOP_CONFIG_FIELDS, values });
     },
     "POST /api/shop-config": async (body) => {
       const user = currentUser();
