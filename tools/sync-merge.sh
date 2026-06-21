@@ -22,17 +22,19 @@ set -e
 
 REF="${1:?Usage: sh tools/sync-merge.sh <ref-to-merge>}"
 
-# Die geschützten Pfade aus .gitattributes lesen (erste Spalte der merge=ours-Zeilen).
-# "<dir>/**" -> "<dir>" (Git-Pathspec für das ganze Verzeichnis).
-PROTECTED=$(grep 'merge=ours' .gitattributes 2>/dev/null \
-  | grep -v '^[[:space:]]*#' \
-  | awk '{ p=$1; sub(/\/\*\*$/, "", p); print p }')
-
 echo "==> git merge --no-commit --no-ff $REF"
 set +e
 git merge --no-commit --no-ff "$REF"
 MERGE_STATUS=$?
 set -e
+
+# Die geschützten Pfade aus .gitattributes lesen (erste Spalte der merge=ours-Zeilen)
+# – NACH dem Merge, damit auch in DIESEM Merge neu hinzugekommene Allowlist-Einträge
+# greifen (sonst würde eine frisch ergänzte Branding-Datei einmalig durchrutschen).
+# Konfliktmarker-Zeilen ignorieren. "<dir>/**" -> "<dir>" (Git-Pathspec).
+PROTECTED=$(grep 'merge=ours' .gitattributes 2>/dev/null \
+  | grep -vE '^[[:space:]]*#|^[<=>]{7}' \
+  | awk '{ p=$1; sub(/\/\*\*$/, "", p); print p }')
 
 echo "==> Branding-Dateien aus dem eigenen HEAD wiederherstellen (merge=ours-Allowlist):"
 for p in $PROTECTED; do
