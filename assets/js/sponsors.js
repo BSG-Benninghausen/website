@@ -117,7 +117,12 @@
   }
 
   function setTitles(cfg) {
-    document.querySelectorAll("[data-sponsors-title]").forEach((el) => { if (cfg.title) el.textContent = cfg.title; });
+    document.querySelectorAll("[data-sponsors-title]").forEach((el) => {
+      if (!cfg.title) return;
+      const badge = el.querySelector(".mock-badge"); // Mock-Badge (main.js) über den Text-Reset hinweg erhalten
+      el.textContent = cfg.title;
+      if (badge) el.appendChild(badge);
+    });
     document.querySelectorAll("[data-sponsors-subtitle]").forEach((el) => { el.textContent = cfg.subtitle || ""; el.hidden = !cfg.subtitle; });
   }
 
