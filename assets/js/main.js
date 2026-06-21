@@ -1,5 +1,6 @@
 /* =====================================================================
-   main.js – gemeinsame UI-Logik (Navigation, Footer-Jahr, Reveal)
+   main.js – gemeinsame UI-Logik (Navigation, Footer-Jahr, Reveal,
+   rechtebasierte Nav-Freischaltung und editierbare Homepage-Texte).
    ===================================================================== */
 (function () {
   "use strict";
