@@ -58,11 +58,16 @@ jobs:
         with:
           node-version: 22
 
-      - name: Upstream-Diff berechnen
+      - name: PR-Diff berechnen (nur die Änderung dieses Fork-PRs)
         run: |
+          # Klassifiziert wird die INKREMENTELLE PR-Änderung (Basis...HEAD) –
+          # NICHT die gesamte Fork-Divergenz gegen upstream/main. Sonst zöge jeder
+          # Fork-PR das komplette Branding + alle Alt-Features mit in den Diff und
+          # liefe als needs_human. Der vereins-neutrale Branch wird weiterhin aus
+          # upstream/main gebaut (Schritt „Neutralen Upstream-Branch bauen").
           git remote add upstream "https://github.com/${UPSTREAM}.git"
           git fetch --no-tags --depth=200 upstream main
-          git diff upstream/main...HEAD > /tmp/fork.diff
+          git diff "${{ github.event.pull_request.base.sha }}...HEAD" > /tmp/fork.diff
           test -s /tmp/fork.diff || echo "(leerer Diff)"
 
       - name: Klassifizieren
