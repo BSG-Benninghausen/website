@@ -918,7 +918,12 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       if (!getUserById(body.userId)) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422);
       const label = norm(body.label);
       if (label.length < 1) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { label: "Bitte einen Funktionsnamen angeben." } }, 422);
-      const pos = { id: genId("pos"), userId: body.userId, group: teamGroupOf(body.group), label, order: num(body.order) };
+      const group = teamGroupOf(body.group);
+      // Vorstandsposten sind exklusiv: pro Amt (Label) nur eine Person.
+      if (group === "vorstand" && db.positions.some((p) => p.group === "vorstand" && norm(p.label) === label)) {
+        return J({ ok: false, message: "Dieses Vorstandsamt ist bereits vergeben.", errors: { label: "Vorstandsamt bereits vergeben." } }, 409);
+      }
+      const pos = { id: genId("pos"), userId: body.userId, group, label, order: num(body.order) };
       db.positions.push(pos);
       return J({ ok: true, position: pos, message: "Amt angelegt." }, 201);
     },
@@ -928,9 +933,15 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       if (!hasPerm(user, "manage_team")) return deny(user);
       const idx = db.positions.findIndex((p) => p.id === body.id);
       if (idx === -1) return J({ ok: false, message: "Amt nicht gefunden." }, 404);
-      if (body.userId !== undefined) { if (!getUserById(body.userId)) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422); db.positions[idx].userId = body.userId; }
-      if (body.group !== undefined) db.positions[idx].group = teamGroupOf(body.group);
-      if (body.label !== undefined && norm(body.label).length >= 1) db.positions[idx].label = norm(body.label);
+      if (body.userId !== undefined && !getUserById(body.userId)) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422);
+      const nextGroup = body.group !== undefined ? teamGroupOf(body.group) : db.positions[idx].group;
+      const nextLabel = (body.label !== undefined && norm(body.label).length >= 1) ? norm(body.label) : db.positions[idx].label;
+      if (nextGroup === "vorstand" && db.positions.some((p, i) => i !== idx && p.group === "vorstand" && norm(p.label) === nextLabel)) {
+        return J({ ok: false, message: "Dieses Vorstandsamt ist bereits vergeben.", errors: { label: "Vorstandsamt bereits vergeben." } }, 409);
+      }
+      if (body.userId !== undefined) db.positions[idx].userId = body.userId;
+      db.positions[idx].group = nextGroup;
+      db.positions[idx].label = nextLabel;
       if (body.order !== undefined) db.positions[idx].order = num(body.order);
       return J({ ok: true, position: db.positions[idx], message: "Amt gespeichert." });
     },
@@ -1042,7 +1053,7 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
           status: m.status, startedAt: m.startedAt,
           photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weightClass: m.weightClass || "",
           competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, ageCfg),
-          ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
+          ownerId: m.userId, ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
         };
         if (fin) row.iban = owner.iban || null;
         return row;
@@ -1227,6 +1238,7 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
         id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"],
         active: u.active !== false, createdAt: u.createdAt || null,
         membershipCount: db.memberships.filter((m) => m.userId === u.id).length,
+        activeMembershipCount: db.memberships.filter((m) => m.userId === u.id && m.status === "aktiv").length,
         isSelf: u.id === user.id,
       }));
       return J({ ok: true, items });

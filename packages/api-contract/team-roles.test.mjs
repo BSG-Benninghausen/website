@@ -51,7 +51,9 @@ export default async function run(api, ck) {
   [s, d] = await api.postJ("/api/positions", { userId: uId, group: "trainer", label: "Trainer", order: "0" });
   ck("Amt Tina angelegt -> 201", s === 201 && !!d.position.id);
   const tinaPos = d.position.id;
-  [s, d] = await api.postJ("/api/positions", { userId: kId, group: "vorstand", label: "Kassenwart", order: "30" });
+  // "Gerätewart" statt "Kassenwart": Vorstandsämter sind exklusiv, "Kassenwart"
+  // ist bereits im Demo-Seed vergeben (siehe positions-exclusive.test.mjs).
+  [s, d] = await api.postJ("/api/positions", { userId: kId, group: "vorstand", label: "Gerätewart", order: "30" });
   ck("Amt Kurt angelegt -> 201", s === 201 && !!d.position.id);
   const kurtPos = d.position.id;
 
@@ -67,7 +69,7 @@ export default async function run(api, ck) {
   const tinaEntry = d.items.find((m) => m.name === "Tina Trainer");
   const kurtEntry = d.items.find((m) => m.name === "Kurt Kasse");
   ck("Tina als Trainer mit Foto", tinaEntry && tinaEntry.group === "trainer" && tinaEntry.label === "Trainer" && tinaEntry.photo === PHOTO);
-  ck("Kurt als Vorstand/Kassenwart ohne Foto", kurtEntry && kurtEntry.group === "vorstand" && kurtEntry.label === "Kassenwart" && kurtEntry.photo === "");
+  ck("Kurt als Vorstand/Gerätewart ohne Foto", kurtEntry && kurtEntry.group === "vorstand" && kurtEntry.label === "Gerätewart" && kurtEntry.photo === "");
 
   // Update: Label ändern, ungültige group -> "", Validierungen
   await api.asAdmin();

@@ -1,43 +1,40 @@
 ---
 import Base from "../layouts/Base.astro";
 ---
-<Base pageTitle="Mitglieder">
+<Base pageTitle="Mitglieder & Benutzer" noindex={true}>
   <section class="page-hero">
     <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
     <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
     <div class="wrap page-hero__inner">
-      <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Mitglieder</p>
-      <span class="eyebrow eyebrow--invert">Intern</span>
-      <h1>Mitgliederübersicht</h1>
-      <p>Alle angemeldeten Mitglieder im Überblick – nur lesend.</p>
+      <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Mitglieder &amp; Benutzer</p>
+      <span class="eyebrow eyebrow--invert">Verwaltung</span>
+      <h1>Mitglieder &amp; Benutzer</h1>
+      <p>Login-Konten und ihre Mitgliedschaften in einer Liste. Jedes Mitglied gehört zu einem Benutzer (Haushalt). Details öffnen sich seitlich.</p>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
-      <p id="members-loading" class="center" style="color:var(--text-soft)">Lade Mitglieder …</p>
-      <div id="members" hidden>
-        <div id="members-meta" class="billing-summary" style="margin-bottom:18px"></div>
-        <div class="card" style="overflow-x:auto">
-          <table class="data-table" id="members-table">
-            <thead></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div id="households" hidden>
-          <h2 style="font-size:1.2rem;margin:28px 0 12px">Beiträge je Haushalt</h2>
-          <div class="card" style="overflow-x:auto">
-            <table class="data-table" id="households-table">
-              <thead><tr><th>Haushalt</th><th>E-Mail</th><th>IBAN</th><th>Mitglieder</th><th>Beitrag/Monat</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
+      <p id="vw-loading" class="center" style="color:var(--text-soft)">Lade Verwaltung …</p>
+      <div id="vw-main" hidden>
+        <div id="vw-toggle" class="vw-toggle" role="group" aria-label="Ansicht wählen"></div>
+        <div id="vw-meta" class="billing-summary" style="margin:14px 0 18px" hidden></div>
+        <div id="vw-status" class="form-status" role="status" aria-live="polite"></div>
+        <div id="vw-list" class="adm-users"></div>
       </div>
     </div>
   </section>
 
+  <div id="vw-scrim" class="drawer__scrim" hidden></div>
+  <aside id="vw-drawer" class="drawer" aria-hidden="true" aria-label="Details">
+    <div class="drawer__head">
+      <span class="eyebrow">Details</span>
+      <button type="button" class="drawer__close" data-drawer-close aria-label="Schließen">&times;</button>
+    </div>
+    <div id="vw-drawer-body" class="drawer__body"></div>
+  </aside>
+
   <Fragment slot="scripts">
-    <script is:inline src="assets/js/mitglieder.js"></script>
+    <script is:inline src="assets/js/verwaltung.js"></script>
   </Fragment>
 </Base>

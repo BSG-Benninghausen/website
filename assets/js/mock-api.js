@@ -1128,7 +1128,12 @@
       if (!getUserById(body.userId)) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422);
       const label = norm(body.label);
       if (label.length < 1) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { label: "Bitte einen Funktionsnamen angeben." } }, 422);
-      const pos = { id: genId("pos"), userId: body.userId, group: teamGroupOf(body.group), label, order: num(body.order) };
+      const group = teamGroupOf(body.group);
+      // Vorstandsposten sind exklusiv: pro Amt (Label) nur eine Person.
+      if (group === "vorstand" && getPositions().some((p) => p.group === "vorstand" && norm(p.label) === label)) {
+        return json({ ok: false, message: "Dieses Vorstandsamt ist bereits vergeben.", errors: { label: "Vorstandsamt bereits vergeben." } }, 409);
+      }
+      const pos = { id: genId("pos"), userId: body.userId, group, label, order: num(body.order) };
       const list = getPositions(); list.push(pos); setPositions(list);
       return json({ ok: true, position: pos, message: "Amt angelegt." }, 201);
     },
@@ -1139,9 +1144,15 @@
       const list = getPositions();
       const idx = list.findIndex((p) => p.id === body.id);
       if (idx === -1) return json({ ok: false, message: "Amt nicht gefunden." }, 404);
-      if (body.userId !== undefined) { if (!getUserById(body.userId)) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422); list[idx].userId = body.userId; }
-      if (body.group !== undefined) list[idx].group = teamGroupOf(body.group);
-      if (body.label !== undefined && norm(body.label).length >= 1) list[idx].label = norm(body.label);
+      if (body.userId !== undefined && !getUserById(body.userId)) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { userId: "Bitte ein Mitglied wählen." } }, 422);
+      const nextGroup = body.group !== undefined ? teamGroupOf(body.group) : list[idx].group;
+      const nextLabel = (body.label !== undefined && norm(body.label).length >= 1) ? norm(body.label) : list[idx].label;
+      if (nextGroup === "vorstand" && list.some((p, i) => i !== idx && p.group === "vorstand" && norm(p.label) === nextLabel)) {
+        return json({ ok: false, message: "Dieses Vorstandsamt ist bereits vergeben.", errors: { label: "Vorstandsamt bereits vergeben." } }, 409);
+      }
+      if (body.userId !== undefined) list[idx].userId = body.userId;
+      list[idx].group = nextGroup;
+      list[idx].label = nextLabel;
       if (body.order !== undefined) list[idx].order = num(body.order);
       setPositions(list);
       return json({ ok: true, position: list[idx], message: "Amt gespeichert." });
@@ -1270,7 +1281,7 @@
           status: m.status, startedAt: m.startedAt,
           photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weightClass: m.weightClass || "",
           competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, acfg),
-          ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
+          ownerId: m.userId, ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
         };
         if (fin) row.iban = owner.iban || null;
         return row;
@@ -1488,6 +1499,7 @@
         id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"],
         active: u.active !== false, createdAt: u.createdAt || null,
         membershipCount: memberships.filter((m) => m.userId === u.id).length,
+        activeMembershipCount: memberships.filter((m) => m.userId === u.id && m.status === "aktiv").length,
         isSelf: u.id === user.id,
       }));
       return json({ ok: true, items });
