@@ -1,7 +1,15 @@
 /* =====================================================================
    public.spec.mjs – öffentliche Seiten rendern echte Backend-Seed-Daten.
-   Beweist im Browser: gepatchte fetch (real-Modus) -> server/ -> Seed-JSON
+   Beweist im Browser: gepatchte fetch (real-Modus) -> Backend -> Seed-JSON
    wird im DOM dargestellt. Bricht, sobald das Backend nicht liefert.
+
+   Hinweis (Fork): die E2E bootet das GENERISCHE Contract-Backend
+   (packages/backend, neutrale Seeds). Daher prüfen die Inhalts-Tests neutrale
+   Seed-Inhalte – sie beweisen die Verdrahtung Backend -> DOM. Die BSG-Inhalte
+   des Forks liegen im Mock (assets/data/*.bsg.json, club-bewusstes Seeding) und
+   werden von den Contract-Tests abgedeckt; ein BSG-Real-Backend ist eine
+   Deploy-/Backend-Frage (Club-Awareness, noch offen). Fork-spezifisch ist hier
+   nur der Wurzel-Redirect auf die Vereinsseite. Siehe docs/bidirectional-sync.md.
    ===================================================================== */
 import { test, expect } from "./fixtures.mjs";
 
@@ -12,19 +20,18 @@ test.describe("Öffentliche Seiten", () => {
     await page.goto("/");
     // Club-Pinning per Query muss erhalten bleiben (?club=bsg), nicht nur home.html.
     await expect(page).toHaveURL(/home\.html\?club=bsg/);
-    await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 
   test("Vereins-Startseite (home.html) zeigt den Hero-Text", async ({ page }) => {
     await page.goto("/home.html");
-    await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
+    await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark im Team.");
   });
 
   test("Aktuelles rendert Seed-News aus dem Backend", async ({ page }) => {
     await page.goto("/aktuelles.html");
     // Eindeutiger Seed-News-Titel (assets/data/news.json) – erscheint nur, wenn /api/news geladen wurde.
     await expect(
-      page.getByText("BSG-Judoka feiern internationalen Erfolg").first()
+      page.getByText("Starker Auftritt beim Vereinsturnier").first()
     ).toBeVisible();
   });
 

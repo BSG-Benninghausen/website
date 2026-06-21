@@ -5,22 +5,22 @@
     "start": "17:00",
     "end": "18:00",
     "ageGroup": "ab 5 Jahre",
-    "description": "Spielerischer Einstieg, Falltechnik und erste Würfe – mit ganz viel Spaß."
+    "description": "Spielerischer Einstieg, Koordination und erste Übungen – mit ganz viel Spaß."
   },
   {
-    "id": "ts-judoka",
-    "title": "Judoka",
+    "id": "ts-aktive",
+    "title": "Aktive",
     "start": "18:00",
     "end": "19:30",
-    "ageGroup": "ab Gelb-Gurt / ca. 8 J.",
-    "description": "Technik, Randori und Wettkampfvorbereitung für Fortgeschrittene."
+    "ageGroup": "ab ca. 8 Jahren",
+    "description": "Technik, Übungskämpfe und Wettkampfvorbereitung für Fortgeschrittene."
   },
   {
     "id": "ts-erwachsene",
-    "title": "Judo & Fitness für Erwachsene",
+    "title": "Sport & Fitness für Erwachsene",
     "start": "18:15",
     "end": "19:45",
     "ageGroup": "Erwachsene",
-    "description": "Technik, Kondition und Selbstverteidigung – für Einsteiger und Wiedereinsteiger."
+    "description": "Technik, Kondition und Fitness – für Einsteiger und Wiedereinsteiger."
   }
 ]
