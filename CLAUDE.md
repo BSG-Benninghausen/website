@@ -53,8 +53,8 @@ routes by editing `api-config.js`.
   (🔜 e.g. the contact form opens the user's mail client via `mailto:` when no API is configured;
   today `forms.js` only reports a connection error).
 - **One contract, two implementations.** `mock-api.js` and the real backend (`server/`) must never
-  diverge. The same suite in `tests/` validates both (`node tests/run.mjs`; `TEST_BASE=… node
-  tests/run.mjs` for real) and must stay green in CI. Add or change a route ⇒ add or update a suite.
+  diverge. The same suite in `packages/api-contract/` validates both (`node packages/api-contract/run.mjs`;
+  `TEST_BASE=… node packages/api-contract/run.mjs` for real) and must stay green in CI. Add or change a route ⇒ add or update a suite.
 - **Forks pull conflict-free.** Club customization lives in **additive, club-owned files**; don't
   bake club specifics into shared code. Seeds (`assets/data/*.json`) are per-club data a small club
   can hand-edit in its fork (🔜 a GitHub Action builds them into the DB seed). Editing a seed only
@@ -69,7 +69,7 @@ routes by editing `api-config.js`.
 ```bash
 python3 -m http.server 8000          # local preview (must be HTTP — pages fetch JSON)
 node --check assets/js/<file>.js     # syntax-check changed JS
-node tests/run.mjs                   # contract tests (mock); TEST_BASE=… runs them against real
+node packages/api-contract/run.mjs   # contract tests (mock); TEST_BASE=… runs them against real
 ```
 
 Browser-E2E (Playwright under `tests/e2e/`), test filters, and the full workflow list are in
@@ -86,4 +86,4 @@ Browser-E2E (Playwright under `tests/e2e/`), test filters, and the full workflow
 - **`docs/backend-repo-separation-plan.md`** — splitting the backend into its own repo + the shared
   contract package.
 - **`server/README.md`** — the real backend and its persistence / multi-tenant seam.
-- **`tests/README.md`** — the contract a real backend must satisfy.
+- **`packages/api-contract/README.md`** — the contract a real backend must satisfy.

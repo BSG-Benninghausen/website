@@ -222,16 +222,16 @@ Frontend-Code ändert sich nichts; der `mock-api.js`-Tag bleibt (er ist Mock **u
 
 ### Contract-Tests
 
-Im Ordner `tests/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die dieselben
+Im Ordner `packages/api-contract/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die dieselben
 Prüfungen wahlweise gegen den Mock oder ein echtes Backend laufen lässt:
 
 ```bash
-node tests/run.mjs                                   # Mock (Default)
-TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
+node packages/api-contract/run.mjs                                   # Mock (Default)
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # echtes Backend
 ```
 
 So bleiben Mock und Backend vertraglich in Sync. Details und die Backend-Anforderungen stehen
-in `tests/README.md`.
+in `packages/api-contract/README.md`.
 
 ### UI-/E2E-Tests (Playwright)
 
@@ -257,7 +257,7 @@ npm test                                 # Suite ausführen (startet server/ sel
 | **Release** | GitHub-Release | Hetzner `<domain>` (`deploy-prod.yml`) | `real` |
 
 `ci.yml` (`Tests`) läuft auf jedem PR und auf `main` mit zwei Jobs: **`contract`** (Syntax-Check,
-Versions-Guard `tests/guard-versions.mjs`, Contract-Tests gegen **Mock und echtes Backend**) und
+Versions-Guard `tools/guard-versions.mjs`, Contract-Tests gegen **Mock und echtes Backend**) und
 **`e2e`** (Playwright-Browser-Tests). Die Real-Tests sind das Promotion-Gate: ein Feature ohne
 Backend fällt durch. Beta/Release deployen per SSH/rsync auf den Node-Server (`server/index.mjs`,
 liefert Static + `/api/*` same-origin). Einrichtung, Secrets und Vorbedingungen: siehe
