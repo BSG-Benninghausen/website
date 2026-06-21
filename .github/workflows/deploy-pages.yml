@@ -34,7 +34,7 @@ jobs:
       - name: Node einrichten
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22   # Astro 6 verlangt Node >= 22.12.0
 
       - name: GitHub Pages konfigurieren (aktiviert Pages bei Bedarf)
         uses: actions/configure-pages@v5
