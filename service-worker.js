@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v34";
+const VERSION = "v35";
 const CACHE = "bsg-cache-" + VERSION;
 const RUNTIME = "bsg-runtime-" + VERSION;
 const OFFLINE_URL = "offline.html";
@@ -137,7 +137,10 @@ self.addEventListener("fetch", (event) => {
           return res;
         })
         .catch(() =>
-          caches.match(req).then((cached) => cached || caches.match(OFFLINE_URL))
+          // ignoreSearch: Navigationen mit Query (z. B. "/" -> home.html?club=bsg)
+          // sollen den precachten Seiten-Eintrag (ohne Query) treffen, statt auf
+          // offline.html zu fallen.
+          caches.match(req, { ignoreSearch: true }).then((cached) => cached || caches.match(OFFLINE_URL))
         )
     );
     return;

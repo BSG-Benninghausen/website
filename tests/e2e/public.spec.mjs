@@ -10,7 +10,8 @@ test.describe("Öffentliche Seiten", () => {
     // Dieser Fork IST die BSG-Vereinsseite: "/" leitet direkt auf
     // home.html?club=bsg (statt auf das generische Produkt-Portal des Upstreams).
     await page.goto("/");
-    await expect(page).toHaveURL(/home\.html/);
+    // Club-Pinning per Query muss erhalten bleiben (?club=bsg), nicht nur home.html.
+    await expect(page).toHaveURL(/home\.html\?club=bsg/);
     await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 
