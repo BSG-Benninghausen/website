@@ -83,14 +83,14 @@
   const FEATURES = [
     { key: "payouts", label: "Auszahlungen an Veranstalter", status: "stable" },
     { key: "tournaments", label: "Turnier-Anmeldung", status: "stable" },
-    { key: "beitragsrechner", label: "Beitragsrechner", status: "beta" },
+    { key: "demofeature", label: "Beispiel-Funktion (Beta)", status: "beta" },
   ];
   const FEATURE_KEYS = FEATURES.map((f) => f.key);
   // Default-Freigabe je Feature (greift, solange der Superadmin nichts gesetzt hat).
-  const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", beitragsrechner: "off" };
+  const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", demofeature: "off" };
   // Default-Buchung (Provisionierung) je Feature: standardmäßig gebucht -> für BSG unverändert.
   // Der echte SaaS-Betrieb leitet dies aus dem gebuchten Tarif ab (später, P4).
-  const FEATURE_DEFAULT_BOOKED = { payouts: true, tournaments: true, beitragsrechner: true };
+  const FEATURE_DEFAULT_BOOKED = { payouts: true, tournaments: true, demofeature: true };
 
   const realFetch = window.fetch.bind(window);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));

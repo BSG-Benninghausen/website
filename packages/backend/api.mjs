@@ -57,12 +57,12 @@ const ADMIN_EMAIL =
 const FEATURES = [
   { key: "payouts", label: "Auszahlungen an Veranstalter", status: "stable" },
   { key: "tournaments", label: "Turnier-Anmeldung", status: "stable" },
-  { key: "beitragsrechner", label: "Beitragsrechner", status: "beta" },
+  { key: "demofeature", label: "Beispiel-Funktion (Beta)", status: "beta" },
 ];
 const FEATURE_KEYS = FEATURES.map((f) => f.key);
-const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", beitragsrechner: "off" };
+const FEATURE_DEFAULT_SCOPE = { payouts: "public", tournaments: "public", demofeature: "off" };
 // Default-Buchung (Provisionierung) – 1:1 zum Mock; standardmäßig gebucht.
-const FEATURE_DEFAULT_BOOKED = { payouts: true, tournaments: true, beitragsrechner: true };
+const FEATURE_DEFAULT_BOOKED = { payouts: true, tournaments: true, demofeature: true };
 const normalizeScope = (release, validRoleIds) => {
   if (release === "public" || release === "off") return release;
   const arr = Array.isArray(release) ? release : (release && Array.isArray(release.roles) ? release.roles : null);

@@ -40,7 +40,7 @@ index 1..2 100644
 --- a/assets/js/mock-api.js
 +++ b/assets/js/mock-api.js
 @@ -83,1 +83,2 @@
-     { key: "beitragsrechner", label: "Beitragsrechner", status: "beta" },
+     { key: "demofeature", label: "Beispiel-Funktion (Beta)", status: "beta" },
 +    { key: "newfeat", label: "Neues Feature", status: "beta" },`;
 
 const nonContract = `diff --git a/assets/js/main.js b/assets/js/main.js
