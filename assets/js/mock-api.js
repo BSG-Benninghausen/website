@@ -991,7 +991,7 @@
           status: m.status, startedAt: m.startedAt,
           photo: m.photo || null, passNumber: m.passNumber || "", belt: m.belt || "", weightClass: m.weightClass || "",
           competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, acfg),
-          ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
+          ownerId: m.userId, ownerName: owner.name || "—", ownerEmail: owner.email || "—", address: owner.address || null,
         };
         if (fin) row.iban = owner.iban || null;
         return row;
@@ -1209,6 +1209,7 @@
         id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"],
         active: u.active !== false, createdAt: u.createdAt || null,
         membershipCount: memberships.filter((m) => m.userId === u.id).length,
+        activeMembershipCount: memberships.filter((m) => m.userId === u.id && m.status === "aktiv").length,
         isSelf: u.id === user.id,
       }));
       return json({ ok: true, items });
