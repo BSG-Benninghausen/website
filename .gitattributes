@@ -34,3 +34,7 @@ deploy/**                               merge=ours
 .github/workflows/deploy-beta.yml       merge=ours
 .github/workflows/deploy-prod.yml       merge=ours
 .github/workflows/deploy-pages.yml      merge=ours
+
+# Deploy-abhaengiger E2E-Test: die Wurzel verhaelt sich je nach BSG_ROOT_MODE
+# unterschiedlich (Upstream -> Portal, Fork -> Club-Redirect), daher pro Repo eigen.
+tests/e2e/public.spec.mjs               merge=ours

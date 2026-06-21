@@ -138,7 +138,10 @@ self.addEventListener("fetch", (event) => {
           return res;
         })
         .catch(() =>
-          caches.match(req).then((cached) => cached || caches.match(OFFLINE_URL))
+          // ignoreSearch: Navigationen mit Query (z. B. "/" -> home.html?club=<id>)
+          // sollen den precachten Seiten-Eintrag (ohne Query) treffen, statt auf
+          // offline.html zu fallen.
+          caches.match(req, { ignoreSearch: true }).then((cached) => cached || caches.match(OFFLINE_URL))
         )
     );
     return;
