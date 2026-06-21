@@ -29,6 +29,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write                # OIDC für anthropics/claude-code-action (Agent)
 
 jobs:
   implement:

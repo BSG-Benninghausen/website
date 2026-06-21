@@ -32,6 +32,7 @@ on:
 permissions:
   contents: read
   pull-requests: write           # Kommentar zurück auf den Fork-PR
+  id-token: write                # OIDC für anthropics/claude-code-action (Agent-Auth)
 
 concurrency:
   group: mergeback-propose-${{ github.event.pull_request.number }}
@@ -53,6 +54,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false   # sonst überschreibt der github-actions[bot]-Credential den App-Token beim Upstream-Push
 
       - uses: actions/setup-node@v4
         with:
@@ -82,7 +84,7 @@ jobs:
         with:
           script: |
             await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number,
-              body: "🟦 **Mergeback:** Dieser PR betrifft nur Branding/Config – nichts Vereins-Neutrales zum Upstream-Vorschlag." });
+              body: "🟦 **Mergeback:** Dieser PR betrifft nur nicht-vorschlagbare Dateien (Branding/Config/Workflows) – nichts Vereins-Neutrales zum Upstream-Vorschlag." });
 
       - name: Kommentar – braucht Mensch (entangled)
         if: steps.classify.outputs.verdict == 'needs_human'
@@ -115,9 +117,15 @@ jobs:
           git config user.name  "mergeback-bot"
           git config user.email "mergeback-bot[bot]@users.noreply.github.com"
           git checkout -B "$BR" upstream/main
-          # nur die als generisch klassifizierten Dateien vom Fork-Head übernehmen …
+          # nur die generischen Dateien übernehmen – und davon NUR die PR-Hunks
+          # (git apply des PR-Diffs), NICHT die ganze Datei. Sonst leaken fork-eigene
+          # Änderungen jenseits dieses PRs (z. B. ein anderes Feature) in den Mergeback.
           node -p "require('/tmp/neutralize.json').include_files.join('\n')" > /tmp/include.txt
-          while IFS= read -r f; do [ -n "$f" ] && git checkout "$GITHUB_SHA" -- "$f"; done < /tmp/include.txt
+          INCLUDE_ARGS=$(while IFS= read -r f; do [ -n "$f" ] && printf -- '--include=%s ' "$f"; done < /tmp/include.txt)
+          if [ -n "$INCLUDE_ARGS" ]; then
+            git apply --3way $INCLUDE_ARGS /tmp/fork.diff \
+              || { echo "PR-Hunks lassen sich nicht sauber auf upstream/main anwenden (Fork/Upstream divergiert dort) -> Hand anlegen."; exit 1; }
+          fi
           # … und deterministisch Rest-Identität neutralisieren (Werte aus neutral_baseline).
           node -e '
             const fs=require("fs"); const n=require("/tmp/neutralize.json");

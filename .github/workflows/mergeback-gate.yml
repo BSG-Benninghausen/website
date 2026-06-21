@@ -18,6 +18,7 @@ permissions:
   contents: write
   pull-requests: write
   checks: write
+  id-token: write                # OIDC für anthropics/claude-code-action (Agent-Review)
 
 concurrency:
   group: mergeback-gate-${{ github.event.pull_request.number }}
