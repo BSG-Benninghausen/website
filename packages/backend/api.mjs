@@ -259,7 +259,7 @@ const SPONSORS_CONFIG_FIELDS = [
   { key: "title", label: "Überschrift", type: "text" },
   { key: "subtitle", label: "Untertitel", type: "textarea" },
 ];
-const SPONSORS_CONFIG_DEFAULTS = { enabled: false, displayMode: "cards", tiersEnabled: false, showHome: true, showPage: true, showFooter: false, title: "Unsere Sponsoren", subtitle: "" };
+const SPONSORS_CONFIG_DEFAULTS = { enabled: false, displayMode: "cards", tiersEnabled: false, showHome: true, showPage: false, showFooter: true, title: "Unsere Sponsoren", subtitle: "" };
 const sponsorTier = (v) => (v === "premium" ? "premium" : "standard");
 const asBool = (v) => v === true || v === "true" || v === "on" || v === 1 || v === "1";
 const normUrl = (v) => {
@@ -277,8 +277,8 @@ function normSponsorsConfig(raw) {
     displayMode: mode,
     tiersEnabled: asBool(r.tiersEnabled),
     showHome: "showHome" in r ? asBool(r.showHome) : true,
-    showPage: "showPage" in r ? asBool(r.showPage) : true,
-    showFooter: asBool(r.showFooter),
+    showPage: "showPage" in r ? asBool(r.showPage) : false,
+    showFooter: "showFooter" in r ? asBool(r.showFooter) : true,
     title: norm(r.title) || SPONSORS_CONFIG_DEFAULTS.title,
     subtitle: norm(r.subtitle),
   };
