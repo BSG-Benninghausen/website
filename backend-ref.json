@@ -1,0 +1,5 @@
+{
+  "_doc": "Gepinnter externer Backend-Stand für CI/E2E nach dem Phase-3-Split (siehe docs/backend-repo-separation-plan.md). Die Source of Truth des Backends liegt seit Phase 3 in einem eigenen Repo; das Monorepo enthält KEIN packages/backend/ mehr. Die Browser-E2E (tests/e2e/) checkt das Backend an genau diesem ref aus und bootet es (Option A: same-origin, BSG_STATIC_DIR zeigt auf den Frontend-Root). 'ref' anheben, um auf einen neueren Backend-Stand zu testen. Das Backend-Repo wird mit tools/backend-split/extract.sh erzeugt/aktualisiert.",
+  "repo": "crypticalcode/vereins-baukasten-backend",
+  "ref": "31d78545f959045876c7d95102cc945e57dc4796"
+}

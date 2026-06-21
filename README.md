@@ -237,15 +237,18 @@ in `packages/api-contract/README.md`.
 
 Die Contract-Tests decken nur `/api/*` ab. Die UI-/DOM-/PWA-Schicht (Login-Flow,
 Permission-Nav-Reveal, CRUD-Editoren, Service-Worker/Offline) prüft eine **Playwright-Suite**
-unter `tests/e2e/` gegen das echte Backend (Playwright startet `packages/backend/index.mjs` selbst,
-`BSG_DEV=1`, `real`-Modus). Die Dev-Abhängigkeit ist **bewusst nach `tests/e2e/` isoliert** –
-Repo-Root und ausgelieferte Website bleiben zero-dep.
+unter `tests/e2e/` gegen das echte Backend. Seit dem Phase-3-Split lebt das Backend in einem
+eigenen Repo (gepinnt in [`backend-ref.json`](backend-ref.json)): Playwright checkt es aus, bootet es
+selbst und liefert die Website same-origin daneben aus (`BSG_BACKEND_DIR` zeigt aufs Backend,
+`BSG_STATIC_DIR` auf den Frontend-Root; `BSG_DEV=1`, `real`-Modus). Die Dev-Abhängigkeit ist
+**bewusst nach `tests/e2e/` isoliert** – Repo-Root und ausgelieferte Website bleiben zero-dep.
 
 ```bash
 cd tests/e2e
 npm ci                                   # Playwright installieren (nur hier)
 npx playwright install --with-deps chromium
-npm test                                 # Suite ausführen (startet das Backend selbst)
+# Backend-Repo (vereins-baukasten-backend) auschecken und BSG_BACKEND_DIR daraufsetzen:
+BSG_BACKEND_DIR=../../../vereins-baukasten-backend npm test
 ```
 
 ### CI/CD

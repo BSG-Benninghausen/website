@@ -1,0 +1,62 @@
+name: Tests
+
+# Eigenständige CI des extrahierten Backends (Pendant zur Monorepo-ci.yml,
+# contract-Job). Zero-Dependency: kein `npm install` nötig (nur node:-Builtins,
+# der Vertrag ist nach contract/ vendored).
+#   • Syntax-Check (node --check)
+#   • Seeds vendored == kanonisch (data/ == contract/data/)
+#   • Persistenz-Roundtrip (JSON-Snapshot)
+#   • Backend booten + Contract-Suite im Real-Modus über HTTP
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Contract-Tests (Real)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22   # Harness nutzt Headers.getSetCookie() -> Node >= 20
+
+      - name: Syntax-Check (node --check)
+        run: |
+          set -e
+          for f in *.mjs contract/*.mjs tools/*.mjs; do
+            echo "check $f"
+            node --check "$f"
+          done
+
+      - name: Seeds vendored == kanonisch (data == contract/data)
+        run: node tools/vendor-seeds.mjs --check
+
+      - name: Persistenz (JSON-Snapshot, Restart-Roundtrip)
+        run: node persistence.mjs
+
+      - name: Backend starten (Dev-Modus)
+        run: |
+          node index.mjs > /tmp/vb-server.log 2>&1 &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/api/age-classes >/dev/null && exit 0
+            sleep 0.5
+          done
+          echo "Backend wurde nicht rechtzeitig erreichbar:"; cat /tmp/vb-server.log; exit 1
+
+      - name: Real-Modus (Contract-Suite über HTTP)
+        run: npm run test:contract
+
+      - name: Backend stoppen
+        if: always()
+        run: kill "${SERVER_PID}" 2>/dev/null || true

@@ -1,7 +1,7 @@
 {
   "name": "@crypticalcode/api-contract",
   "version": "1.0.0",
-  "description": "Single Source of Truth des /api/*-Vertrags der BSG-Website: Contract-Test-Suite, Harness und kanonische Seed-Daten. Dieselben Suiten messen den In-Process-Mock (assets/js/mock-api.js) UND das echte Backend (packages/backend) – so bleiben beide Implementierungen in Sync. Ohne npm-Abhängigkeiten (nur node:-Builtins).",
+  "description": "Single Source of Truth des /api/*-Vertrags der BSG-Website: Contract-Test-Suite, Harness und kanonische Seed-Daten. Dieselben Suiten messen den In-Process-Mock (assets/js/mock-api.js) UND ein echtes Backend (Referenzimpl. im Repo crypticalcode/vereins-baukasten-backend) – so bleiben beide Implementierungen in Sync. Ohne npm-Abhängigkeiten (nur node:-Builtins).",
   "type": "module",
   "main": "./harness.mjs",
   "exports": {
