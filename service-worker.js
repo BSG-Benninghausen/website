@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v36";
+const VERSION = "v37";
 /* Cache-Namespace (vereinsneutral); ein Fork kann hier seinen eigenen Prefix
    setzen, damit getrennte Deployments keine kollidierenden Cache-Namen erben. */
 const CACHE_NS = "app";
