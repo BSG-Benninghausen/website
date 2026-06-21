@@ -1,18 +1,15 @@
 <!DOCTYPE html>
-<html lang="de" data-club-site data-page-title="Aktuelles">
+<html lang="de" data-club-site data-page-title="Shop · Recht">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aktuelles – BSG Benninghausen e.V.</title>
-  <meta name="description" content="Neuigkeiten, Turniererfolge und Vereinsleben der Musterverein e.V.">
+  <title>Shop · Impressum &amp; AGB – BSG Benninghausen e.V.</title>
+  <meta name="description" content="Impressum, AGB und Widerrufsbelehrung des Judo-Shops. Betrieben von einer Privatperson, getrennt vom Verein.">
+  <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <meta name="theme-color" content="#0d0d12">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BSG Judo">
-  <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
@@ -39,8 +36,6 @@
           <li><a href="kalender.html">Termine</a></li>
           <li><a href="kontakt.html">Kontakt</a></li>
         </ul>
-
-        <!-- Konto: ausgeloggt = Login-Link, eingeloggt = Konto-Menü -->
         <div class="nav__account">
           <a href="login.html" class="nav__login" data-account-link>Login</a>
           <div class="nav__user" data-account-menu hidden>
@@ -73,83 +68,39 @@
       <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
       <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
       <div class="wrap page-hero__inner">
-        <p class="crumbs"><a href="index.html">Start</a> · Aktuelles</p>
-        <span class="eyebrow eyebrow--invert">News &amp; Berichte</span>
-        <h1>Aktuelles aus dem Verein</h1>
-        <p>Turniererfolge, Prüfungen, Feiern – hier erfährst du, was bei der Musterverein los ist.</p>
+        <p class="crumbs"><a href="index.html">Start</a> · <a href="shop.html">Shop</a> · Recht</p>
+        <span class="eyebrow eyebrow--invert">Shop-Betreiber</span>
+        <h1>Impressum, AGB &amp; Widerruf</h1>
+        <p>Der Shop wird eigenverantwortlich von einer Privatperson betrieben und steht rechtlich nicht in Verbindung mit dem Verein.</p>
       </div>
     </section>
 
     <section class="section">
-      <div class="wrap">
-        <div class="news-grid" data-news>
-          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
-          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      <div class="wrap" style="max-width:760px">
+        <div class="card" style="margin-bottom:24px">
+          <h2 style="font-size:1.2rem;margin-bottom:10px">Betreiber / Impressum</h2>
+          <p><strong data-shop-operator>Julian Becker</strong></p>
+          <p class="shop-legal-text" data-shop-operator-address>—</p>
+          <p class="shop-legal-text" data-shop-legal="impressum">—</p>
         </div>
-
-        <div class="notice notice--mock" style="margin-top:34px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v14H4zM4 9h16M9 13h7M9 16h4"/></svg>
-          <p><b>Hinweis:</b> Die Beiträge werden in dieser Demo aus einer simulierten API (<code>/api/news</code>) geladen. Inhalte lassen sich in <code>assets/data/news.json</code> pflegen.</p>
+        <div class="card" style="margin-bottom:24px">
+          <h2 style="font-size:1.2rem;margin-bottom:10px">Allgemeine Geschäftsbedingungen</h2>
+          <p class="shop-legal-text" data-shop-legal="agb">—</p>
         </div>
-      </div>
-    </section>
-
-    <section class="section--tight">
-      <div class="wrap">
-        <div class="cta-band reveal">
-          <span class="cta-band__glow" aria-hidden="true"></span>
-          <h2>Auch dabei sein?</h2>
-          <p>Werde Teil unserer Erfolgsgeschichte – starte mit einem kostenlosen Probetraining.</p>
-          <div class="hero__cta"><a href="anmeldung.html" class="btn btn--gold btn--lg">Jetzt mitmachen</a></div>
+        <div class="card">
+          <h2 style="font-size:1.2rem;margin-bottom:10px">Widerrufsbelehrung</h2>
+          <p class="shop-legal-text" data-shop-legal="widerruf">—</p>
         </div>
+        <p class="muted-note" style="margin-top:20px">Das <a href="kontakt.html">Impressum des Vereins</a> findest du separat – es betrifft den Vereinsbetrieb, nicht den Shop.</p>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">
-      <div class="footer-grid">
-        <div class="footer-about">
-          <a href="index.html" class="brand">
-            <img class="brand__logo" src="assets/img/bsg-logo.png" alt="" width="42" height="42" data-club-logo>
-            <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
-          </a>
-          <p>Sport für Kinder, Jugendliche und Erwachsene in Musterstadt. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
-          <div class="socials">
-            <a href="https://www.instagram.com/" aria-label="Instagram" target="_blank" rel="noopener" data-club-instagram>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            </a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Verein</h4>
-          <ul>
-            <li><a href="index.html">Start</a></li>
-            <li><a href="team.html">Team &amp; Vorstand</a></li>
-            <li><a href="aktuelles.html">Aktuelles</a></li>
-            <li><a href="kalender.html">Termine</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Mitmachen</h4>
-          <ul>
-            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
-            <li><a href="anmeldung.html">Probetraining</a></li>
-            <li><a href="kontakt.html">Kontakt</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Training</h4>
-          <ul>
-            <li data-club="venue">Vereinsheim Musterstadt</li>
-            <li><span data-club="street">Musterstraße 1</span>, <span data-club="city">12345 Musterstadt</span></li>
-            <li>Mittwochs &amp; freitags</li>
-          </ul>
-        </div>
-      </div>
       <div class="footer-bottom">
-        <span>© <span data-year>2026</span> <span data-club="name">Musterverein e.V.</span> · <span data-club="sport">Sport</span> in <span data-club="locality">Musterstadt</span></span>
-        <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
+        <span>© <span data-year>2026</span> <span data-club="name">BSG Benninghausen e.V.</span></span>
+        <span><a href="shop.html">Zum Shop</a> · <a href="kontakt.html">Impressum (Verein)</a> · <a href="datenschutz.html">Datenschutz</a></span>
       </div>
     </div>
   </footer>
@@ -157,8 +108,6 @@
   <script src="assets/js/api-config.js?v=42" defer></script>
   <script src="assets/js/mock-api.js?v=42" defer></script>
   <script src="assets/js/main.js?v=42" defer></script>
-  <script src="assets/js/sponsors.js?v=42" defer></script>
   <script src="assets/js/shop.js?v=42" defer></script>
-  <script src="assets/js/news.js?v=42" defer></script>
 </body>
 </html>

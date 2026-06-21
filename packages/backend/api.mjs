@@ -43,6 +43,7 @@ const PERMISSIONS = [
   { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
   { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
   { key: "manage_sponsors", label: "Sponsoren verwalten" },
+  { key: "manage_shop", label: "Webshop verwalten (Produkte, Bestellungen, Förder-Status)" },
 ];
 const ALL_PERMS = PERMISSIONS.map((p) => p.key);
 /* Seed-Admin-Adresse; per Env ADMIN_EMAIL (Deploy/Fork) überschreibbar.
@@ -289,6 +290,78 @@ function sponsorErrors(b) {
   return e;
 }
 const sponsorFields = (b) => ({ name: norm(b.name), url: normUrl(b.url), tier: sponsorTier(b.tier), description: norm(b.description), order: num(b.order) });
+
+/* ----- Webshop (1:1 zum Mock) -----
+   Eigenständiger Shop (Betreiber = Privatperson, NICHT der Verein). Produkte tragen
+   je Stufe eigene Preise (extern/mitglied/gesponsert; gesponsert optional). Checkout
+   per SEPA-Lastschrift nur für eingeloggte, aktive Mitglieder. Betreiber-/Rechtsdaten
+   in der Shop-Config (shop.json / shop.<ns>.json), getrennt von /api/club. */
+const SHOP_CATEGORIES = ["gi", "guertel", "merch"];
+const shopCategory = (v) => (SHOP_CATEGORIES.includes(v) ? v : "merch");
+const SHOP_ORDER_STATUSES = ["offen", "mandat_erteilt", "bezahlt", "versendet", "storniert"];
+const SHOP_CONFIG_FIELDS = [
+  { key: "enabled", label: "Shop aktivieren", type: "checkbox" },
+  { key: "showPage", label: "Shop-Seite im Menü verlinken", type: "checkbox" },
+  { key: "title", label: "Überschrift", type: "text" },
+  { key: "subtitle", label: "Untertitel", type: "textarea" },
+  { key: "operatorName", label: "Betreiber (Name)", type: "text" },
+  { key: "operatorAddress", label: "Betreiber – Anschrift", type: "textarea" },
+  { key: "operatorEmail", label: "Betreiber – E-Mail (für Anfragen)", type: "text" },
+  { key: "operatorIban", label: "Betreiber – IBAN (SEPA-Gläubiger)", type: "text" },
+  { key: "creditorId", label: "Gläubiger-Identifikationsnummer", type: "text" },
+  { key: "legalImpressum", label: "Impressum (Shop-Betreiber)", type: "textarea" },
+  { key: "legalAgb", label: "AGB", type: "textarea" },
+  { key: "legalWiderruf", label: "Widerrufsbelehrung", type: "textarea" },
+];
+const SHOP_CONFIG_DEFAULTS = { enabled: false, showPage: false, title: "Vereinsshop", subtitle: "" };
+function normShopConfig(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const ibanRaw = norm(r.operatorIban);
+  return {
+    enabled: asBool(r.enabled),
+    showPage: "showPage" in r ? asBool(r.showPage) : false,
+    title: norm(r.title) || SHOP_CONFIG_DEFAULTS.title,
+    subtitle: norm(r.subtitle),
+    operatorName: norm(r.operatorName),
+    operatorAddress: norm(r.operatorAddress),
+    operatorEmail: norm(r.operatorEmail),
+    operatorIban: ibanRaw && isIban(ibanRaw) ? fmtIban(ibanRaw) : "",
+    creditorId: norm(r.creditorId),
+    legalImpressum: norm(r.legalImpressum),
+    legalAgb: norm(r.legalAgb),
+    legalWiderruf: norm(r.legalWiderruf),
+  };
+}
+function productErrors(b) {
+  const e = {};
+  if (norm(b.name).length < 2) e.name = "Bitte einen Produktnamen angeben.";
+  const src = b.prices && typeof b.prices === "object" ? b.prices : b;
+  if (!(num(src.extern) > 0)) e.extern = "Bitte einen Externen-Preis (> 0) angeben.";
+  if (!(num(src.mitglied) > 0)) e.mitglied = "Bitte einen Mitglieder-Preis (> 0) angeben.";
+  return e;
+}
+function productFields(b) {
+  const src = b.prices && typeof b.prices === "object" ? b.prices : b;
+  const prices = { extern: num(src.extern), mitglied: num(src.mitglied) };
+  const g = num(src.gesponsert);
+  if (g > 0) prices.gesponsert = g;
+  return {
+    name: norm(b.name),
+    category: shopCategory(b.category),
+    description: norm(b.description),
+    prices,
+    active: "active" in b ? asBool(b.active) : true,
+    order: num(b.order),
+  };
+}
+function shopPriceFor(product, tier) {
+  const pr = (product && product.prices) || {};
+  if (tier === "gesponsert") return pr.gesponsert != null ? pr.gesponsert : (pr.mitglied != null ? pr.mitglied : pr.extern);
+  if (tier === "mitglied") return pr.mitglied != null ? pr.mitglied : pr.extern;
+  return pr.extern;
+}
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
 function eventErrors(b) {
   const e = {};
   if (norm(b.title).length < 3) e.title = "Bitte einen Titel angeben.";
@@ -370,6 +443,15 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
   }
   const isAdmin = (user) => !!user && (user.roles || []).includes("admin");
   const hasPerm = (user, perm) => isAdmin(user) || userPermissions(user).includes(perm);
+
+  /* Webshop: Preis-Stufe & Checkout-Gate (db-abhängig, daher hier definiert). */
+  function shopTierFor(user) {
+    if (!user) return "extern";
+    if (user.shopSponsored) return "gesponsert";
+    const active = db.memberships.some((m) => m.userId === user.id && m.status === "aktiv");
+    return active ? "mitglied" : "extern";
+  }
+  const shopCanCheckout = (user) => !!user && db.memberships.some((m) => m.userId === user.id && m.status === "aktiv");
 
   /* ----- Feature-Freigabe (Beta-Steuerung pro Gruppe), 1:1 zum Mock ----- */
   const scopeFor = (key) => (key in db.featureFlags ? db.featureFlags[key] : (FEATURE_DEFAULT_SCOPE[key] || "off"));
@@ -470,6 +552,12 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       grant("vorsitz1", ["manage_sponsors"]);
       db.seedVersion = 10;
     }
+    // Migration v11: Webshop-Recht. Eigene Rolle „Shop-Betreiber" (Privatperson),
+    // BEWUSST NICHT an den Vorstand – der Shop ist rechtlich vom Verein getrennt.
+    if (db.seedVersion < 11) {
+      if (!roles.some((r) => r.id === "shop")) roles.push({ id: "shop", label: "Shop-Betreiber", permissions: ["manage_shop"], system: false });
+      db.seedVersion = 11;
+    }
 
     if (!db.users.some((u) => u.email === ADMIN_EMAIL)) {
       db.users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
@@ -487,6 +575,9 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
     db.club = loadSeed("club.json");
     db.sponsors = loadSeed("sponsors.json");
     db.sponsorsConfig = normSponsorsConfig({});
+    db.shopProducts = (() => { try { return loadSeed("shop-products.json"); } catch (e) { return []; } })();
+    db.shopConfig = normShopConfig((() => { try { return loadSeed("shop.json"); } catch (e) { return {}; } })());
+    db.shopOrders = []; db.shopMandates = [];
     db.registrations = []; db.payouts = []; db.codes = {}; db.passCounter = 0; db.seedVersion = 0;
     db.positions = [];
     db.featureFlags = {};
@@ -604,6 +695,157 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       const values = body.values && typeof body.values === "object" ? body.values : body;
       db.sponsorsConfig = normSponsorsConfig(values);
       return J({ ok: true, values: db.sponsorsConfig, message: "Sponsoren-Einstellungen gespeichert." });
+    },
+
+    /* ---------- Webshop: Konfiguration (Betreiber & Recht) ---------- */
+    "GET /api/shop-config": async () => J({ ok: true, fields: SHOP_CONFIG_FIELDS, values: normShopConfig(db.shopConfig) }),
+    "POST /api/shop-config": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      db.shopConfig = normShopConfig(values);
+      return J({ ok: true, values: db.shopConfig, message: "Shop-Einstellungen gespeichert." });
+    },
+
+    /* ---------- Webshop: Produkte ---------- */
+    "GET /api/shop/products": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      const manage = hasPerm(user, "manage_shop");
+      const tier = shopTierFor(user);
+      const items = db.shopProducts.slice()
+        .filter((p) => manage || p.active !== false)
+        .sort((a, b) => (num(a.order) - num(b.order)) || a.name.localeCompare(b.name, "de"))
+        .map((p) => {
+          const out = {
+            id: p.id, name: p.name, category: p.category, description: p.description || "",
+            image: p.image || "", active: p.active !== false, order: num(p.order),
+            prices: { extern: p.prices.extern, mitglied: p.prices.mitglied },
+            yourTier: tier, yourPrice: shopPriceFor(p, tier),
+          };
+          if (manage && p.prices.gesponsert != null) out.prices.gesponsert = p.prices.gesponsert;
+          return out;
+        });
+      return J({ ok: true, items, tier });
+    },
+    "POST /api/shop/products": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      const errors = productErrors(body);
+      if (Object.keys(errors).length) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const item = { id: genId("prod"), ...productFields(body), image: isPhoto(body.image) ? body.image : "" };
+      db.shopProducts.push(item);
+      return J({ ok: true, item, message: "Produkt angelegt." }, 201);
+    },
+    "POST /api/shop/products/update": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      const errors = productErrors(body);
+      if (Object.keys(errors).length) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const idx = db.shopProducts.findIndex((p) => p.id === body.id);
+      if (idx === -1) return J({ ok: false, message: "Produkt nicht gefunden." }, 404);
+      const image = body.image === "" ? "" : (isPhoto(body.image) ? body.image : (db.shopProducts[idx].image || ""));
+      db.shopProducts[idx] = { ...db.shopProducts[idx], ...productFields(body), image };
+      return J({ ok: true, item: db.shopProducts[idx], message: "Produkt gespeichert." });
+    },
+    "POST /api/shop/products/delete": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      if (!db.shopProducts.some((p) => p.id === body.id)) return J({ ok: false, message: "Produkt nicht gefunden." }, 404);
+      db.shopProducts = db.shopProducts.filter((p) => p.id !== body.id);
+      return J({ ok: true, message: "Produkt gelöscht." });
+    },
+
+    /* ---------- Webshop: Förder-Status (gesponserte Einzelperson) ---------- */
+    "POST /api/shop/sponsored": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      if (typeof body.sponsored !== "boolean") return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { sponsored: "Boolean erwartet." } }, 422);
+      // Betreiber hat keinen Mitglieder-Listenzugriff: Auswahl per userId ODER E-Mail.
+      const target = body.userId ? getUserById(body.userId) : (body.email ? findUserByEmail(body.email) : null);
+      if (!target) return J({ ok: false, message: "Benutzer nicht gefunden.", errors: { email: "Kein Konto mit dieser E-Mail." } }, 404);
+      target.shopSponsored = body.sponsored;
+      return J({ ok: true, user: { id: target.id, name: target.name, email: target.email, shopSponsored: !!target.shopSponsored }, message: body.sponsored ? "Förder-Status gesetzt." : "Förder-Status entfernt." });
+    },
+
+    /* ---------- Webshop: SEPA-Lastschriftmandat ---------- */
+    "GET /api/shop/mandate": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      if (!user) return J({ ok: false, message: "Nicht angemeldet." }, 401);
+      const mandate = db.shopMandates.filter((m) => m.userId === user.id && m.status === "aktiv").slice(-1)[0] || null;
+      return J({ ok: true, mandate });
+    },
+    "POST /api/shop/mandate": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!user) return J({ ok: false, message: "Nicht angemeldet." }, 401);
+      if (!shopCanCheckout(user)) return J({ ok: false, message: "Nur aktive Vereinsmitglieder können ein SEPA-Mandat erteilen." }, 403);
+      if (!asBool(body.consent)) return J({ ok: false, message: "Bitte das SEPA-Lastschriftmandat bestätigen.", errors: { consent: "Bitte bestätigen." } }, 422);
+      const iban = norm(body.iban) ? body.iban : user.iban;
+      if (!iban || !isIban(iban)) return J({ ok: false, code: "ACCOUNT_INCOMPLETE", message: "Bitte zuerst eine gültige IBAN im Konto hinterlegen." }, 409);
+      db.shopMandates.forEach((m) => { if (m.userId === user.id && m.status === "aktiv") m.status = "widerrufen"; });
+      const mandate = {
+        id: genId("man"), userId: user.id,
+        mandateRef: "SHOP-" + user.id.replace(/^usr-/, "").toUpperCase().slice(0, 8) + "-" + Date.now().toString(36).toUpperCase(),
+        iban: fmtIban(iban), accountHolder: norm(body.accountHolder) || user.name,
+        creditorId: db.shopConfig.creditorId || "", creditorName: db.shopConfig.operatorName || "",
+        consentAt: new Date().toISOString(), status: "aktiv", createdAt: new Date().toISOString(),
+      };
+      db.shopMandates.push(mandate);
+      return J({ ok: true, mandate, message: "SEPA-Lastschriftmandat gespeichert." }, 201);
+    },
+
+    /* ---------- Webshop: Bestellungen ---------- */
+    "GET /api/shop/orders": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      if (!user) return J({ ok: false, message: "Nicht angemeldet." }, 401);
+      const items = db.shopOrders.filter((o) => o.userId === user.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return J({ ok: true, items });
+    },
+    "POST /api/shop/orders": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!user) return J({ ok: false, message: "Nicht angemeldet." }, 401);
+      if (!shopCanCheckout(user)) return J({ ok: false, message: "Nur aktive Vereinsmitglieder können bestellen. Externe Interessenten bestellen bitte per Anfrage." }, 403);
+      const cart = Array.isArray(body.items) ? body.items : [];
+      const errors = {};
+      if (!cart.length) errors.items = "Bitte mindestens ein Produkt wählen.";
+      if (!asBool(body.consent)) errors.consent = "Bitte die SEPA-Lastschrift bestätigen.";
+      if (Object.keys(errors).length) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const mandate = db.shopMandates.filter((m) => m.userId === user.id && m.status === "aktiv").slice(-1)[0];
+      if (!mandate) return J({ ok: false, code: "NO_MANDATE", message: "Bitte zuerst ein SEPA-Lastschriftmandat erteilen." }, 409);
+      const tier = shopTierFor(user);
+      const lines = [];
+      for (const it of cart) {
+        const p = db.shopProducts.find((x) => x.id === it.productId && x.active !== false);
+        const qty = Math.floor(num(it.qty));
+        if (!p) { errors.items = "Produkt nicht gefunden."; break; }
+        if (!(qty >= 1)) { errors.items = "Ungültige Menge."; break; }
+        const unitPrice = shopPriceFor(p, tier);
+        lines.push({ productId: p.id, name: p.name, qty, tier, unitPrice, lineTotal: round2(unitPrice * qty) });
+      }
+      if (errors.items) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const total = round2(lines.reduce((s, l) => s + l.lineTotal, 0));
+      const now = new Date().toISOString();
+      const order = { id: genId("ord"), userId: user.id, items: lines, total, tier, mandateId: mandate.id, status: "mandat_erteilt", note: norm(body.note), createdAt: now, updatedAt: now };
+      db.shopOrders.push(order);
+      return J({ ok: true, order, message: "Bestellung aufgegeben. Der Betrag wird per SEPA-Lastschrift eingezogen." }, 201);
+    },
+    "GET /api/shop/admin/orders": async (_body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      const usersById = {}; db.users.forEach((u) => { usersById[u.id] = u; });
+      const items = db.shopOrders.map((o) => {
+        const ow = usersById[o.userId] || {};
+        return { ...o, ownerName: ow.name || "—", ownerEmail: ow.email || "—" };
+      }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return J({ ok: true, items });
+    },
+    "POST /api/shop/orders/status": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_shop")) return deny(user);
+      if (!SHOP_ORDER_STATUSES.includes(body.status)) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors: { status: "Ungültiger Status." } }, 422);
+      const idx = db.shopOrders.findIndex((o) => o.id === body.id);
+      if (idx === -1) return J({ ok: false, message: "Bestellung nicht gefunden." }, 404);
+      db.shopOrders[idx].status = body.status; db.shopOrders[idx].updatedAt = new Date().toISOString();
+      return J({ ok: true, order: db.shopOrders[idx], message: "Bestellstatus aktualisiert." });
     },
 
     "GET /api/age-classes": async () => J({ ok: true, items: allAgeClassLabels(ageCfg) }),

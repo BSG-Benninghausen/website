@@ -1,0 +1,4 @@
+[
+  { "id": "prod-gi", "name": "Judo-Anzug (Gi) Einsteiger", "category": "gi", "description": "Robuster Einsteiger-Anzug, 100% Baumwolle.", "image": "", "prices": { "extern": 49.9, "mitglied": 39.9, "gesponsert": 19.9 }, "active": true, "order": 1 },
+  { "id": "prod-shirt", "name": "Vereins-T-Shirt", "category": "merch", "description": "T-Shirt mit Vereinslogo.", "image": "", "prices": { "extern": 18, "mitglied": 14 }, "active": true, "order": 2 }
+]

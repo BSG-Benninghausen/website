@@ -1,0 +1,14 @@
+{
+  "enabled": false,
+  "showPage": false,
+  "title": "Vereinsshop",
+  "subtitle": "Anzüge, Gürtel & Merch",
+  "operatorName": "Betreiber (Beispiel)",
+  "operatorAddress": "Musterweg 1, 12345 Musterstadt",
+  "operatorEmail": "shop@example.com",
+  "operatorIban": "",
+  "creditorId": "",
+  "legalImpressum": "",
+  "legalAgb": "",
+  "legalWiderruf": ""
+}

@@ -6,7 +6,7 @@ export default async function run(api, ck) {
   const fut = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("15 Rechte inkl. manage_payouts", d.items.length === 15 && d.items.some((p) => p.key === "manage_payouts"));
+  ck("16 Rechte inkl. manage_payouts", d.items.length === 16 && d.items.some((p) => p.key === "manage_payouts"));
   [s, d] = await api.getJ("/api/roles");
   const role = (id) => d.items.find((r) => r.id === id);
   ck("kassenwart hat manage_payouts", role("kassenwart").permissions.includes("manage_payouts"));

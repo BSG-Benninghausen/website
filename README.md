@@ -93,6 +93,12 @@ Bereitgestellte Endpunkte:
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
 | `GET /api/sponsors` · `POST /api/sponsors`(`/update`,`/delete`) | Sponsoren lesen (öffentlich) · pflegen (`manage_sponsors`) |
 | `GET /api/sponsors-config` · `POST /api/sponsors-config` | Sponsoren-Anzeige (an/aus, Stil, Premium-Stufen, Platzierungen) lesen (öffentlich) · speichern (`manage_sponsors`) |
+| `GET /api/shop-config` · `POST /api/shop-config` | Webshop-/Betreiber-Config lesen (öffentlich) · speichern (`manage_shop`) – Betreiber (Privatperson, **nicht der Verein**): Name, Anschrift, IBAN/Gläubiger-ID, Impressum/AGB/Widerruf |
+| `GET /api/shop/products` · `POST /api/shop/products`(`/update`,`/delete`) | Produkte lesen (öffentlich, Preis je Stufe für den Aufrufer aufgelöst) · pflegen (`manage_shop`) |
+| `POST /api/shop/sponsored` | Konto als „gesponsert" markieren (per `userId` **oder** `email`) → Förderpreis (`manage_shop`) |
+| `GET /api/shop/mandate` · `POST /api/shop/mandate` | SEPA-Lastschriftmandat des eigenen Kontos lesen/erteilen (nur aktive Mitglieder) |
+| `GET /api/shop/orders` · `POST /api/shop/orders` | Eigene Bestellungen lesen · bestellen (nur aktive Mitglieder, SEPA-Lastschrift) |
+| `GET /api/shop/admin/orders` · `POST /api/shop/orders/status` | Alle Bestellungen + Status pflegen (`manage_shop`) |
 | `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Impressum, Logo, Tagline, Markenfarbe) |
 | `GET /api/manifest` | PWA-Manifest aus der Club-Config (rohes Objekt, öffentlich). Das echte Backend liefert `/manifest.webmanifest` pro Domain darüber aus; `<title>`/`theme-color`/App-Titel setzt `main.js` client-seitig aus `/api/club` |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
@@ -133,7 +139,9 @@ Bereitgestellte Endpunkte:
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`,
   `bsg_site`, `bsg_club`, `bsg_payouts`, `bsg_positions`, `bsg_feature_flags`,
-  `bsg_feature_bookings`, `bsg_seed_version`, `bsg_pass_counter`.
+  `bsg_feature_bookings`, `bsg_seed_version`, `bsg_pass_counter`,
+  `bsg_sponsors`, `bsg_sponsors_config`, `bsg_shop_products`, `bsg_shop_orders`,
+  `bsg_shop_mandates`, `bsg_shop_config`.
 
 ### Rollen, Berechtigungen & Admin
 
@@ -142,9 +150,11 @@ Bereitgestellte Endpunkte:
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
   `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`,
-  `manage_payouts`, `manage_features`, `book_features`, `manage_sponsors`.
+  `manage_payouts`, `manage_features`, `book_features`, `manage_sponsors`, `manage_shop`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
   Startseiten-Texte, Vereinsdaten/Branding, Vereinsämter) ist einzeln zuweisbar.
+  `manage_shop` ist bewusst **nicht** an den Vorstand vergeben, sondern an die eigene Rolle
+  **Shop-Betreiber** (`shop`) – der Webshop wird von einer Privatperson betrieben, getrennt vom Verein.
 - **Vereinsämter ≠ Rollen:** Rollen geben **ausschließlich Rechte**; die öffentliche
   Team-Anzeige läuft über einen getrennten **Vereinsämter-Store** (`bsg_positions`,
   Datensatz `{ userId, group, label, order }`, `group` ∈ `vorstand`/`trainer`). Ämter geben

@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "showPage": true,
+  "title": "Judo-Shop",
+  "subtitle": "Anzüge, Gürtel & Vereins-Merch",
+  "operatorName": "Julian Becker",
+  "operatorAddress": "[Anschrift des Betreibers – BITTE ERGÄNZEN]",
+  "operatorEmail": "shop@bsg-benninghausen.de",
+  "operatorIban": "DE89 3704 0044 0532 0130 00",
+  "creditorId": "DE98ZZZ09999999999",
+  "legalImpressum": "Betreiber des Shops: Julian Becker (Privatperson). Der Shop wird eigenverantwortlich von Julian Becker betrieben und steht rechtlich nicht in Verbindung mit der BSG Benninghausen e.V. Anschrift und Kontakt: [BITTE ERGÄNZEN].",
+  "legalAgb": "Es gelten die Allgemeinen Geschäftsbedingungen des Betreibers. [BITTE ERGÄNZEN]",
+  "legalWiderruf": "Verbraucher haben ein vierzehntägiges Widerrufsrecht. Die vollständige Widerrufsbelehrung stellt der Betreiber bereit. [BITTE ERGÄNZEN]"
+}
