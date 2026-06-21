@@ -320,7 +320,10 @@
   function nextPassNumber() {
     const n = (getStore(KEYS.passCounter, 0) || 0) + 1;
     setStore(KEYS.passCounter, n);
-    return "MV-" + String(n).padStart(4, "0");
+    /* Prefix ist club-konfigurierbar (club-Seed: "passPrefix"); Default neutral. */
+    const club = getStore(KEYS.club, null);
+    const prefix = (club && club.passPrefix) || "MV-";
+    return prefix + String(n).padStart(4, "0");
   }
   const fromList = (list, v) => (list.includes(v) ? v : "");
   // gemeinsame Validierung & Übernahme der editierbaren Profilfelder
@@ -533,25 +536,39 @@
     return res.json();
   }
 
+  /* Club-Namespace für Content-Seeds (White-Label, additiv): ein Beispiel/Fork
+     kann Inhalte über "<base>.<ns>.json" überschreiben (z. B. news.bsg.json),
+     ohne die generische "<base>.json" zu divergieren. ns stammt aus club-config
+     (window.BSG_CLUB.ns) – ohne Config (z. B. in Contract-Tests) gilt generisch. */
+  const CLUB_NS =
+    (typeof window !== "undefined" && window.BSG_CLUB && window.BSG_CLUB.ns) || "";
+  async function loadClubData(base) {
+    if (CLUB_NS) {
+      try { return await loadData(base.replace(/\.json$/, "." + CLUB_NS + ".json")); }
+      catch (e) { /* keine club-spezifische Datei -> generischer Fallback */ }
+    }
+    return loadData(base);
+  }
+
   /* Dynamischer Content: beim ersten Zugriff aus JSON in den Store übernehmen */
   async function ensureNews() {
     let items = getStore(KEYS.news, null);
-    if (!items) { items = await loadData("news.json"); setStore(KEYS.news, items); }
+    if (!items) { items = await loadClubData("news.json"); setStore(KEYS.news, items); }
     return items;
   }
   async function ensureEvents() {
     let items = getStore(KEYS.events, null);
-    if (!items) { items = await loadData("events.json"); setStore(KEYS.events, items); }
+    if (!items) { items = await loadClubData("events.json"); setStore(KEYS.events, items); }
     return items;
   }
   async function ensureTraining() {
     let items = getStore(KEYS.training, null);
-    if (!items) { items = await loadData("trainingszeiten.json"); setStore(KEYS.training, items); }
+    if (!items) { items = await loadClubData("trainingszeiten.json"); setStore(KEYS.training, items); }
     return items;
   }
   async function ensureSite() {
     let values = getStore(KEYS.site, null);
-    if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
+    if (!values) { values = await loadClubData("site.json"); setStore(KEYS.site, values); }
     return values;
   }
   async function ensureClub() {
@@ -573,7 +590,7 @@
   async function ensureDemo() {
     if (getStore(KEYS.demoVersion, 0) >= 1) return;
     let demo;
-    try { demo = await loadData("demo-data.json"); }
+    try { demo = await loadClubData("demo-data.json"); }
     catch (e) { setStore(KEYS.demoVersion, 1); return; } // ohne Datei still überspringen
     const users = getUsers();
     (demo.users || []).forEach((u) => { if (!users.some((x) => x.id === u.id || x.email === u.email)) users.push(u); });

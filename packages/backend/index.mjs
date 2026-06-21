@@ -36,10 +36,12 @@ const ROOT = fileURLToPath(new URL("../../", import.meta.url));        // Repo-R
 const DATA_DIR = new URL("../api-contract/data/", import.meta.url);
 // Persistenz (opt-in): Pfad zur JSON-Snapshot-Datei. Leer = rein in-memory wie bisher.
 const DATA_FILE = process.env.BSG_DATA_FILE || "";
+// Club-Namespace (White-Label): lädt club-spezifische Seeds "<base>.<ns>.json", falls vorhanden.
+const CLUB_NS = process.env.BSG_CLUB_NS || "";
 // Repo-interne Verzeichnisse, die nie über das Static-Serving erreichbar sein sollen.
 const DENY_STATIC = new Set([".git", ".github", "packages", "tests", "tools", "deploy", "docs", "node_modules"]);
 
-const api = createApi({ dataDir: DATA_DIR, dev: DEV, dataFile: DATA_FILE });
+const api = createApi({ dataDir: DATA_DIR, dev: DEV, dataFile: DATA_FILE, clubNs: CLUB_NS });
 
 const MIME = {
   ".html": "text/html; charset=utf-8",

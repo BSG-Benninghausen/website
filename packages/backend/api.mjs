@@ -281,8 +281,18 @@ function memberFields(body, allowedWeights) {
 }
 
 /* ===================================================================== */
-export function createApi({ dataDir, dev = true, dataFile = "" }) {
+export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
   const loadJSON = (file) => JSON.parse(readFileSync(new URL(file, dataDir), "utf8"));
+  /* Club-Namespace (White-Label, additiv): lädt "<base>.<ns>.json" wenn vorhanden,
+     sonst die generische "<base>.json". ns kommt aus der Deploy-Config (Env
+     BSG_CLUB_NS, siehe index.mjs); ohne ns -> generisch. */
+  const loadSeed = (base) => {
+    if (clubNs) {
+      try { return loadJSON(base.replace(/\.json$/, "." + clubNs + ".json")); }
+      catch (e) { /* keine club-spezifische Datei -> generischer Fallback */ }
+    }
+    return loadJSON(base);
+  };
   // Persistenz ist opt-in: nur mit dataFile (Env BSG_DATA_FILE) wird `db` durabel.
   const persist = () => { if (dataFile) saveSnapshot(dataFile, db); };
 
@@ -329,7 +339,9 @@ export function createApi({ dataDir, dev = true, dataFile = "" }) {
 
   function nextPassNumber() {
     db.passCounter = (db.passCounter || 0) + 1;
-    return "MV-" + String(db.passCounter).padStart(4, "0");
+    /* Prefix ist club-konfigurierbar (club-Seed: "passPrefix"); Default neutral. */
+    const prefix = (db.club && db.club.passPrefix) || "MV-";
+    return prefix + String(db.passCounter).padStart(4, "0");
   }
 
   /* ----- Seed: Rollen + Admin (idempotent, versioniert wie im Mock) ----- */
@@ -416,11 +428,11 @@ export function createApi({ dataDir, dev = true, dataFile = "" }) {
      Das ist im Real-Modus das Pendant zur frischen Mock-Sandbox je Test-Suite. */
   function init() {
     db.users = []; db.memberships = []; db.roles = [];
-    db.news = loadJSON("news.json");
-    db.events = loadJSON("events.json");
-    db.training = loadJSON("trainingszeiten.json");
-    db.site = loadJSON("site.json");
-    db.club = loadJSON("club.json");
+    db.news = loadSeed("news.json");
+    db.events = loadSeed("events.json");
+    db.training = loadSeed("trainingszeiten.json");
+    db.site = loadSeed("site.json");
+    db.club = loadSeed("club.json");
     db.registrations = []; db.payouts = []; db.codes = {}; db.passCounter = 0; db.seedVersion = 0;
     db.positions = [];
     db.featureFlags = {};
@@ -433,7 +445,7 @@ export function createApi({ dataDir, dev = true, dataFile = "" }) {
      leert ohnehin, daher kein Idempotenz-Check nötig. Fehlt die Datei, wird übersprungen. */
   function seedDemo() {
     let demo;
-    try { demo = loadJSON("demo-data.json"); } catch (e) { return; }
+    try { demo = loadSeed("demo-data.json"); } catch (e) { return; }
     (demo.users || []).forEach((u) => db.users.push(u));
     (demo.positions || []).forEach((p) => db.positions.push(p));
     (demo.memberships || []).forEach((m) => db.memberships.push(m));

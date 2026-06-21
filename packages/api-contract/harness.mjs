@@ -44,7 +44,7 @@ class MockResponse {
 }
 
 /* ---------- Mock-Sandbox (isoliert, ohne Node-Globals zu verändern) ---------- */
-export function createMockSandbox() {
+export function createMockSandbox(opts = {}) {
   const store = {};
   const localStorage = {
     getItem: (k) => (k in store ? store[k] : null),
@@ -65,6 +65,9 @@ export function createMockSandbox() {
     return new MockResponse(JSON.stringify({ ok: true, backend: true, url, creds: (init && init.credentials) || null }), { status: 200 });
   };
   const win = { location: { origin: "http://localhost" }, fetch: realFetch };
+  // White-Label: optionaler Club-Namespace (wie ihn club-config.js im Browser setzt),
+  // damit Contract-Tests den ns-fähigen Seed-Loader prüfen können.
+  if (opts.clubNs) win.BSG_CLUB = { ns: opts.clubNs };
   const factory = new Function("window", "localStorage", "Response", "URL", "setTimeout", "console", MOCK_SRC);
   factory(win, localStorage, MockResponse, URL, (fn) => fn(), { info() {} });
   // win.fetch ist jetzt der Mock-Dispatcher
