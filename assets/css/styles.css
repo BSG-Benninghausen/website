@@ -509,18 +509,20 @@ button { font: inherit; cursor: pointer; }
 .footer-bottom { border-top: 1px solid rgba(255, 255, 255, .1); padding-block: 22px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; font-size: .85rem; }
 .footer-bottom a:hover { color: var(--gold); }
 
-/* ----------  Drache als Wasserzeichen  ---------- */
+/* ----------  Drache als Wasserzeichen  ----------
+   Das Logo (dunkle Silhouette) wird per brightness(0) invert(1) zu einer hellen
+   Silhouette für die dunklen Hero-Flächen – daher der Dateiname "-light". */
 .hero__dragon {
   position: absolute; z-index: -1; pointer-events: none; user-select: none;
   right: 2%; bottom: 8%;
   width: min(30vw, 280px); opacity: .1;
-  filter: drop-shadow(0 0 26px rgba(227, 20, 27, .5));
+  filter: brightness(0) invert(1) drop-shadow(0 0 26px rgba(227, 20, 27, .5));
 }
 .page-hero__dragon {
   position: absolute; z-index: -1; pointer-events: none; user-select: none;
   right: 3%; top: 50%; transform: translateY(-50%);
   width: min(20vw, 170px); opacity: .09;
-  filter: drop-shadow(0 0 20px rgba(227, 20, 27, .45));
+  filter: brightness(0) invert(1) drop-shadow(0 0 20px rgba(227, 20, 27, .45));
 }
 @media (max-width: 700px) {
   .hero__dragon { width: 46vw; opacity: .07; right: -4%; bottom: 4%; }
