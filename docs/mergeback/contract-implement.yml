@@ -9,7 +9,7 @@
 # einen DRAFT-PR (Backend berührt reale Persistenz/Deploy -> bewusst kein Auto-Merge).
 #
 # Voraussetzungen im Backend-Repo:
-#   • Secret ANTHROPIC_API_KEY
+#   • Secret CLAUDE_CODE_OAUTH_TOKEN (Abo, `claude setup-token`) oder ANTHROPIC_API_KEY (API)
 #   • Secret/Token mit read:packages für die @crypticalcode/api-contract devDependency
 #   • Push/PR laufen im EIGENEN Repo -> der eingebaute github.token reicht
 #     (permissions: contents:write + pull-requests:write unten). Keine App nötig.
@@ -65,7 +65,7 @@ jobs:
       - name: Claude – reale Route implementieren
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: '--allowedTools "Read,Edit,Bash(npx bsg-contract*),Bash(curl*),Bash(node *)" --max-turns 30'
           prompt: |
             Die Contract-Version wurde auf ${{ env.CONTRACT_VERSION }} gehoben.

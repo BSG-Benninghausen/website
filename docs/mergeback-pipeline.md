@@ -101,7 +101,10 @@ Teil des Tooling-PRs:
    hinterlegen — **im Fork** (für `mergeback-propose`) **und im Hauptrepo** (für `contract-notify`).
    Das Backend-Repo selbst braucht die App **nicht** (same-repo `github.token`). *Fallback:* fine-
    grained PAT pro Repo (`MERGEBACK_TOKEN`).
-2. **Secrets/Variablen setzen:** `ANTHROPIC_API_KEY` (alle Repos mit Agent-Schritten);
+2. **Secrets/Variablen setzen:** Agent-Auth in allen Repos mit Agent-Schritten — entweder
+   `CLAUDE_CODE_OAUTH_TOKEN` (Claude Pro/Max-Abo; lokal via `claude setup-token` erzeugen) **oder**
+   `ANTHROPIC_API_KEY` (pay-as-you-go). Die Workflows nutzen `claude_code_oauth_token`; für den
+   API-Key-Weg den Input in den drei Agent-Schritten auf `anthropic_api_key` umstellen.
    `vars.MERGEBACK_ENABLED=true` (Hauptrepo + opt-in je Fork); im Backend-Repo zusätzlich ein
    `read:packages`-Token für die `@crypticalcode/api-contract`-devDependency.
 3. **Branch Protection auf `main`:** Required Checks = `Contract-Tests (Mock & Real)`,
