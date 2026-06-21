@@ -15,7 +15,7 @@
   }
 
   let caps = { users: false, members: false, finance: false, team: false };
-  let roles = [], users = [], members = [];
+  let roles = [], users = [], members = [], vorstandPosts = [];
   let view = "nested";
   let lastTrigger = null;
 
@@ -38,6 +38,7 @@
         members = md.items || [];
         caps.finance = !!md.canViewFinance;
       }
+      if (caps.team) await reloadPositions();
     } catch (e) { $("#vw-loading").textContent = "Daten konnten nicht geladen werden."; return; }
 
     view = (caps.users && caps.members) ? "nested" : (caps.users ? "users" : "members");
@@ -49,6 +50,8 @@
   }
 
   async function reloadUsers() { try { users = ((await (await fetch("/api/users")).json()).items) || []; } catch (e) {} }
+  async function reloadPositions() { try { vorstandPosts = (((await (await fetch("/api/positions")).json()).items) || []).filter((p) => p.group === "vorstand"); } catch (e) {} }
+  const userPost = (u) => vorstandPosts.find((p) => p.userId === u.id);
 
   /* ---------------- Helfer ---------------- */
   const roleLabel = (id) => { const r = roles.find((x) => x.id === id); return r ? r.label : id; };
@@ -63,6 +66,8 @@
   const membersOf = (u) => members.filter((m) => m.ownerId === u.id);
   function roleBadges(u) {
     let b = (u.roles || []).filter((r) => r !== "member").map((r) => '<span class="badge badge--intern">' + esc(roleLabel(r)) + "</span>").join("");
+    const post = userPost(u);
+    if (post) b += '<span class="badge badge--beta">' + esc(post.label) + "</span>";
     if ((u.activeMembershipCount || 0) > 0) b += '<span class="badge badge--aktiv">Mitglied</span>';
     return b || '<span class="muted-note">ohne Rolle</span>';
   }
@@ -180,7 +185,18 @@
         '<fieldset class="perm-grid">' + roleChecks + "</fieldset>" +
         (u.isSelf ? "" : '<button class="btn btn--primary btn--sm" data-save-user="' + esc(u.id) + '">Rollen speichern</button>') + "</div>" +
       (caps.members ? '<div class="drawer__section"><h4>Mitgliedschaften (' + (u.activeMembershipCount || 0) + " aktiv)</h4>" + kidList + "</div>" : "") +
+      (caps.team ? vorstandSection(u) : "") +
       '<div class="drawer__section drawer__actions">' + actions + "</div>";
+  }
+
+  function vorstandSection(u) {
+    const cur = userPost(u);
+    const opts = '<option value="">— kein Vorstandsamt —</option>' + vorstandPosts.map((p) =>
+      '<option value="' + esc(p.id) + '"' + (cur && cur.id === p.id ? " selected" : "") + ">" + esc(p.label) + "</option>").join("");
+    const note = vorstandPosts.length ? "" : '<p class="muted-note">Noch keine Vorstandsposten definiert.</p>';
+    return '<div class="drawer__section"><h4>Vorstandsamt</h4>' + note +
+      '<div class="field"><select data-vorstand-select="' + esc(u.id) + '">' + opts + "</select></div>" +
+      '<p class="muted-note">Jedes Amt hat genau eine Person. Posten werden zentral unter Admin → Vereinsämter definiert.</p></div>';
   }
 
   function memberDrawerHTML(m) {
@@ -264,6 +280,22 @@
         if (ok) { await reloadUsers(); render(); closeDrawer(); }
         return;
       }
+    });
+
+    $("#vw-drawer-body").addEventListener("change", async (e) => {
+      const sel = e.target.closest("[data-vorstand-select]");
+      if (!sel) return;
+      const uid = sel.getAttribute("data-vorstand-select");
+      const cur = vorstandPosts.find((p) => p.userId === uid);
+      const newId = sel.value;
+      if ((cur && cur.id === newId) || (!cur && !newId)) return;
+      let res;
+      if (!newId) res = await post("/api/positions/delete", { id: cur.id });        // kein Amt -> Posten freigeben
+      else res = await post("/api/positions/update", { id: newId, userId: uid });   // Amt dieser Person zuweisen (Move)
+      setStatus(res.data.message || (res.ok ? "Vorstandsamt aktualisiert." : "Fehler."), res.ok);
+      if (res.ok) await reloadPositions();
+      render();
+      openUserDrawer(uid); // Auswahl/Badges auf den tatsächlichen Stand bringen
     });
 
     $("#vw-drawer").addEventListener("click", (e) => { if (e.target.closest("[data-drawer-close]")) closeDrawer(); });
