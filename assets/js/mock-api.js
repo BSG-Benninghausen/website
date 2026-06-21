@@ -217,7 +217,9 @@
      Steuert, OB Sponsoren überhaupt erscheinen (enabled), in welchem Stil
      (displayMode), ob Premium-Stufen genutzt werden (tiersEnabled) und an welchen
      Stellen (showHome/showPage/showFooter). Der Verein entscheidet selbst – Default
-     enabled:false, also zunächst unsichtbar. Frontend liest dies über sponsors.js. */
+     enabled:false (Funktion aus). Ist sie an, sind Startseite + Footer-Logo-Leiste
+     sichtbar; die eigene Sponsoren-Seite ist per Default aus (Admin kann sie zuschalten).
+     Frontend liest dies über sponsors.js. */
   const SPONSORS_MODES = ["cards", "logos", "band"];
   const SPONSORS_CONFIG_FIELDS = [
     { key: "enabled", label: "Sponsoren anzeigen", type: "checkbox" },
@@ -229,7 +231,7 @@
     { key: "title", label: "Überschrift", type: "text" },
     { key: "subtitle", label: "Untertitel", type: "textarea" },
   ];
-  const SPONSORS_CONFIG_DEFAULTS = { enabled: false, displayMode: "cards", tiersEnabled: false, showHome: true, showPage: true, showFooter: false, title: "Unsere Sponsoren", subtitle: "" };
+  const SPONSORS_CONFIG_DEFAULTS = { enabled: false, displayMode: "cards", tiersEnabled: false, showHome: true, showPage: false, showFooter: true, title: "Unsere Sponsoren", subtitle: "" };
   const sponsorTier = (v) => (v === "premium" ? "premium" : "standard");
   const asBool = (v) => v === true || v === "true" || v === "on" || v === 1 || v === "1";
   function normSponsorsConfig(raw) {
@@ -240,8 +242,8 @@
       displayMode: mode,
       tiersEnabled: asBool(r.tiersEnabled),
       showHome: "showHome" in r ? asBool(r.showHome) : true,
-      showPage: "showPage" in r ? asBool(r.showPage) : true,
-      showFooter: asBool(r.showFooter),
+      showPage: "showPage" in r ? asBool(r.showPage) : false,
+      showFooter: "showFooter" in r ? asBool(r.showFooter) : true,
       title: norm(r.title) || SPONSORS_CONFIG_DEFAULTS.title,
       subtitle: norm(r.subtitle),
     };
