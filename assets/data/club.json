@@ -14,5 +14,6 @@
   "city": "12345 Musterstadt",
   "description": "Vereinssport für Kinder, Jugendliche und Erwachsene in Musterstadt. Komm vorbei und probier ein kostenloses Training aus.",
   "logo": "assets/img/drache.png",
-  "theme_color": "#2563eb"
+  "theme_color": "#2563eb",
+  "pass_label": "Mitgliedsausweis"
 }

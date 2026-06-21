@@ -11,6 +11,7 @@
   let currentPhoto = "";    // Data-URL des aktuellen Fotos
   let membershipItems = []; // zuletzt geladene Mitgliedschaften (für Bearbeiten)
   let weightCats = [];      // Gewichtsklassen-Kategorien (aus /api/weight-classes)
+  let passLabel = "Mitgliedsausweis";  // Label des Mitgliedsausweises (club-config: pass_label)
 
   const $ = (sel) => document.querySelector(sel);
 
@@ -76,6 +77,13 @@
     $("#greet-name").textContent = account.name.split(" ")[0];
 
     try { weightCats = (await (await fetch("/api/weight-classes")).json()).categories || []; } catch (e) { weightCats = []; }
+    // Label des Mitgliedsausweises kommt aus der Club-Config (White-Label, z. B. „Judopass").
+    try {
+      const cd = await (await fetch("/api/club")).json();
+      if (cd && cd.ok && cd.values && typeof cd.values.pass_label === "string" && cd.values.pass_label.trim()) {
+        passLabel = cd.values.pass_label.trim();
+      }
+    } catch (e) { /* Fallback "Mitgliedsausweis" */ }
 
     fillAccountForms();
     await loadMemberships();
@@ -205,7 +213,7 @@
       '<article class="judopass' + (active ? "" : " judopass--inactive") + '">' +
         '<div class="judopass__head">' +
           '<img class="judopass__logo" src="assets/img/drache-light.png" alt="">' +
-          "<span>Judopass</span>" +
+          "<span>" + BSG.escape(passLabel) + "</span>" +
           '<span class="judopass__no">' + BSG.escape(m.passNumber || "—") + "</span>" +
         "</div>" +
         '<div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>' +
@@ -228,7 +236,7 @@
               : "") +
           "</div>" +
         "</div>" +
-        (m.photo ? "" : '<p class="judopass__warn">Foto fehlt – bitte über „Bearbeiten" ergänzen (Pflicht für den Judopass).</p>') +
+        (m.photo ? "" : '<p class="judopass__warn">Foto fehlt – bitte über „Bearbeiten" ergänzen (Pflicht für den ' + BSG.escape(passLabel) + ").</p>") +
         '<div class="judopass__actions">' +
           '<button class="btn btn--outline btn--sm" data-edit="' + m.id + '">Bearbeiten</button>' +
           (active ? '<button class="btn btn--outline btn--sm" data-cancel="' + m.id + '">Kündigen</button>' : "") +
