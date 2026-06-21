@@ -22,12 +22,15 @@ assets/js/deploy-config.js              merge=ours
 # PWA-Identitaet
 manifest.webmanifest                    merge=ours
 
-# Branding-Icons an festen Pfaden (per Verein eigene Bilder, gleiche Dateinamen)
+# Branding-Bilder an festen Pfaden (per Verein eigene Grafiken, gleiche Dateinamen;
+# u. a. von geteiltem Code/Config referenziert: manifest, HTML, konto.js-Mitgliedsausweis)
 assets/img/favicon.png                  merge=ours
 assets/img/apple-touch-icon.png         merge=ours
 assets/img/icon-192.png                 merge=ours
 assets/img/icon-512.png                 merge=ours
 assets/img/icon-maskable-512.png        merge=ours
+assets/img/drache.png                   merge=ours
+assets/img/drache-light.png             merge=ours
 
 # Deploy-Infrastruktur (pro Repo eigen: Domains, Secrets, systemd, Pages)
 deploy/**                               merge=ours

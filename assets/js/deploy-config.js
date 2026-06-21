@@ -35,20 +35,6 @@
         "Die neutrale White-Label-Vorlage – dasselbe Frontend, nur mit " +
         "generischer Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
     },
-    {
-      id: "bsg",
-      name: "BSG Benninghausen e.V.",
-      sport: "Judo",
-      locality: "Benninghausen",
-      status: "live",
-      clubSeed: "club.json",
-      theme: "assets/css/theme.css",
-      accent: "#e3141b",
-      summary:
-        "Judo-Verein im Kreis Soest – der erste Referenzkunde, vollständig " +
-        "eingerichtet: Training, Termine, Team, Mitgliederbereich, Turnier-" +
-        "Anmeldungen und Auszahlungen.",
-    },
   ];
 
   /* Upstream = generisches Produkt: Default ist das neutrale Beispiel, die
