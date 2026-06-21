@@ -72,6 +72,25 @@
     el.textContent = new Date().getFullYear();
   });
 
+  /* ----- Mock-Kennzeichnung: Features ohne echtes Backend markieren ([data-mock-badge]) -----
+     Hängt ein kleines „Mock"-Badge an die Sektions-Überschrift, solange deren Route
+     nicht ans echte Backend geht. BSGApi.isLive() entscheidet je Route: im mock-Modus
+     trifft das alle, im hybrid-Modus nur die noch gemockten, im real-Modus keine. */
+  document.querySelectorAll("[data-mock-badge]").forEach((el) => {
+    const route = el.getAttribute("data-mock-badge");
+    const live = (window.BSGApi && typeof window.BSGApi.isLive === "function")
+      ? window.BSGApi.isLive(route)
+      : false; // ohne BSGApi als Mock behandeln (sicher fürs Standalone-Demo)
+    const existing = el.querySelector(":scope > .mock-badge");
+    if (live) { if (existing) existing.remove(); return; }
+    if (existing) return; // idempotent
+    const span = document.createElement("span");
+    span.className = "badge badge--mock feature-badge mock-badge";
+    span.textContent = "Mock";
+    span.title = "Simulierte Daten – diese Funktion hat (noch) keinen echten Backend-Zugriff.";
+    el.appendChild(span);
+  });
+
   /* ----- Scroll-Reveal ----- */
   const items = document.querySelectorAll(".reveal");
   if (items.length && "IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -125,7 +144,7 @@
       }
     }
     const has = (p) => s.isAdmin || (s.perms && s.perms.includes(p));
-    setHidden("[data-members-link]", !has("view_members"));
+    setHidden("[data-members-link]", !(has("view_members") || has("manage_users")));
     setHidden("[data-redaktion-link]", !(has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts") || has("manage_sponsors")));
     setHidden("[data-admin-link]", !(has("manage_roles") || has("manage_users") || has("manage_team") || has("manage_features") || has("book_features")));
   }

@@ -23,7 +23,7 @@ const club = JSON.parse(readFileSync(clubPath, "utf8"));
 
 // Cache-Bust der App-Shell: bei jedem Release erhöhen (Astro hasht im PoC noch
 // nicht). 🔜 Mit Asset-Hashing entfällt das.
-const VERSION = "astro-v6";
+const VERSION = "astro-v9";
 
 const ns = club.ns || club.id || "app";
 const themeCss = club.theme_css || "assets/css/theme.css";
@@ -58,7 +58,7 @@ const PRECACHE_URLS = [
   ".",
   "index.html", "trainingszeiten.html", "team.html", "aktuelles.html", "kalender.html",
   "anmeldung.html", "kontakt.html", "datenschutz.html", "sponsoren.html",
-  "login.html", "registrieren.html", "konto.html", "mitglieder.html", "redaktion.html", "admin.html",
+  "login.html", "registrieren.html", "konto.html", "mitglieder.html", "benutzer.html", "redaktion.html", "admin.html",
   "404.html", "offline.html",
   "manifest.webmanifest",
 
@@ -67,7 +67,7 @@ const PRECACHE_URLS = [
   "assets/js/api-config.js", "assets/js/mock-api.js", "assets/js/main.js", "assets/js/auth.js",
   "assets/js/forms.js", "assets/js/news.js", "assets/js/sponsors.js", "assets/js/trainingszeiten.js",
   "assets/js/team.js", "assets/js/kalender.js", "assets/js/konto.js", "assets/js/mitglieder.js",
-  "assets/js/redaktion.js", "assets/js/admin.js",
+  "assets/js/redaktion.js", "assets/js/admin.js", "assets/js/verwaltung.js",
 
   "assets/data/age-classes.json", "assets/data/weight-classes.json", "assets/data/events.json",
   "assets/data/membership-types.json", "assets/data/news.json", "assets/data/sponsors.json",
