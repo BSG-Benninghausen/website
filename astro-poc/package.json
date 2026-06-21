@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "sync-assets": "mkdir -p public && rm -rf public/assets && cp -r ../assets public/assets",
-    "predev": "npm run sync-assets",
-    "prebuild": "npm run sync-assets",
+    "gen-pwa": "node scripts/gen-pwa.mjs",
+    "predev": "npm run sync-assets && npm run gen-pwa",
+    "prebuild": "npm run sync-assets && npm run gen-pwa",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview"

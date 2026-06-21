@@ -17,48 +17,46 @@ Verbesserungen lassen sich als PR zurückgeben.
    git fetch upstream
    ```
 
-## 2. Vereins-Konfiguration anlegen (nur additive, dir gehörende Dateien)
+## 2. Vereins-Konfiguration anlegen (eine Datei + Theme + Seeds)
 
-1. **Club-Daten:** `assets/data/club.example.json` → `assets/data/club.<id>.json` kopieren und
-   ausfüllen (Name, Sport, Adresse, Kontakt, Instagram, Logo-Pfad, `theme_color`). Schema =
-   `CLUB_FIELDS` in `assets/js/mock-api.js`.
-2. **Theme:** `assets/css/theme.example.css` → `assets/css/theme.<id>.css` kopieren und Farben/
-   Schrift anpassen (nur Design-Tokens; `styles.css` nicht anfassen).
-3. **Registry-Eintrag:** in `assets/js/club-config.js` im `EXAMPLES`-Array einen Eintrag ergänzen:
-   ```js
-   {
-     id: "<id>", name: "<Verein> e.V.", sport: "<Sportart>", locality: "<Ort>",
-     status: "live", clubSeed: "club.<id>.json", theme: "assets/css/theme.<id>.css",
-     accent: "#rrggbb", summary: "…",
-   }
-   ```
-4. **Inhalte (optional):** eigene `news`/`events`/`site`/`trainingszeiten` über die Redaktions-UI
-   pflegen oder die Seed-JSONs in `assets/data/` ersetzen.
-5. **Branding-Assets:** Logo/Favicon/PWA-Icons in `assets/img/` ersetzen; in `club.<id>.json`
-   den `logo`-Pfad setzen.
+Das Astro-Layout (`astro-poc/src/layouts/Base.astro`) liest die **gesamte Marke zur Build-Zeit aus
+einer Datei**: `astro-poc/src/data/club.json`. Daraus werden `manifest.webmanifest` und
+`service-worker.js` erzeugt (`npm run gen-pwa`) und das Theme verlinkt. Ein anderer Verein tauscht
+also nur **club.json (+ Theme + Seeds + Bilder)** – geteilter Code bleibt unangetastet.
 
-## 3. Den eigenen Verein als Default einstellen
+1. **Club-Daten:** `astro-poc/src/data/club.example.json` → `astro-poc/src/data/club.json` kopieren
+   und ausfüllen. Felder:
+   - **Technik/Verdrahtung:** `id`, `ns` (localStorage-/Seed-Namespace + SW-Cache-Name),
+     `clubSeed` (Club-Seed-Datei in `assets/data/`), `admin_email` (Seed-Admin),
+     `theme_css` (Pfad zum Theme).
+   - **Marke/Text:** `brand_name`, `name`, `short_name`, `sport`, `brand_sub`, `tagline`,
+     `locality`, `email`, `instagram_url`/`instagram_handle`, `venue`, `street`, `city`,
+     `description`, `logo`, `theme_color`, `background_color`, `passPrefix`.
+2. **Theme:** `assets/css/theme.musterverein.css` → `assets/css/theme.<id>.css` kopieren und
+   Farben/Schrift anpassen (nur Design-Tokens; `styles.css` nicht anfassen). In `club.json`
+   `"theme_css": "assets/css/theme.<id>.css"` setzen.
+3. **Inhalte:** Seeds in `assets/data/` als `*.<ns>.json` ablegen (`club.<ns>.json`,
+   `news.<ns>.json`, `site.<ns>.json`, `trainingszeiten.<ns>.json`, `events.<ns>.json`) – oder über
+   die Redaktions-UI pflegen. Fehlt ein Namespace-Seed, greift der generische Default (`*.json`).
+4. **Branding-Assets:** Logo/Favicon/PWA-Icons in `assets/img/` ersetzen (Dateinamen beibehalten:
+   `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `favicon.png`, `apple-touch-icon.png`)
+   und den `logo`-Pfad in `club.json` setzen.
 
-Drei Wege – je weniger geteilte Zeilen du editierst, desto konfliktfreier bleiben Upstream-Pulls:
+## 3. PWA & „Default" — entfällt
 
-- **Empfohlen (konfliktfrei): Deploy-Default-Hook.** `assets/js/club-config.js` liest vor der
-  Auflösung `window.BSG_CLUB_DEFAULT` (analog `window.BSG_API` in `api-config.js`). Setze ihn per
-  Deploy-Zeit-Patch, z. B. im eigenen Deploy-Workflow (wie heute `api-config.js` gepatcht wird):
-  ```bash
-  # club-config.js so ausliefern, dass dein Verein der Default ist:
-  sed -i 's/var DEFAULT_ID = "demo";/var DEFAULT_ID = "<id>";/' assets/js/club-config.js
-  ```
-  Reihenfolge der Auflösung: `?club=` → `localStorage bsg_example` → `window.BSG_CLUB_DEFAULT`
-  → eingebautes `DEFAULT_ID`.
-- **Einfach: eine Zeile committen.** `DEFAULT_ID = "<id>"` direkt setzen (minimaler, seltener
-  Konflikt-Abdruck beim Pull, da Upstream diese Zeile selten ändert).
+Single-Tenant: **`club.json` IST die Seite.** Es gibt keinen `?club=`-Resolver und keine
+`club-config.js`-Registry mehr – die zu setzende Marke ist einfach der Inhalt von `club.json`.
+`manifest.webmanifest` und `service-worker.js` werden beim Build aus `club.json` generiert
+(`astro-poc/scripts/gen-pwa.mjs`, läuft als `prebuild`) und sind deshalb **nicht eingecheckt**.
+Cache-Bust: `VERSION` in `gen-pwa.mjs` bei jedem Release erhöhen.
 
-## 4. Optional: Admin-Adresse & Cache-Namespace
+## 4. Admin-Adresse & Cache-Namespace
 
-- **Seed-Admin-Adresse:** im Mock über `window.BSG_ADMIN_EMAIL`, im echten Backend
-  (`packages/backend/`) über die Env-Variable `ADMIN_EMAIL`. Default bleibt sonst der Upstream-Wert.
-- **Service-Worker-Cache-Namespace:** `CACHE_NS` in `service-worker.js` (Default `app`) auf einen
-  eigenen Prefix setzen, falls mehrere Deployments denselben Origin teilen.
+- **Seed-Admin-Adresse:** `admin_email` in `club.json` (der Mock liest `window.BSG_ADMIN_EMAIL`,
+  das `Base.astro` daraus setzt); im echten Backend (`packages/backend/`) über die Env-Variable
+  `ADMIN_EMAIL`.
+- **Cache-/Storage-Namespace:** `ns` in `club.json` steuert den localStorage-Namespace und die
+  Service-Worker-Cache-Namen (`<ns>-astro-…`) – falls mehrere Deployments denselben Origin teilen.
 
 ## 5. Deployen
 

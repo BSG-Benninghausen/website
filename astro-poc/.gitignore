@@ -3,3 +3,6 @@ dist/
 .astro/
 # Wird per `npm run sync-assets` aus ../assets kopiert (Single Source of Truth):
 public/assets/
+# Werden per `npm run gen-pwa` aus club.json erzeugt (nicht editieren):
+public/manifest.webmanifest
+public/service-worker.js

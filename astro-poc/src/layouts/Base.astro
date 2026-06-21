@@ -50,9 +50,11 @@ const navLinks = [
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
-  <!-- Single-Tenant: BSG_CLUB direkt setzen (mock-api.js liest es) – ersetzt club-config.js -->
-  <script is:inline set:html={`window.BSG_CLUB={id:"bsg",name:${JSON.stringify(club.name)},clubSeed:"club.bsg.json",ns:"bsg"};window.BSG_ADMIN_EMAIL="admin@bsg-benninghausen.de";`}></script>
-  <link rel="stylesheet" href="assets/css/theme.bsg.css" />
+  <!-- Single-Tenant: BSG_CLUB aus club.json setzen (mock-api.js liest es) – ersetzt
+       club-config.js. Alles Club-Spezifische (id/ns/Seed/Admin/Theme) kommt aus
+       club.json, damit ein anderer Verein nur diese eine Datei (+ Theme + Seeds) tauscht. -->
+  <script is:inline set:html={`window.BSG_CLUB={id:${JSON.stringify(club.id)},name:${JSON.stringify(club.name)},clubSeed:${JSON.stringify(club.clubSeed)},ns:${JSON.stringify(club.ns)}};window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};`}></script>
+  <link rel="stylesheet" href={club.theme_css} />
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
