@@ -1,0 +1,112 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Administration">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Administration</p>
+      <span class="eyebrow eyebrow--invert">Administration</span>
+      <h1>Rollen &amp; Berechtigungen</h1>
+      <p>Lege Rollen an, setze Berechtigungen, weise sie Benutzern zu und pflege die Vereinsämter der Team-Seite.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p id="admin-loading" class="center" style="color:var(--text-soft)">Lade Administration …</p>
+
+      <div id="admin" hidden>
+        <div id="admin-status" class="form-status" role="status" aria-live="polite"></div>
+
+        <div id="roles-section" class="card" style="margin-bottom:24px" hidden>
+          <span class="eyebrow">Rollen</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 4px">Rollen &amp; Berechtigungen</h2>
+          <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Rollen geben ausschließlich Rechte. Die öffentliche Team-Anzeige steuerst du unten unter <em>Vereinsämter</em>. Die Administrator-Rolle besitzt immer alle Berechtigungen; System-Rollen können nicht gelöscht werden.</p>
+          <div id="roles-list" class="adm-roles"></div>
+          <form id="role-create-form" class="sub-form" novalidate>
+            <h3 style="font-size:1.1rem;margin-bottom:14px">Neue Rolle anlegen</h3>
+            <div class="field">
+              <label for="role-label">Rollenname <span class="req">*</span></label>
+              <input id="role-label" name="label" type="text" placeholder="z. B. Trainer, Kassenwart">
+              <p class="field__error"></p>
+            </div>
+            <fieldset id="role-perms" class="perm-grid"></fieldset>
+            <button type="submit" class="btn btn--primary">
+              <span class="spinner" aria-hidden="true"></span>
+              Rolle anlegen
+            </button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div id="users-section" class="card" hidden>
+          <span class="eyebrow">Benutzer</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 4px">Benutzer &amp; Rollenzuweisung</h2>
+          <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Weise jedem Benutzer eine oder mehrere Rollen zu.</p>
+          <div id="users-list" class="adm-users"></div>
+        </div>
+
+        <div id="team-section" class="card" style="margin-top:24px" hidden>
+          <span class="eyebrow">Vereinsämter</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 4px">Team-Seite / Vereinsämter</h2>
+          <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Wer hier ein Amt erhält, erscheint öffentlich auf der Team-Seite (mit Foto aus dem Konto). Ämter geben keine Rechte.</p>
+          <div id="positions-list" class="adm-roles"></div>
+          <form id="position-create-form" class="sub-form" novalidate>
+            <h3 style="font-size:1.1rem;margin-bottom:14px">Neues Amt anlegen</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="pos-user">Mitglied <span class="req">*</span></label>
+                <select id="pos-user" name="userId"></select>
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="pos-group">Bereich</label>
+                <select id="pos-group" name="group">
+                  <option value="vorstand">Vorstand</option>
+                  <option value="trainer">Trainerteam</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="pos-label">Funktionsname <span class="req">*</span></label>
+                <input id="pos-label" name="label" type="text" placeholder="z. B. 1. Vorsitzender, Trainer">
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="pos-order">Reihenfolge</label>
+                <input id="pos-order" name="order" type="number" value="0" step="1">
+              </div>
+            </div>
+            <button type="submit" class="btn btn--primary">
+              <span class="spinner" aria-hidden="true"></span>
+              Amt anlegen
+            </button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div id="features-section" class="card" style="margin-top:24px" hidden>
+          <span class="eyebrow">Features</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 4px">Features &amp; Beta-Freigabe</h2>
+          <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Steuere, wer ein Feature sieht: <em>Aus</em> (nur Vorschau für Verwalter), <em>nur bestimmte Rollen</em> (interne Beta) oder <em>öffentlich</em> (alle). Beta-Features tragen im Frontend einen Badge.</p>
+          <div id="features-list" class="adm-roles"></div>
+        </div>
+
+        <div id="booking-section" class="card" style="margin-top:24px" hidden>
+          <span class="eyebrow">Buchung</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 4px">Funktionen buchen</h2>
+          <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Lege fest, welche Funktionen für diesen Verein gebucht (freigeschaltet) sind. Nicht gebuchte Funktionen sind für alle Mitglieder unsichtbar – unabhängig von der Beta-Freigabe. Im echten Betrieb richtet sich der Umfang nach dem gebuchten Tarif.</p>
+          <div id="booking-list" class="adm-roles"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/sponsors.js"></script>
+    <script is:inline src="/assets/js/admin.js"></script>
+  </Fragment>
+</Base>

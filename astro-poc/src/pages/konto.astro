@@ -1,0 +1,239 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Mein Konto">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Mein Konto</p>
+      <span class="eyebrow eyebrow--invert">Dashboard</span>
+      <h1>Hallo <span id="greet-name">…</span></h1>
+      <p>Verwalte hier deine Vereinsmitgliedschaften, deine Anschrift und deine Kontoverbindung.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p id="dash-loading" class="center" style="color:var(--text-soft)">Lade dein Konto …</p>
+
+      <div id="dash" hidden>
+        <div class="card dash-account">
+          <div>
+            <span class="eyebrow">Angemeldet als</span>
+            <h2 id="acc-name" style="font-size:1.3rem;margin-top:6px">…</h2>
+            <p id="acc-email" style="color:var(--text-soft)"></p>
+          </div>
+          <button id="logout" class="btn btn--outline">Abmelden</button>
+        </div>
+
+        <div class="notice notice--mock" style="margin:22px 0 30px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <p><b>Demo:</b> Alle Daten (Konto, Mitgliedschaften, Adresse, IBAN) werden von einem simulierten Server ausschließlich lokal in deinem Browser gespeichert – es findet keine echte Übertragung oder Zahlung statt.</p>
+        </div>
+
+        <div class="card" style="margin-bottom:24px">
+          <span class="eyebrow">Profil</span>
+          <h2 style="font-size:1.2rem;margin:6px 0 6px">Profilfoto</h2>
+          <p style="color:var(--text-soft);font-size:.9rem;margin-bottom:16px">Optional. Dein Foto wird angezeigt, wenn du im <b>Vorstand</b> oder <b>Trainerteam</b> geführt wirst.</p>
+          <div class="photo-input">
+            <img id="u-photo-preview" class="photo-input__preview" alt="" hidden>
+            <div class="photo-input__ph" id="u-photo-ph" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="3.2"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+            </div>
+            <div>
+              <input id="u-photo" name="photo" type="file" accept="image/*">
+              <p style="color:var(--text-soft);font-size:.82rem;margin-top:6px">JPG/PNG, wird automatisch verkleinert.</p>
+              <button type="button" id="u-photo-remove" class="btn btn--outline btn--sm" style="margin-top:8px" hidden>Foto entfernen</button>
+            </div>
+          </div>
+          <div id="u-photo-status" class="form-status" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:24px">
+          <div class="dash-head">
+            <div>
+              <span class="eyebrow">Mitgliedschaften</span>
+              <h2 style="font-size:1.3rem;margin-top:6px">Meine Mitgliedschaften</h2>
+            </div>
+            <button id="add-membership-btn" class="btn btn--primary">+ Mitglied anmelden</button>
+          </div>
+          <div id="memberships" class="memberships" style="margin-top:18px"></div>
+          <div id="billing-summary" class="billing-summary" hidden></div>
+          <p id="membership-hint" class="muted-note" style="margin-top:16px" hidden></p>
+
+          <form id="membership-form" class="sub-form" hidden novalidate>
+            <input type="hidden" name="id">
+            <h3 id="membership-form-title" style="font-size:1.1rem;margin-bottom:4px">Mitglied anmelden</h3>
+            <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Der Beitrag ergibt sich <b>automatisch aus dem Alter</b>. Ein <b>Foto ist Pflicht</b> (für den Mitgliedsausweis).</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="m-first">Vorname <span class="req">*</span></label>
+                <input id="m-first" name="firstName" type="text" required>
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="m-last">Nachname <span class="req">*</span></label>
+                <input id="m-last" name="lastName" type="text" required>
+                <p class="field__error"></p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="m-birth">Geburtsdatum <span class="req">*</span></label>
+                <input id="m-birth" name="birthdate" type="date" required>
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="m-gender">Geschlecht</label>
+                <select id="m-gender" name="gender">
+                  <option value="">Keine Angabe</option>
+                  <option>männlich</option>
+                  <option>weiblich</option>
+                  <option>divers</option>
+                </select>
+              </div>
+            </div>
+            <div class="field" data-photo-field>
+              <label for="m-photo">Foto <span class="req">*</span> <span style="font-weight:400;color:var(--text-soft)">(Pflicht für den Mitgliedsausweis)</span></label>
+              <div class="photo-input">
+                <img id="m-photo-preview" class="photo-input__preview" alt="" hidden>
+                <div class="photo-input__ph" id="m-photo-ph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="3.2"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+                </div>
+                <div>
+                  <input id="m-photo" name="photo" type="file" accept="image/*" capture="user">
+                  <p style="color:var(--text-soft);font-size:.82rem;margin-top:6px">JPG/PNG, wird automatisch verkleinert. Hochformat (Passbild) empfohlen.</p>
+                </div>
+              </div>
+              <p class="field__error"></p>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="m-belt">Gürtel / Graduierung</label>
+                <select id="m-belt" name="belt">
+                  <option value="">Keine Angabe</option>
+                  <option>Weißgurt</option>
+                  <option>Weiß-Gelb</option>
+                  <option>Gelbgurt</option>
+                  <option>Gelb-Orange</option>
+                  <option>Orangegurt</option>
+                  <option>Orange-Grün</option>
+                  <option>Grüngurt</option>
+                  <option>Blaugurt</option>
+                  <option>Braungurt</option>
+                  <option>1. Dan (Schwarzgurt)</option>
+                  <option>2. Dan</option>
+                  <option>3. Dan</option>
+                  <option>4. Dan</option>
+                  <option>5. Dan</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="m-weightclass">Gewichtsklasse</label>
+                <select id="m-weightclass" name="weightClass">
+                  <option value="">Keine Angabe</option>
+                </select>
+                <p class="muted-note" style="margin-top:6px">Es werden nur die Gewichtsklassen passend zu Geburtsjahr und Geschlecht angezeigt.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="m-nat">Nationalität</label>
+              <select id="m-nat" name="nationality">
+                <option value="">Keine Angabe</option>
+                <option>Deutsch</option>
+                <option>Österreichisch</option>
+                <option>Schweizerisch</option>
+                <option>Französisch</option>
+                <option>Italienisch</option>
+                <option>Spanisch</option>
+                <option>Niederländisch</option>
+                <option>Polnisch</option>
+                <option>Türkisch</option>
+                <option>Russisch</option>
+                <option>Ukrainisch</option>
+                <option>Britisch</option>
+                <option>US-amerikanisch</option>
+                <option>Brasilianisch</option>
+                <option>Japanisch</option>
+                <option>Andere</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
+              <button type="submit" class="btn btn--primary">
+                <span class="spinner" aria-hidden="true"></span>
+                Mitglied anmelden
+              </button>
+              <button type="button" id="membership-cancel" class="btn btn--outline">Abbrechen</button>
+            </div>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div id="tournaments-section" class="card" style="margin-bottom:24px" hidden>
+          <span class="eyebrow">Wettkampf</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 6px">Turniere &amp; Meisterschaften</h2>
+          <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Melde passende Mitglieder deines Haushalts zu kommenden Turnieren an. Es werden nur Mitglieder angezeigt, deren Wettkampf-Altersklasse zum Turnier passt.</p>
+          <div id="tournaments-list"></div>
+        </div>
+
+        <div class="grid grid--2">
+          <form id="address-form" class="card" novalidate>
+            <span class="eyebrow">Haushalt</span>
+            <h2 style="font-size:1.2rem;margin:6px 0 18px">Anschrift</h2>
+            <p style="color:var(--text-soft);font-size:.86rem;margin-bottom:16px">Gilt für alle Mitglieder deines Haushalts.</p>
+            <div class="field">
+              <label for="a-street">Straße &amp; Hausnummer</label>
+              <input id="a-street" name="street" type="text" autocomplete="street-address">
+              <p class="field__error"></p>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="a-zip">PLZ</label>
+                <input id="a-zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code">
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="a-city">Ort</label>
+                <input id="a-city" name="city" type="text" autocomplete="address-level2">
+                <p class="field__error"></p>
+              </div>
+            </div>
+            <button type="submit" class="btn btn--primary">Adresse speichern</button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+
+          <form id="bank-form" class="card" novalidate>
+            <span class="eyebrow">Haushalt</span>
+            <h2 style="font-size:1.2rem;margin:6px 0 18px">Bankverbindung</h2>
+            <div class="field">
+              <label for="b-iban">IBAN</label>
+              <input id="b-iban" name="iban" type="text" autocomplete="off" placeholder="DE00 0000 0000 0000 0000 00">
+              <p class="field__error"></p>
+            </div>
+            <p style="color:var(--text-soft);font-size:.86rem;margin-bottom:16px">Wird für den Einzug des Mitgliedsbeitrags verwendet (in dieser Demo nur lokal gespeichert).</p>
+            <button type="submit" class="btn btn--primary">Kontoverbindung speichern</button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-feature="beitragsrechner" data-feature-module="beitragsrechner" hidden>
+    <div class="wrap">
+      <div class="card" style="max-width:480px">
+        <span class="eyebrow">Mitgliedschaft</span>
+        <h2 style="font-size:1.3rem;margin:6px 0 4px">Beitragsrechner <span data-feature-badge></span></h2>
+        <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:14px">Schätze den monatlichen Beitrag nach Alter.</p>
+        <div data-calc-mount></div>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/sponsors.js"></script>
+    <script is:inline src="/assets/js/konto.js"></script>
+    <script type="module" is:inline src="/assets/js/features/loader.js"></script>
+  </Fragment>
+</Base>

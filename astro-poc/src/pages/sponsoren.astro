@@ -1,0 +1,31 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Sponsoren">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Sponsoren</p>
+      <span class="eyebrow eyebrow--invert">Gemeinsam stark</span>
+      <h1 data-sponsors-title>Unsere Sponsoren</h1>
+      <p data-sponsors-subtitle>Diese Partner unterstützen das Judo in Benninghausen. Vielen Dank für euer Engagement!</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div data-sponsors>
+        <p class="muted-note">Aktuell sind keine Sponsoren hinterlegt.</p>
+      </div>
+      <div class="notice notice--mock" style="margin-top:30px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p>Du möchtest unseren Verein als Sponsor unterstützen? <a href="kontakt.html">Sprich uns gerne an.</a></p>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>

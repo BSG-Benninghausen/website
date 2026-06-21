@@ -1,0 +1,61 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Login">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Login</p>
+      <span class="eyebrow eyebrow--invert">Anmelden</span>
+      <h1>Login</h1>
+      <p>Melde dich ohne Passwort an – wir schicken dir einen kurzen Anmeldecode per E-Mail.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap" style="max-width:520px">
+      <div class="form-card reveal">
+        <form id="req-form" novalidate>
+          <h2 style="font-size:1.4rem;margin-bottom:6px">Anmelden</h2>
+          <p style="color:var(--text-soft);margin-bottom:22px;font-size:.95rem">Gib deine E-Mail-Adresse ein, um einen Anmeldecode zu erhalten.</p>
+          <div class="field">
+            <label for="email">E-Mail <span class="req">*</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+            <p class="field__error"></p>
+          </div>
+          <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+            <span class="spinner" aria-hidden="true"></span>
+            Anmeldecode anfordern
+          </button>
+          <div class="form-status" role="status" aria-live="polite"></div>
+        </form>
+
+        <form id="verify-form" novalidate hidden>
+          <div id="step-2">
+            <hr style="border:none;border-top:1px solid var(--line);margin:26px 0">
+            <p style="color:var(--text-soft);margin-bottom:18px;font-size:.95rem">Wir haben einen Code an <b id="email-echo"></b> geschickt. Gib ihn hier ein.</p>
+            <div class="field">
+              <label for="code">Anmeldecode <span class="req">*</span></label>
+              <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" class="code-input" maxlength="6" required>
+              <p class="field__error"></p>
+            </div>
+            <p id="dev-code-note" class="dev-note"></p>
+            <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+              <span class="spinner" aria-hidden="true"></span>
+              Einloggen
+            </button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </div>
+        </form>
+
+        <p style="margin-top:18px;font-size:.92rem;color:var(--text-soft)">Noch kein Konto? <a href="registrieren.html">Jetzt registrieren</a></p>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/auth.js"></script>
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>
