@@ -5,12 +5,12 @@ export const name = "Inhalte & Rechte (News/Termine/Mitglieder-Lesezugriff)";
 export default async function run(api, ck) {
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("16 Berechtigungen", d.items.length === 16 && d.items.some((p) => p.key === "manage_news") && d.items.some((p) => p.key === "manage_team") && d.items.some((p) => p.key === "view_finance") && d.items.some((p) => p.key === "manage_club"));
+  ck("17 Berechtigungen", d.items.length === 17 && d.items.some((p) => p.key === "manage_news") && d.items.some((p) => p.key === "manage_team") && d.items.some((p) => p.key === "view_finance") && d.items.some((p) => p.key === "manage_club") && d.items.some((p) => p.key === "manage_fees") && d.items.some((p) => p.key === "manage_shop"));
   [s, d] = await api.getJ("/api/roles");
   const ex = ["vorstand", "pressewart", "kassenwart", "trainer"];
   ck("Beispiel-Rollen geseedet", ex.every((id) => d.items.some((r) => r.id === id)));
   ck("pressewart hat manage_news", d.items.find((r) => r.id === "pressewart").permissions.includes("manage_news"));
-  ck("kassenwart hat view_members+view_finance+manage_payouts", d.items.find((r) => r.id === "kassenwart").permissions.slice().sort().join() === "manage_payouts,view_finance,view_members");
+  ck("kassenwart hat view_members+view_finance+manage_payouts+manage_fees", d.items.find((r) => r.id === "kassenwart").permissions.slice().sort().join() === "manage_fees,manage_payouts,view_finance,view_members");
 
   [s, d] = await api.getJ("/api/news");
   const seedCount = d.items.length;
