@@ -1,10 +1,15 @@
 name: Tests
 
 # Führt bei jedem PR und bei Pushes auf main die Test-Suiten aus:
-#   • contract – die zero-dependency Contract-Tests im Mock- UND Real-Modus
-#                (Real: echtes Backend aus packages/backend/ über HTTP), plus Syntax-
-#                Check, Versions-Guard und Seed-Vendoring-Check (Cache-Busting/Seeds konsistent).
-#   • e2e      – Browser-End-to-End-Tests (Playwright, isoliert in tests/e2e/).
+#   • contract – die zero-dependency Contract-Tests im MOCK-Modus, plus Syntax-Check,
+#                Versions-Guard und Seed-Vendoring-Check (Cache-Busting/Seeds konsistent).
+#                Seit dem Phase-3-Split (docs/backend-repo-separation-plan.md) liegt das echte
+#                Backend in einem eigenen Repo; der Real-Modus-/Persistenz-Test läuft dort in
+#                dessen eigener CI. Hier bleibt der Mock-Vertrag der Gegenstand.
+#   • e2e      – Browser-End-to-End-Tests (Playwright, isoliert in tests/e2e/). Bootet das
+#                gepinnte Backend (backend-ref.json) same-origin gegen den Frontend-Root.
+#                Da das Backend-Repo privat ist, ist der Job auf das Secret BACKEND_REPO_TOKEN
+#                angewiesen; ohne Token wird er (grün) übersprungen.
 # Der Deploy nach GitHub Pages bleibt davon getrennt (siehe deploy-pages.yml).
 on:
   pull_request:
@@ -18,7 +23,7 @@ permissions:
 
 jobs:
   contract:
-    name: Contract-Tests (Mock & Real)
+    name: Contract-Tests (Mock) & Guards
     runs-on: ubuntu-latest
     steps:
       - name: Repository auschecken
@@ -32,7 +37,7 @@ jobs:
       - name: Syntax-Check (node --check)
         run: |
           set -e
-          for f in assets/js/*.js packages/backend/*.mjs packages/api-contract/*.mjs tools/*.mjs tests/e2e/*.mjs service-worker.js; do
+          for f in assets/js/*.js packages/api-contract/*.mjs tools/*.mjs tests/e2e/*.mjs service-worker.js; do
             echo "check $f"
             node --check "$f"
           done
@@ -52,52 +57,67 @@ jobs:
       - name: Mock-Modus
         run: node packages/api-contract/run.mjs
 
-      - name: Persistenz (JSON-Snapshot, Restart-Roundtrip)
-        run: node packages/backend/persistence.mjs
-
-      - name: Backend starten (Dev-Modus)
-        run: |
-          node packages/backend/index.mjs > /tmp/bsg-server.log 2>&1 &
-          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
-          for i in $(seq 1 60); do
-            curl -sf http://localhost:3000/api/age-classes >/dev/null && exit 0
-            sleep 0.5
-          done
-          echo "Backend wurde nicht rechtzeitig erreichbar:"; cat /tmp/bsg-server.log; exit 1
-
-      - name: Real-Modus (echtes Backend über HTTP)
-        run: TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
-
-      - name: Backend stoppen
-        if: always()
-        run: kill "${SERVER_PID}" 2>/dev/null || true
-
   e2e:
     name: Browser-E2E (Playwright)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: tests/e2e
     steps:
-      - name: Repository auschecken
+      - name: Backend-Zugriff prüfen (privates Backend-Repo -> Token nötig)
+        id: gate
+        env:
+          TOKEN: ${{ secrets.BACKEND_REPO_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::BACKEND_REPO_TOKEN nicht gesetzt – Browser-E2E übersprungen. Das echte Backend liegt seit dem Phase-3-Split im privaten Repo (siehe backend-ref.json); ein Read-Token aktiviert die E2E."
+          fi
+
+      - name: Frontend auschecken
+        if: steps.gate.outputs.ok == 'true'
         uses: actions/checkout@v4
 
+      - name: Gepinnten Backend-Ref lesen (backend-ref.json)
+        if: steps.gate.outputs.ok == 'true'
+        id: ref
+        run: |
+          echo "repo=$(node -p "require('./backend-ref.json').repo")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(node -p "require('./backend-ref.json').ref")" >> "$GITHUB_OUTPUT"
+
+      - name: Backend auschecken (gepinnt)
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.ref.outputs.repo }}
+          ref: ${{ steps.ref.outputs.sha }}
+          token: ${{ secrets.BACKEND_REPO_TOKEN }}
+          path: backend
+
       - name: Node einrichten
+        if: steps.gate.outputs.ok == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Abhängigkeiten installieren
+      - name: E2E-Abhängigkeiten installieren
+        if: steps.gate.outputs.ok == 'true'
+        working-directory: tests/e2e
         run: npm ci
 
       - name: Playwright-Browser installieren
+        if: steps.gate.outputs.ok == 'true'
+        working-directory: tests/e2e
         run: npx playwright install --with-deps chromium
 
-      - name: E2E-Tests (Playwright startet packages/backend/ selbst)
+      - name: E2E-Tests (Playwright bootet das gepinnte Backend, BSG_STATIC_DIR=Frontend-Root)
+        if: steps.gate.outputs.ok == 'true'
+        working-directory: tests/e2e
+        env:
+          BSG_BACKEND_DIR: ${{ github.workspace }}/backend
         run: npx playwright test
 
       - name: Playwright-Report hochladen
-        if: ${{ !cancelled() }}
+        if: ${{ steps.gate.outputs.ok == 'true' && !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

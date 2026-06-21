@@ -14,14 +14,16 @@ node packages/api-contract/run.mjs
 node packages/api-contract/run.mjs tournaments payouts
 
 # Gegen ein laufendes echtes Backend:
-node packages/backend/index.mjs &                                # siehe packages/backend/README.md
+node index.mjs &   # im Backend-Repo (crypticalcode/vereins-baukasten-backend), Port 3000
 TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
 ```
 
 Exit-Code `0` = alles grün, sonst `1` (CI-tauglich).
 
-Ein referenz-implementiertes echtes Backend liegt unter [`packages/backend/`](../backend/README.md) – es
-erfüllt genau diesen Vertrag und macht die Suite im `TEST_BASE`-Modus grün.
+Ein referenz-implementiertes echtes Backend liegt im eigenen Repo
+[`crypticalcode/vereins-baukasten-backend`](https://github.com/crypticalcode/vereins-baukasten-backend)
+(seit dem Phase-3-Split; im Monorepo gepinnt über `backend-ref.json`) – es erfüllt genau diesen
+Vertrag und macht die Suite im `TEST_BASE`-Modus grün.
 
 Dieses Package ist die **Single Source of Truth des Vertrags**: die Suiten **und** die kanonischen
 Seed-Daten (`data/`). Mock-Quelle und Seed-Verzeichnis sind per `BSG_MOCK_SRC` / `BSG_DATA_DIR`
@@ -130,8 +132,8 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
 ## Browser-E2E (Playwright)
 
 Ergänzend zu den API-Contract-Tests fahren **Browser-End-to-End-Tests** einen echten Browser
-gegen das Backend aus [`packages/backend/`](../backend/README.md) – Static **und** `/api/*` über denselben
-Origin. Sie liegen isoliert in [`tests/e2e/`](../../tests/e2e/) mit **eigener** `package.json`: nur dort
+gegen das Backend aus dem eigenen Repo (gepinnt über `backend-ref.json`) – Static **und** `/api/*`
+über denselben Origin. Sie liegen isoliert in [`tests/e2e/`](../../tests/e2e/) mit **eigener** `package.json`: nur dort
 gibt es Dev-Abhängigkeiten (`@playwright/test`), Repo-Root und ausgelieferte Website bleiben
 abhängigkeitsfrei.
 

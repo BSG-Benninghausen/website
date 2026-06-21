@@ -4,6 +4,13 @@ Werkzeug für **Phase 3** von [`docs/backend-repo-separation-plan.md`](../../doc
 erzeugt aus dem Monorepo den vollständigen, **install-freien** Inhalt des eigenständigen Repos
 [`crypticalcode/vereins-baukasten-backend`](https://github.com/crypticalcode/vereins-baukasten-backend).
 
+> **Status: Migration durchgeführt.** Das Backend wurde ausgegliedert und der Monorepo-Cleanup
+> (Phase 3 §4) ist erfolgt — `packages/backend/` existiert hier **nicht mehr**, das Backend ist über
+> [`backend-ref.json`](../../backend-ref.json) gepinnt. `extract.sh` ist damit das **historische
+> Migrations-/Re-Sync-Werkzeug**: ein erneuter Lauf setzt voraus, dass `packages/backend/` (z. B. per
+> `git checkout <ref-vor-cleanup> -- packages/backend`) wieder vorliegt. Künftige Vertragsänderungen
+> laufen über das Contract-Package (Phase 3b), nicht über erneutes Extrahieren.
+
 ```bash
 tools/backend-split/extract.sh --no-history --out <ziel> [--force] [--no-verify]
 ```

@@ -34,11 +34,13 @@ node --check assets/js/<file>.js
 # Contract tests (run from repo root) — exits non-zero on failure
 node packages/api-contract/run.mjs                     # mock mode (default)
 node packages/api-contract/run.mjs tournaments payouts # filter by filename substring
-TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # against a real backend
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # against a real backend (the vereins-baukasten-backend repo, booted on :3000)
 
 # Browser-E2E (Playwright) — isolated devDeps under tests/e2e/ (site stays zero-dep)
+# The real backend lives in its own repo (pinned in backend-ref.json). Check it out and point
+# BSG_BACKEND_DIR at it; Playwright boots it serving the frontend same-origin (BSG_DEV=1, real mode).
 cd tests/e2e && npm install && npx playwright install chromium   # one-time (Linux: add --with-deps for system libs, as CI does)
-npx playwright test                      # Playwright boots packages/backend/ itself, runs Chromium
+BSG_BACKEND_DIR=../path/to/vereins-baukasten-backend npx playwright test
 ```
 
 **Contract-test suite (`packages/api-contract/`).** Same assertions validate either the in-process
@@ -61,8 +63,10 @@ satisfy.
 - **Don't push to `main`.** Work on a feature branch off `origin/main`, open a PR **ready for review
   (not draft)**, then squash-merge to `main`. GitHub Pages auto-deploys from `main` via `.github/workflows/deploy-pages.yml`
   (only `main` and the legacy `claude/bsg-website-redesign-dio9co` branch trigger deploys). Tests run
-  in CI via `.github/workflows/ci.yml` on every PR and push to `main` (contract job: mock + real;
-  e2e job: Playwright/Chromium) — keep both green.
+  in CI via `.github/workflows/ci.yml` on every PR and push to `main` (contract job: mock + guards;
+  e2e job: Playwright/Chromium against the pinned backend, gated on the `BACKEND_REPO_TOKEN` secret)
+  — keep them green. Real-mode contract + persistence tests now run in the **backend repo's own CI**
+  (`crypticalcode/vereins-baukasten-backend`, pinned via `backend-ref.json`).
 - **Editing `assets/data/*.json` only affects fresh `localStorage`.** These files are *seeds*:
   `ensureX()` copies them into the store on first read, after which the store is the source of
   truth (editable via the Redaktion UI). To re-seed in a browser, clear the site's localStorage.
@@ -133,7 +137,7 @@ This single file is the backend. Key pieces:
 A capability layer hides features that have no real backend (so production never suggests
 non-existent functionality) and marks new ones as Beta. **Two orthogonal axes** per feature:
 a **maturity** `status` (`beta`/`stable`) declared in the `FEATURES` catalog (mirrored in
-`mock-api.js` and `packages/backend/api.mjs` — the catalog itself is the contract; a real backend that
+`mock-api.js` and the backend repo's `api.mjs` — the catalog itself is the contract; a real backend that
 hasn't caught up simply omits the key, hiding it in `real` mode; current entries: `payouts`/`tournaments`
 stable, `beitragsrechner` beta), and a **release scope**
 (`"public"|"off"|{roles:[…]}`) set at runtime by a superadmin (`manage_features`) and stored in
