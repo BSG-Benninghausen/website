@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <script src="assets/js/club-config.js?v=41"></script>
-  <link rel="stylesheet" href="assets/css/styles.css?v=41">
+  <script src="assets/js/club-config.js?v=42"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=42">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -90,7 +90,7 @@
           <!-- Rollen -->
           <div id="roles-section" class="card" style="margin-bottom:24px" hidden>
             <span class="eyebrow">Rollen</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 4px">Rollen &amp; Berechtigungen</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px" data-mock-badge="GET /api/roles">Rollen &amp; Berechtigungen</h2>
             <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Rollen geben ausschließlich Rechte. Die öffentliche Team-Anzeige steuerst du unten unter <em>Vereinsämter</em>. Die Administrator-Rolle besitzt immer alle Berechtigungen; System-Rollen können nicht gelöscht werden.</p>
             <div id="roles-list" class="adm-roles"></div>
 
@@ -113,7 +113,7 @@
           <!-- Benutzer -->
           <div id="users-section" class="card" hidden>
             <span class="eyebrow">Benutzer</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 4px">Benutzer &amp; Rollenzuweisung</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px" data-mock-badge="GET /api/users">Benutzer &amp; Rollenzuweisung</h2>
             <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Weise jedem Benutzer eine oder mehrere Rollen zu.</p>
             <div id="users-list" class="adm-users"></div>
           </div>
@@ -121,7 +121,7 @@
           <!-- Vereinsämter / Team-Seite -->
           <div id="team-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Vereinsämter</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 4px">Team-Seite / Vereinsämter</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px" data-mock-badge="GET /api/positions">Team-Seite / Vereinsämter</h2>
             <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Wer hier ein Amt erhält, erscheint öffentlich auf der Team-Seite (mit Foto aus dem Konto). Ämter geben keine Rechte.</p>
             <div id="positions-list" class="adm-roles"></div>
 
@@ -163,7 +163,7 @@
           <!-- Features & Beta-Freigabe -->
           <div id="features-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Features</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 4px">Features &amp; Beta-Freigabe</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px" data-mock-badge="GET /api/features">Features &amp; Beta-Freigabe</h2>
             <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Steuere, wer ein Feature sieht: <em>Aus</em> (nur Vorschau für Verwalter), <em>nur bestimmte Rollen</em> (interne Beta) oder <em>öffentlich</em> (alle). Beta-Features tragen im Frontend einen Badge.</p>
             <div id="features-list" class="adm-roles"></div>
           </div>
@@ -171,7 +171,7 @@
           <!-- Funktionen buchen (Provisionierung) -->
           <div id="booking-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Buchung</span>
-            <h2 style="font-size:1.3rem;margin:6px 0 4px">Funktionen buchen</h2>
+            <h2 style="font-size:1.3rem;margin:6px 0 4px" data-mock-badge="GET /api/bookings">Funktionen buchen</h2>
             <p style="color:var(--text-soft);font-size:.94rem;margin-bottom:18px">Lege fest, welche Funktionen für diesen Verein gebucht (freigeschaltet) sind. Nicht gebuchte Funktionen sind für alle Mitglieder unsichtbar – unabhängig von der Beta-Freigabe. Im echten Betrieb richtet sich der Umfang nach dem gebuchten Tarif.</p>
             <div id="booking-list" class="adm-roles"></div>
           </div>
@@ -228,10 +228,10 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=41" defer></script>
-  <script src="assets/js/mock-api.js?v=41" defer></script>
-  <script src="assets/js/main.js?v=41" defer></script>
-  <script src="assets/js/sponsors.js?v=41" defer></script>
-  <script src="assets/js/admin.js?v=41" defer></script>
+  <script src="assets/js/api-config.js?v=42" defer></script>
+  <script src="assets/js/mock-api.js?v=42" defer></script>
+  <script src="assets/js/main.js?v=42" defer></script>
+  <script src="assets/js/sponsors.js?v=42" defer></script>
+  <script src="assets/js/admin.js?v=42" defer></script>
 </body>
 </html>

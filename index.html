@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <script src="assets/js/club-config.js?v=41"></script>
-  <link rel="stylesheet" href="assets/css/styles.css?v=41">
+  <script src="assets/js/club-config.js?v=42"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=42">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -193,7 +193,7 @@
         <div class="section-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;max-width:100%">
           <div style="max-width:560px">
             <span class="eyebrow">Aktuelles</span>
-            <h2>Neues aus dem Verein</h2>
+            <h2 data-mock-badge="GET /api/news">Neues aus dem Verein</h2>
             <p>Turniererfolge, Prüfungen und Vereinsleben – das tut sich im Verein.</p>
           </div>
           <a href="aktuelles.html" class="btn btn--outline">Alle Beiträge</a>
@@ -209,7 +209,7 @@
       <div class="wrap">
         <div class="section-head center" style="max-width:600px;margin:0 auto 42px">
           <span class="eyebrow" style="justify-content:center">Partner</span>
-          <h2 data-sponsors-title>Unsere Sponsoren</h2>
+          <h2 data-sponsors-title data-mock-badge="GET /api/sponsors">Unsere Sponsoren</h2>
           <p data-sponsors-subtitle hidden></p>
         </div>
         <div data-sponsors data-sponsors-home></div>
@@ -281,11 +281,11 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=41" defer></script>
-  <script src="assets/js/mock-api.js?v=41" defer></script>
-  <script src="assets/js/main.js?v=41" defer></script>
-  <script src="assets/js/sponsors.js?v=41" defer></script>
-  <script src="assets/js/news.js?v=41" defer></script>
-  <script src="assets/js/trainingszeiten.js?v=41" defer></script>
+  <script src="assets/js/api-config.js?v=42" defer></script>
+  <script src="assets/js/mock-api.js?v=42" defer></script>
+  <script src="assets/js/main.js?v=42" defer></script>
+  <script src="assets/js/sponsors.js?v=42" defer></script>
+  <script src="assets/js/news.js?v=42" defer></script>
+  <script src="assets/js/trainingszeiten.js?v=42" defer></script>
 </body>
 </html>
