@@ -4,8 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A **purely static** website for the Judo club *BSG Benninghausen e.V.* (German-language UI).
-No build step, no framework, no dependencies — just HTML, CSS, and vanilla JS. All "server"
+A **purely static**, white-label **Vereins-Baukasten** (generic German club website; German-language
+UI). The repo is the generic product; an individual club runs its own site as a **fork** with its
+branding as configuration (see `docs/fork-onboarding.md`). Reference customer *BSG Benninghausen*
+runs as its own fork (`bsg-benninghausen.github.io/website`); the default example here is the neutral
+*Musterverein*. No build step, no framework, no dependencies — just HTML, CSS, and vanilla JS. All "server"
 behavior is **mocked in the browser**: `assets/js/mock-api.js` patches `window.fetch`, answers
 every `/api/*` request locally, and persists data in `localStorage`. The dispatcher is also a
 **mock⇄real router**: `assets/js/api-config.js` (loaded before `mock-api.js`) sets

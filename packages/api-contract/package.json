@@ -1,0 +1,39 @@
+{
+  "name": "@crypticalcode/api-contract",
+  "version": "1.0.0",
+  "description": "Single Source of Truth des /api/*-Vertrags der BSG-Website: Contract-Test-Suite, Harness und kanonische Seed-Daten. Dieselben Suiten messen den In-Process-Mock (assets/js/mock-api.js) UND das echte Backend (packages/backend) – so bleiben beide Implementierungen in Sync. Ohne npm-Abhängigkeiten (nur node:-Builtins).",
+  "type": "module",
+  "main": "./harness.mjs",
+  "exports": {
+    ".": "./harness.mjs",
+    "./harness": "./harness.mjs",
+    "./run": "./run.mjs",
+    "./data/*": "./data/*",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "bsg-contract": "run.mjs"
+  },
+  "files": [
+    "run.mjs",
+    "harness.mjs",
+    "*.test.mjs",
+    "data/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crypticalcode/vereins-baukasten.git",
+    "directory": "packages/api-contract"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {}
+}

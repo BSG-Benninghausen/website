@@ -1,0 +1,8 @@
+{
+  "ageBands": [
+    { "id": "kind", "label": "Kind", "minAge": 0, "maxAge": 11, "feeMonthly": 7 },
+    { "id": "jugend", "label": "Jugend", "minAge": 12, "maxAge": 17, "feeMonthly": 9 },
+    { "id": "erwachsene", "label": "Erwachsene", "minAge": 18, "maxAge": 199, "feeMonthly": 12 }
+  ],
+  "familyFlatMonthly": 25
+}

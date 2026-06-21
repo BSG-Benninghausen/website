@@ -1,0 +1,286 @@
+{
+  "_generatedBy": "tools/gen-demo-data.mjs",
+  "_hinweis": "Beispiel-Stammdaten (Demo-Seed). Wird von mock-api.js (ensureDemo) und server/api.mjs (init) eingespielt. Nicht von Hand editieren – über den Generator neu erzeugen.",
+  "passCounter": 5,
+  "users": [
+    {
+      "id": "usr-demo-vorsitz1",
+      "name": "Markus Vorbeck",
+      "email": "markus.vorbeck@example.com",
+      "address": {
+        "street": "Im Brühl 12",
+        "zip": "59556",
+        "city": "Lippstadt"
+      },
+      "iban": "DE89 3704 0044 0532 0130 00",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy2kDURBE0UrGkTl8g9HGeyWghUGDqt/0gU5A9zCDpPfJ1/ePKU4kAADAAABgAAAwAAAYAAAMAAAGAAADAIABAMAAAGAAvJzfxx+Az7X+/wDodD9OIjdOfwRDNtSfbJAN6SczZFX9gQbZVn+aQRbWH2WQnfXnGGRt/SEG2Vx/ggGA3QD1+nWDqN81ALAVYFT9ogEAAADULxoAAAAAAAAAAAAA2F6/YuAJ8AoCAAAAAAAAAABYA2A9AAAAAHZF2JYCwM64zTvj7A0FAMD5ACdkADgj5pQkAOeEnZQH4K4It6UAcF/QXSRO+VDujAOwewAAAGAAAPAtCIAfYvf/Pw6A9QBrwtaE7QuyN3T33lDHVGsAw9NXGKJ+1yDSdxmiftcg6ncNon7XIOp3DaJ+1yDqdw2iftcg6ncNon7XAMAtABbWv8og6ncNABwOsLz++wYATgaQ/n0DAMcCiH6JAQAAANQvGgAAAED9ogEAAAAAAAAAAAAAACcASHytgSfAKwgAAAAAAJQAnjNp75bOLmUXAAAAAElFTkSuQmCC",
+      "roles": [
+        "vorsitz1"
+      ],
+      "createdAt": "2023-01-15T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-vorsitz2",
+      "name": "Sabine Klein",
+      "email": "sabine.klein@example.com",
+      "address": null,
+      "iban": null,
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy40CQRBEwbQG/w3ChtVe9o4DHJAYbVZPhVQO8EIzAvqT5+NhihMJAAAwAAAYAAAMAAAGAAADAIABAMAAAGAAADAAABgAb+fn9w/A/7X+fAB0uh8nkRunP4IhG+pPNsiG9JMZsqr+QINsqz/NIAvrjzLIzvpzDLK2/hCDbK4/wQDAboB6/bpB1O8aANgKMKp+0QAAAADqFw0AAAAAAAAAAAAAbK9fMfAEeAUBAAAAAAAAAACsAbAeAAAAALsibEsBYGfc5p1x9oYCAOB8gBMyAJwRc0oSgHPCTsoDcFeE21IAuC/oLhKnfCh3xgHYPQAAADAAAPgWBMAPsfv/HwfAeoA1YWvC9gXZG7p7b6hjqjWA4ekrDFG/axDpuwxRv2sQ9bsGUb9rEPW7BlG/axD1uwZRv2sQ9bsGUb9rAOAWAAvrX2UQ9bsGAA4HWF7/ewMAJwNI/70BgGMBRL/EAAAAAOoXDQAAAKB+0QAAAAAAAAAAAAAAgBMAJL7WwBPgFQQAAAAAAEoALxnH0mVM0Ax0AAAAAElFTkSuQmCC",
+      "roles": [
+        "vorsitz2"
+      ],
+      "createdAt": "2023-01-15T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-kasse",
+      "name": "Thomas Kassner",
+      "email": "thomas.kassner@example.com",
+      "address": {
+        "street": "Schulstraße 7",
+        "zip": "59556",
+        "city": "Lippstadt"
+      },
+      "iban": "DE89 3704 0044 0532 0130 00",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0YrCQTlN52ex8Z4EWFhiRPWbPlInwD2aEfA++fr5NsWJBAAAGAAADAAABgAAAwCAAQDAAABgAAAwAAAYAAAMgJfz+/gD8LnW/x8Ane7HSeTG6Y9gyIb6kw2yIf1khqyqP9Ag2+pPM8jC+qMMsrP+HIOsrT/EIJvrTzAAsBugXr9uEPW7BgC2AoyqXzQAAACA+kUDAAAAAAAAAAAAANvrVww8AV5BAAAAAAAAAAAAawCsBwAAAMCuCNtSANgZt3lnnL2hAAA4H+CEDABnxJySBOCcsJPyANwV4bYUAO4LuovEKR/KnXEAdg8AAAAMAAC+BQHwQ+z+/8cBsB5gTdiasH1B9obu3hvqmGoNYHj6CkPU7xpE+i5D1O8aRP2uQdTvGkT9rkHU7xpE/a5B1O8aRP2uQdTvGgC4BcDC+lcZRP2uAYDDAZbXf98AwMkA0r9vAOBYANEvMQAAAID6RQMAAACoXzQAAAAAAAAAAAAAAOAEAImvNfAEeAUBAAAAAIASwBOP79h4NBHnqAAAAABJRU5ErkJggg==",
+      "roles": [
+        "kassenwart"
+      ],
+      "createdAt": "2023-01-15T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-schrift",
+      "name": "Petra Lauf",
+      "email": "petra.lauf@example.com",
+      "address": null,
+      "iban": null,
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0Vo4eofmYCw23pMAC0uMqH7TR+oEuEczAt4nP99fpjiRAAAAAwCAAQDAAABgAAAwAAAYAAAMAAAGAAADAIAB8HJ+H38APtf6/wOg0/04idw4/REM2VB/skE2pJ/MkFX1BxpkW/1pBllYf5RBdtafY5C19YcYZHP9CQYAdgPU69cNon7XAMBWgFH1iwYAAABQv2gAAAAAAAAAAAAAYHv9ioEnwCsIAAAAAAAAAABgDYD1AAAAANgVYVsKADvjNu+MszcUAADnA5yQAeCMmFOSAJwTdlIegLsi3JYCwH1Bd5E45UO5Mw7A7gEAAIABAMC3IAB+iN3//zgA1gOsCVsTti/I3tDde0MdU60BDE9fYYj6XYNI32WI+l2DqN81iPpdg6jfNYj6XYOo3zWI+l2DqN81iPpdAwC3AFhY/yqDqN81AHA4wPL67xsAOBlA+vcNABwLIPolBgAAAFC/aAAAAAD1iwYAAAAAAAAAAAAAAJwAIPG1Bp4AryAAAAAAAFACeAJZ1ZMtj9K0jwAAAABJRU5ErkJggg==",
+      "roles": [
+        "member"
+      ],
+      "createdAt": "2023-02-01T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-trainer1",
+      "name": "Jens Wurf",
+      "email": "jens.wurf@example.com",
+      "address": null,
+      "iban": null,
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy20CURBE0YrLsTllW2y8JwEWlhhR/aaP1Alwj2YEvE++v35McSIBAAAGAAADAIABAMAAAGAAADAAABgAAAwAAAYAAAPg5fw+/gB8rvX/B0Cn+3ESuXH6Ixiyof5kg2xIP5khq+oPNMi2+tMMsrD+KIPsrD/HIGvrDzHI5voTDADsBqjXrxtE/a4BgK0Ao+oXDQAAAKB+0QAAAAAAAAAAAADA9voVA0+AVxAAAAAAAAAAAMAaAOsBAAAAsCvCthQAdsZt3hlnbygAAM4HOCEDwBkxpyQBOCfspDwAd0W4LQWA+4LuInHKh3JnHIDdAwAAAAMAgG9BAPwQu///cQCsB1gTtiZsX5C9obv3hjqmWgMYnr7CEPW7BpG+yxD1uwZRv2sQ9bsGUb9rEPW7BlG/axD1uwZRv2sQ9bsGAG4BsLD+VQZRv2sA4HCA5fXfNwBwMoD07xsAOBZA9EsMAAAAoH7RAAAAAOoXDQAAAAAAAAAAAAAAOAFA4msNPAFeQQAAAAAAoATwBJiPsF4nDUfeAAAAAElFTkSuQmCC",
+      "roles": [
+        "trainer"
+      ],
+      "createdAt": "2023-03-10T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-trainer2",
+      "name": "Lena Halt",
+      "email": "lena.halt@example.com",
+      "address": null,
+      "iban": null,
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0UrAeTsAx2mx8Z4EWFhiRPWbPlInwD2aEfA++fr5NsWJBAAAGAAADAAABgAAAwCAAQDAAABgAAAwAAAYAAAMgJfz+/gD8LnW/x8Ane7HSeTG6Y9gyIb6kw2yIf1khqyqP9Ag2+pPM8jC+qMMsrP+HIOsrT/EIJvrTzAAsBugXr9uEPW7BgC2AoyqXzQAAACA+kUDAAAAAAAAAAAAANvrVww8AV5BAAAAAAAAAAAAawCsBwAAAMCuCNtSANgZt3lnnL2hAAA4H+CEDABnxJySBOCcsJPyANwV4bYUAO4LuovEKR/KnXEAdg8AAAAMAAC+BQHwQ+z+/8cBsB5gTdiasH1B9obu3hvqmGoNYHj6CkPU7xpE+i5D1O8aRP2uQdTvGkT9rkHU7xpE/a5B1O8aRP2uQdTvGgC4BcDC+lcZRP2uAYDDAZbXf98AwMkA0r9vAOBYANEvMQAAAID6RQMAAACoXzQAAAAAAAAAAAAAAOAEAImvNfAEeAUBAAAAAIASwBPUavu8S5+8GQAAAABJRU5ErkJggg==",
+      "roles": [
+        "trainer"
+      ],
+      "createdAt": "2023-03-10T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-cotrainer",
+      "name": "Mike Boden",
+      "email": "mike.boden@example.com",
+      "address": null,
+      "iban": null,
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy2kDURBE0UrGkTl8g9HGeyWghUGDqt/0gU5A9zCDpPfJ1/ePKU4kAADAAABgAAAwAAAYAAAMAAAGAAADAIABAMAAAGAAvJzfxx+Az7X+/wDodD9OIjdOfwRDNtSfbJAN6SczZFX9gQbZVn+aQRbWH2WQnfXnGGRt/SEG2Vx/ggGA3QD1+nWDqN81ALAVYFT9ogEAAADULxoAAAAAAAAAAAAA2F6/YuAJ8AoCAAAAAAAAAABYA2A9AAAAAHZF2JYCwM64zTvj7A0FAMD5ACdkADgj5pQkAOeEnZQH4K4It6UAcF/QXSRO+VDujAOwewAAAGAAAPAtCIAfYvf/Pw6A9QBrwtaE7QuyN3T33lDHVGsAw9NXGKJ+1yDSdxmiftcg6ncNon7XIOp3DaJ+1yDqdw2iftcg6ncNon7XAMAtABbWv8og6ncNABwOsLz++wYATgaQ/n0DAMcCiH6JAQAAANQvGgAAAED9ogEAAAAAAAAAAAAAACcASHytgSfAKwgAAAAAAJQAnjNp75bOLmUXAAAAAElFTkSuQmCC",
+      "roles": [
+        "member"
+      ],
+      "createdAt": "2023-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-presse",
+      "name": "Carla Feder",
+      "email": "carla.feder@example.com",
+      "address": null,
+      "iban": null,
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy40CQRBEwbQG/w3ChtVe9o4DHJAYbVZPhVQO8EIzAvqT5+NhihMJAAAwAAAYAAAMAAAGAAADAIABAMAAAGAAADAAABgAb+fn9w/A/7X+fAB0uh8nkRunP4IhG+pPNsiG9JMZsqr+QINsqz/NIAvrjzLIzvpzDLK2/hCDbK4/wQDAboB6/bpB1O8aANgKMKp+0QAAAADqFw0AAAAAAAAAAAAAbK9fMfAEeAUBAAAAAAAAAACsAbAeAAAAALsibEsBYGfc5p1x9oYCAOB8gBMyAJwRc0oSgHPCTsoDcFeE21IAuC/oLhKnfCh3xgHYPQAAADAAAPgWBMAPsfv/HwfAeoA1YWvC9gXZG7p7b6hjqjWA4ekrDFG/axDpuwxRv2sQ9bsGUb9rEPW7BlG/axD1uwZRv2sQ9bsGUb9rAOAWAAvrX2UQ9bsGAA4HWF7/ewMAJwNI/70BgGMBRL/EAAAAAOoXDQAAAKB+0QAAAAAAAAAAAAAAgBMAJL7WwBPgFQQAAAAAAEoALxnH0mVM0Ax0AAAAAElFTkSuQmCC",
+      "roles": [
+        "pressewart"
+      ],
+      "createdAt": "2023-05-20T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-haus1",
+      "name": "Anja Sonnenberg",
+      "email": "anja.sonnenberg@example.com",
+      "address": {
+        "street": "Im Brühl 12",
+        "zip": "59556",
+        "city": "Lippstadt"
+      },
+      "iban": "DE89 3704 0044 0532 0130 00",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0YrCQTlN52ex8Z4EWFhiRPWbPlInwD2aEfA++fr5NsWJBAAAGAAADAAABgAAAwCAAQDAAABgAAAwAAAYAAAMgJfz+/gD8LnW/x8Ane7HSeTG6Y9gyIb6kw2yIf1khqyqP9Ag2+pPM8jC+qMMsrP+HIOsrT/EIJvrTzAAsBugXr9uEPW7BgC2AoyqXzQAAACA+kUDAAAAAAAAAAAAANvrVww8AV5BAAAAAAAAAAAAawCsBwAAAMCuCNtSANgZt3lnnL2hAAA4H+CEDABnxJySBOCcsJPyANwV4bYUAO4LuovEKR/KnXEAdg8AAAAMAAC+BQHwQ+z+/8cBsB5gTdiasH1B9obu3hvqmGoNYHj6CkPU7xpE+i5D1O8aRP2uQdTvGkT9rkHU7xpE/a5B1O8aRP2uQdTvGgC4BcDC+lcZRP2uAYDDAZbXf98AwMkA0r9vAOBYANEvMQAAAID6RQMAAACoXzQAAAAAAAAAAAAAAOAEAImvNfAEeAUBAAAAAIASwBOP79h4NBHnqAAAAABJRU5ErkJggg==",
+      "roles": [
+        "member"
+      ],
+      "createdAt": "2024-08-01T08:00:00.000Z"
+    },
+    {
+      "id": "usr-demo-haus2",
+      "name": "Bernd Falk",
+      "email": "bernd.falk@example.com",
+      "address": {
+        "street": "Am Sportplatz 3",
+        "zip": "59556",
+        "city": "Lippstadt"
+      },
+      "iban": "DE89 3704 0044 0532 0130 00",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0Vo4eofmYCw23pMAC0uMqH7TR+oEuEczAt4nP99fpjiRAAAAAwCAAQDAAABgAAAwAAAYAAAMAAAGAAADAIAB8HJ+H38APtf6/wOg0/04idw4/REM2VB/skE2pJ/MkFX1BxpkW/1pBllYf5RBdtafY5C19YcYZHP9CQYAdgPU69cNon7XAMBWgFH1iwYAAABQv2gAAAAAAAAAAAAAYHv9ioEnwCsIAAAAAAAAAABgDYD1AAAAANgVYVsKADvjNu+MszcUAADnA5yQAeCMmFOSAJwTdlIegLsi3JYCwH1Bd5E45UO5Mw7A7gEAAIABAMC3IAB+iN3//zgA1gOsCVsTti/I3tDde0MdU60BDE9fYYj6XYNI32WI+l2DqN81iPpdg6jfNYj6XYOo3zWI+l2DqN81iPpdAwC3AFhY/yqDqN81AHA4wPL67xsAOBlA+vcNABwLIPolBgAAAFC/aAAAAAD1iwYAAAAAAAAAAAAAAJwAIPG1Bp4AryAAAAAAAFACeAJZ1ZMtj9K0jwAAAABJRU5ErkJggg==",
+      "roles": [
+        "member"
+      ],
+      "createdAt": "2024-08-15T08:00:00.000Z"
+    }
+  ],
+  "positions": [
+    {
+      "id": "pos-demo-1",
+      "userId": "usr-demo-vorsitz1",
+      "group": "vorstand",
+      "label": "1. Vorsitzender",
+      "order": 10
+    },
+    {
+      "id": "pos-demo-2",
+      "userId": "usr-demo-vorsitz2",
+      "group": "vorstand",
+      "label": "2. Vorsitzende",
+      "order": 20
+    },
+    {
+      "id": "pos-demo-3",
+      "userId": "usr-demo-kasse",
+      "group": "vorstand",
+      "label": "Kassenwart",
+      "order": 30
+    },
+    {
+      "id": "pos-demo-4",
+      "userId": "usr-demo-schrift",
+      "group": "vorstand",
+      "label": "Schriftführerin",
+      "order": 40
+    },
+    {
+      "id": "pos-demo-5",
+      "userId": "usr-demo-trainer1",
+      "group": "trainer",
+      "label": "Cheftrainer",
+      "order": 10
+    },
+    {
+      "id": "pos-demo-6",
+      "userId": "usr-demo-trainer2",
+      "group": "trainer",
+      "label": "Trainerin Kindergruppe",
+      "order": 20
+    },
+    {
+      "id": "pos-demo-7",
+      "userId": "usr-demo-cotrainer",
+      "group": "trainer",
+      "label": "Co-Trainer",
+      "order": 30
+    }
+  ],
+  "memberships": [
+    {
+      "id": "mem-demo-1",
+      "userId": "usr-demo-haus1",
+      "firstName": "Anja",
+      "lastName": "Sonnenberg",
+      "birthdate": "1986-03-14",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0Vo4eofmYCw23pMAC0uMqH7TR+oEuEczAt4nP99fpjiRAAAAAwCAAQDAAABgAAAwAAAYAAAMAAAGAAADAIAB8HJ+H38APtf6/wOg0/04idw4/REM2VB/skE2pJ/MkFX1BxpkW/1pBllYf5RBdtafY5C19YcYZHP9CQYAdgPU69cNon7XAMBWgFH1iwYAAABQv2gAAAAAAAAAAAAAYHv9ioEnwCsIAAAAAAAAAABgDYD1AAAAANgVYVsKADvjNu+MszcUAADnA5yQAeCMmFOSAJwTdlIegLsi3JYCwH1Bd5E45UO5Mw7A7gEAAIABAMC3IAB+iN3//zgA1gOsCVsTti/I3tDde0MdU60BDE9fYYj6XYNI32WI+l2DqN81iPpdg6jfNYj6XYOo3zWI+l2DqN81iPpdAwC3AFhY/yqDqN81AHA4wPL67xsAOBlA+vcNABwLIPolBgAAAFC/aAAAAAD1iwYAAAAAAAAAAAAAAJwAIPG1Bp4AryAAAAAAAFACeAJZ1ZMtj9K0jwAAAABJRU5ErkJggg==",
+      "weightClass": "-63 kg",
+      "belt": "Braungurt",
+      "gender": "weiblich",
+      "nationality": "Deutsch",
+      "ageCategory": "erwachsene",
+      "categoryLabel": "Erwachsene",
+      "individualFee": 12,
+      "passNumber": "BSG-0001",
+      "status": "aktiv",
+      "startedAt": "2024-08-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-demo-2",
+      "userId": "usr-demo-haus1",
+      "firstName": "Leon",
+      "lastName": "Sonnenberg",
+      "birthdate": "2016-07-02",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy20CURBE0YrLsTllW2y8JwEWlhhR/aaP1Alwj2YEvE++v35McSIBAAAGAAADAIABAMAAAGAAADAAABgAAAwAAAYAAAPg5fw+/gB8rvX/B0Cn+3ESuXH6Ixiyof5kg2xIP5khq+oPNMi2+tMMsrD+KIPsrD/HIGvrDzHI5voTDADsBqjXrxtE/a4BgK0Ao+oXDQAAAKB+0QAAAAAAAAAAAADA9voVA0+AVxAAAAAAAAAAAMAaAOsBAAAAsCvCthQAdsZt3hlnbygAAM4HOCEDwBkxpyQBOCfspDwAd0W4LQWA+4LuInHKh3JnHIDdAwAAAAMAgG9BAPwQu///cQCsB1gTtiZsX5C9obv3hjqmWgMYnr7CEPW7BpG+yxD1uwZRv2sQ9bsGUb9rEPW7BlG/axD1uwZRv2sQ9bsGAG4BsLD+VQZRv2sA4HCA5fXfNwBwMoD07xsAOBZA9EsMAAAAoH7RAAAAAOoXDQAAAAAAAAAAAAAAOAFA4msNPAFeQQAAAAAAoATwBJiPsF4nDUfeAAAAAElFTkSuQmCC",
+      "weightClass": "-34 kg",
+      "belt": "Gelbgurt",
+      "gender": "männlich",
+      "nationality": "Deutsch",
+      "ageCategory": "kind",
+      "categoryLabel": "Kind",
+      "individualFee": 7,
+      "passNumber": "BSG-0002",
+      "status": "aktiv",
+      "startedAt": "2024-08-01T08:00:00.000Z"
+    },
+    {
+      "id": "mem-demo-3",
+      "userId": "usr-demo-haus2",
+      "firstName": "Bernd",
+      "lastName": "Falk",
+      "birthdate": "1979-11-23",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABkElEQVR42u3cy20CURBE0UrAeTsAx2mx8Z4EWFhiRPWbPlInwD2aEfA++fr5NsWJBAAAGAAADAAABgAAAwCAAQDAAABgAAAwAAAYAAAMgJfz+/gD8LnW/x8Ane7HSeTG6Y9gyIb6kw2yIf1khqyqP9Ag2+pPM8jC+qMMsrP+HIOsrT/EIJvrTzAAsBugXr9uEPW7BgC2AoyqXzQAAACA+kUDAAAAAAAAAAAAANvrVww8AV5BAAAAAAAAAAAAawCsBwAAAMCuCNtSANgZt3lnnL2hAAA4H+CEDABnxJySBOCcsJPyANwV4bYUAO4LuovEKR/KnXEAdg8AAAAMAAC+BQHwQ+z+/8cBsB5gTdiasH1B9obu3hvqmGoNYHj6CkPU7xpE+i5D1O8aRP2uQdTvGkT9rkHU7xpE/a5B1O8aRP2uQdTvGgC4BcDC+lcZRP2uAYDDAZbXf98AwMkA0r9vAOBYANEvMQAAAID6RQMAAACoXzQAAAAAAAAAAAAAAOAEAImvNfAEeAUBAAAAAIASwBPUavu8S5+8GQAAAABJRU5ErkJggg==",
+      "weightClass": "-81 kg",
+      "belt": "1. Dan (Schwarzgurt)",
+      "gender": "männlich",
+      "nationality": "Deutsch",
+      "ageCategory": "erwachsene",
+      "categoryLabel": "Erwachsene",
+      "individualFee": 12,
+      "passNumber": "BSG-0003",
+      "status": "aktiv",
+      "startedAt": "2024-08-15T08:00:00.000Z"
+    },
+    {
+      "id": "mem-demo-4",
+      "userId": "usr-demo-haus2",
+      "firstName": "Mia",
+      "lastName": "Falk",
+      "birthdate": "2012-05-09",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy2kDURBE0UrGkTl8g9HGeyWghUGDqt/0gU5A9zCDpPfJ1/ePKU4kAADAAABgAAAwAAAYAAAMAAAGAAADAIABAMAAAGAAvJzfxx+Az7X+/wDodD9OIjdOfwRDNtSfbJAN6SczZFX9gQbZVn+aQRbWH2WQnfXnGGRt/SEG2Vx/ggGA3QD1+nWDqN81ALAVYFT9ogEAAADULxoAAAAAAAAAAAAA2F6/YuAJ8AoCAAAAAAAAAABYA2A9AAAAAHZF2JYCwM64zTvj7A0FAMD5ACdkADgj5pQkAOeEnZQH4K4It6UAcF/QXSRO+VDujAOwewAAAGAAAPAtCIAfYvf/Pw6A9QBrwtaE7QuyN3T33lDHVGsAw9NXGKJ+1yDSdxmiftcg6ncNon7XIOp3DaJ+1yDqdw2iftcg6ncNon7XAMAtABbWv8og6ncNABwOsLz++wYATgaQ/n0DAMcCiH6JAQAAANQvGgAAAED9ogEAAAAAAAAAAAAAACcASHytgSfAKwgAAAAAAJQAnjNp75bOLmUXAAAAAElFTkSuQmCC",
+      "weightClass": "-48 kg",
+      "belt": "Orangegurt",
+      "gender": "weiblich",
+      "nationality": "Deutsch",
+      "ageCategory": "jugend",
+      "categoryLabel": "Jugend",
+      "individualFee": 9,
+      "passNumber": "BSG-0004",
+      "status": "aktiv",
+      "startedAt": "2024-08-15T08:00:00.000Z"
+    },
+    {
+      "id": "mem-demo-5",
+      "userId": "usr-demo-haus2",
+      "firstName": "Noah",
+      "lastName": "Falk",
+      "birthdate": "2018-09-30",
+      "photo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABj0lEQVR42u3cy40CQRBEwbQG/w3ChtVe9o4DHJAYbVZPhVQO8EIzAvqT5+NhihMJAAAwAAAYAAAMAAAGAAADAIABAMAAAGAAADAAABgAb+fn9w/A/7X+fAB0uh8nkRunP4IhG+pPNsiG9JMZsqr+QINsqz/NIAvrjzLIzvpzDLK2/hCDbK4/wQDAboB6/bpB1O8aANgKMKp+0QAAAADqFw0AAAAAAAAAAAAAbK9fMfAEeAUBAAAAAAAAAACsAbAeAAAAALsibEsBYGfc5p1x9oYCAOB8gBMyAJwRc0oSgHPCTsoDcFeE21IAuC/oLhKnfCh3xgHYPQAAADAAAPgWBMAPsfv/HwfAeoA1YWvC9gXZG7p7b6hjqjWA4ekrDFG/axDpuwxRv2sQ9bsGUb9rEPW7BlG/axD1uwZRv2sQ9bsGUb9rAOAWAAvrX2UQ9bsGAA4HWF7/ewMAJwNI/70BgGMBRL/EAAAAAOoXDQAAAKB+0QAAAAAAAAAAAAAAgBMAJL7WwBPgFQQAAAAAAEoALxnH0mVM0Ax0AAAAAElFTkSuQmCC",
+      "weightClass": "-27 kg",
+      "belt": "Weiß-Gelb",
+      "gender": "männlich",
+      "nationality": "Deutsch",
+      "ageCategory": "kind",
+      "categoryLabel": "Kind",
+      "individualFee": 7,
+      "passNumber": "BSG-0005",
+      "status": "aktiv",
+      "startedAt": "2025-01-10T08:00:00.000Z"
+    }
+  ]
+}

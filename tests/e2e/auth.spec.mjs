@@ -6,7 +6,7 @@
    ===================================================================== */
 import { test, expect } from "./fixtures.mjs";
 
-const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+const ADMIN_EMAIL = "admin@example.com";
 
 test("Login als Seed-Admin: Code-Flow und rechtebasierte Navigation", async ({ page }) => {
   await page.goto("/login.html");

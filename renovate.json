@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "description": "Bump-PRs für den Vertrag (greift erst nach dem Repo-Split, Phase 3 – im Monorepo trackt der Workspace die Version automatisch).",
+      "matchPackageNames": ["@crypticalcode/api-contract"],
+      "groupName": "api-contract"
+    }
+  ]
+}

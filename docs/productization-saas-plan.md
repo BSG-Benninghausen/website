@@ -29,7 +29,7 @@ Die tragende Mechanik existiert bereits: Der **Mock⇄Real-Router** (`assets/js/
 Branding ist nicht mehr im Markup hartcodiert, sondern **Laufzeit-Konfiguration**:
 
 - **`GET/POST /api/club`** + Seed `assets/data/club.json` (Schema `CLUB_FIELDS`, gespiegelt in
-  `assets/js/mock-api.js` und `server/api.mjs`). Felder: `brand_name`, `name`, `short_name`, `sport`,
+  `assets/js/mock-api.js` und `packages/backend/api.mjs`). Felder: `brand_name`, `name`, `short_name`, `sport`,
   `brand_sub`, `locality`, `email`, `instagram_url/_handle`, `venue`, `street`, `city`,
   `description`, `logo`. Schreiben erfordert das neue Recht **`manage_club`**.
 - **`[data-club="key"]`** im DOM (Anwendung in `main.js`, analog zum bestehenden `[data-site]`):
@@ -45,7 +45,7 @@ Branding ist nicht mehr im Markup hartcodiert, sondern **Laufzeit-Konfiguration*
 **`<head>` & PWA (P2, umgesetzt):** `<title>`, `theme-color` und der App-Titel werden von `main.js`
 zur Laufzeit aus `/api/club` gesetzt (client-seitig, wirkt in Static **und** Real; pro Seite über
 `data-page-title`). Das **`manifest.webmanifest`** rendert das echte Backend pro Domain
-(`server/index.mjs` → `GET /api/manifest` aus der Club-Config); im Static-Deploy bleibt die
+(`packages/backend/index.mjs` → `GET /api/manifest` aus der Club-Config); im Static-Deploy bleibt die
 committete Default-Datei. **Noch offen:** crawler-korrekte `<title>`/Description ohne JS (Backend-
 HTML-Templating, sinnvoll erst mit Multi-Mandant, P4) und **per-Verein-Icon-/Favicon-Dateien**
 (Binär-Asset-Hosting).
@@ -87,12 +87,12 @@ bestimmt *Sichtbarkeit* (Freigabe an `public`/Rollen).
 
 ## 4. Mehrmandantenfähigkeit (Backend)
 
-**Persistenz (P4 Teil 1, umgesetzt):** Das `server/` hält den `db` jetzt optional als JSON-Snapshot
-durabel (`BSG_DATA_FILE` → `server/store.mjs`, atomares Write-through in `handle()`, fail-safe Boot,
+**Persistenz (P4 Teil 1, umgesetzt):** Das `packages/backend/` hält den `db` jetzt optional als JSON-Snapshot
+durabel (`BSG_DATA_FILE` → `packages/backend/store.mjs`, atomares Write-through in `handle()`, fail-safe Boot,
 `sessions` flüchtig). Ohne die Env-Var bleibt alles in-memory wie zuvor → Tests/CI/E2E unverändert.
 Die `db`/`dataFile`-Kapselung ist die **Naht** für echte Mandantenfähigkeit (ein `dataFile` je Mandant).
 
-Das `server/` ist weiterhin **single-tenant** (ein Store, ein Seed-Admin). Für volle SaaS-Mandanten
+Das `packages/backend/` ist weiterhin **single-tenant** (ein Store, ein Seed-Admin). Für volle SaaS-Mandanten
 fehlt noch:
 
 - **Mandanten-Auflösung** per `Host`-Header (Domain → Mandant) bzw. dediziertem Deploy je Verein.
@@ -154,7 +154,7 @@ hier wählt der Besucher das Beispiel per Query.
 | **P2 Branding pro Domain** | Dynamisches `manifest.webmanifest` (Backend, `/api/manifest`) + client-seitiges `<title>`/`theme-color`/App-Titel aus `/api/club`; Felder `tagline`/`theme_color` | **umgesetzt** (offen: Crawler-SEO-Templating, per-Verein-Icon-Dateien) |
 | **P3 Feature-Buchung mocken** | Provisioning-Store (`bsg_feature_bookings`) + Recht `book_features` + `GET /api/bookings`/`POST /api/features/book` + Admin-UI „Funktionen buchen"; `capabilities` filtert gebucht×freigegeben | **umgesetzt** (offen: Abo/Billing-Gating, P4) |
 | **P3b Produkt-Portal & Referenz-Beispiele** | Generisches `index.html`-Portal; BSG → `home.html`; `club-config.js` (Registry+Resolver, `?club=<id>`), Store-Namespace + Club-Seed pro Beispiel (§5a) | **umgesetzt** |
-| **P4 Mehrmandanten-Backend** | **Teil 1 umgesetzt:** JSON-Snapshot-Persistenz (`BSG_DATA_FILE`, `server/store.mjs`), mandantenfähig gekapselt. **Offen (Teil 2):** Host-basierte Mandantenauflösung, pro-Mandant-Stores, Onboarding, Billing | teilweise |
+| **P4 Mehrmandanten-Backend** | **Teil 1 umgesetzt:** JSON-Snapshot-Persistenz (`BSG_DATA_FILE`, `packages/backend/store.mjs`), mandantenfähig gekapselt. **Offen (Teil 2):** Host-basierte Mandantenauflösung, pro-Mandant-Stores, Onboarding, Billing | teilweise |
 | **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |
 
 > **Empfehlung:** P2/P3 als nächste, in sich abgeschlossene Schritte (rein additiv, gegen den
