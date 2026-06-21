@@ -18,7 +18,7 @@ node --check assets/js/<datei>.js
 
 # Contract-Tests (Mock + echtes Backend) – aus dem Repo-Root
 node packages/api-contract/run.mjs                                   # Mock
-TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # gegen server/
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # gegen packages/backend/
 
 # Cache-Busting-Konsistenz prüfen
 node tools/guard-versions.mjs

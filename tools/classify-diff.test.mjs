@@ -61,6 +61,15 @@ index 1..2 100644
 +    if (!id) id = DEFAULT_ID;
      var p = new URLSearchParams(location.search).get("club");
    } catch (e3) {}`,
+
+  // Workflow-Datei: .github/workflows/** ist config (Bot darf Workflows nicht pushen)
+  workflow: `diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 1..2 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -1,2 +1,2 @@
+-  node-version: 20
++  node-version: 22`,
 };
 
 test("rein generischer Diff -> propose", () => {
@@ -94,6 +103,13 @@ test("club-config.js Resolver-Änderung -> propose", () => {
   const r = classifyDiff(D.clubResolver);
   assert.equal(r.verdict, "propose");
   assert.deepEqual(r.generic_files, ["assets/js/club-config.js"]);
+});
+
+test("Workflow-Datei (.github/workflows/**) -> config (nothing); Bot pusht keine Workflows", () => {
+  const r = classifyDiff(D.workflow);
+  assert.equal(r.verdict, "nothing");
+  assert.deepEqual(r.config_files, [".github/workflows/ci.yml"]);
+  assert.equal(r.generic_files.length, 0);
 });
 
 test("verify: sauberer generischer Patch ist clean", () => {
