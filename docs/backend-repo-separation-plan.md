@@ -93,6 +93,14 @@ Heute ein PR; nach dem Split:
 
 ## 4. Phase 3 — Backend ausgliedern (inkrementell, wenn ein Treiber kommt)
 
+> **Werkzeug:** [`tools/backend-split/extract.sh`](../tools/backend-split/) automatisiert die
+> Schritte 1–2 (Inhalt) und ist re-runnbar (zugleich Sync-Mechanismus). Empfohlen ist der
+> Snapshot-Modus `--no-history` (braucht kein `git-filter-repo`); das Skript flacht
+> `packages/backend/` auf die Wurzel, vendored den Vertrag nach `contract/` und die Seeds nach
+> `data/`, schreibt die Seed-/Static-Pfade um und prüft das Ergebnis end-to-end (Contract-Suite im
+> Real-Modus). Bis ein Package-Konsum (Phase 3b) greift, wird der Vertrag **vendored** statt als
+> devDependency gezogen — so bleibt das Backend-Repo ohne Registry-Token CI-grün.
+
 **Backend zuerst**, Vertrag + Frontend bleiben vorerst im Monorepo (Contract-Split = späteres
 Phase 3b). Bis der Monorepo-Cleanup gemergt ist, ist alles reversibel. Ablauf in Kürze:
 

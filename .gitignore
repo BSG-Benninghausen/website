@@ -12,3 +12,6 @@ test-results/
 # Kein Lockfile committen: die Site bleibt zero-dep/install-frei; die Workspaces haben keine
 # externen Laufzeit-Deps (npm install verlinkt nur lokal). Bei Bedarf neu erzeugbar.
 package-lock.json
+
+# Ausgabe von tools/backend-split/extract.sh (Standalone-Backend-Tree).
+dist/
