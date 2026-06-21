@@ -371,11 +371,14 @@
 
   /* ----- Mitgliedsausweis-Felder: Foto, Passnummer, Profilfelder ----- */
   const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
-  function nextPassNumber() {
+  async function nextPassNumber() {
+    /* Club-Config sicher laden (passPrefix), bevor die Nummer vergeben wird:
+       sonst greift bei noch nicht geladenem Club der Default "MV-" statt z. B.
+       "BSG-". Im echten Backend ist db.club ab dem Seed immer präsent. */
+    const club = await ensureClub();
     const n = (getStore(KEYS.passCounter, 0) || 0) + 1;
     setStore(KEYS.passCounter, n);
     /* Prefix ist club-konfigurierbar (club-Seed: "passPrefix"); Default neutral. */
-    const club = getStore(KEYS.club, null);
     const prefix = (club && club.passPrefix) || "MV-";
     return prefix + String(n).padStart(4, "0");
   }
@@ -1356,7 +1359,7 @@
         id: genId("mem"), userId: user.id,
         ...memberFields(body, allowedWeights),
         ageCategory: band.id, categoryLabel: band.label, individualFee: band.feeMonthly,
-        passNumber: nextPassNumber(),
+        passNumber: await nextPassNumber(),
         status: "aktiv", startedAt: new Date().toISOString(),
       };
       all.push(membership); setStore(KEYS.memberships, all);
