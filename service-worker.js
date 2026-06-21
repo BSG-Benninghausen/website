@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v34";
+const VERSION = "v35";
 /* Cache-Namespace (vereinsneutral); ein Fork kann hier seinen eigenen Prefix
    setzen, damit getrennte Deployments keine kollidierenden Cache-Namen erben. */
 const CACHE_NS = "app";
@@ -48,6 +48,7 @@ const PRECACHE_URLS = [
   "assets/css/theme.example.css?v=" + VERSION.slice(1),
   "assets/css/styles.css?v=" + VERSION.slice(1),
 
+  "assets/js/deploy-config.js?v=" + VERSION.slice(1),
   "assets/js/club-config.js?v=" + VERSION.slice(1),
   "assets/js/portal.js?v=" + VERSION.slice(1),
   "assets/js/api-config.js?v=" + VERSION.slice(1),

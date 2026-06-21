@@ -12,9 +12,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/theme.example.css?v=34">
-  <link rel="stylesheet" href="assets/css/styles.css?v=34">
-  <script src="assets/js/club-config.js?v=34"></script>
+  <link rel="stylesheet" href="assets/css/theme.example.css?v=35">
+  <link rel="stylesheet" href="assets/css/styles.css?v=35">
+  <script src="assets/js/deploy-config.js?v=35"></script>
+  <script>
+    /* Wurzel-Verhalten ist Deploy-Konfiguration (deploy-config.js), nicht
+       hartkodiert: ein Verein-Fork setzt BSG_ROOT_MODE="club" und die Wurzel
+       leitet auf seine Vereins-Startseite; der generische Upstream bleibt
+       "portal" und zeigt das Produkt-Portal. So ist index.html in allen Repos
+       identisch (mergebar). Siehe docs/bidirectional-sync.md. */
+    (function () {
+      if (window.BSG_ROOT_MODE === "club") {
+        var id = (typeof window.BSG_CLUB_DEFAULT === "string" && window.BSG_CLUB_DEFAULT) || "";
+        location.replace("home.html" + (id ? "?club=" + encodeURIComponent(id) : ""));
+      }
+    })();
+  </script>
+  <script src="assets/js/club-config.js?v=35"></script>
 </head>
 <body class="portal">
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -200,7 +214,7 @@
     </div>
   </footer>
 
-  <script src="assets/js/portal.js?v=34" defer></script>
+  <script src="assets/js/portal.js?v=35" defer></script>
   <script>
     /* App-Shell auch vom Portal aus offline-fähig machen (PWA). */
     if ("serviceWorker" in navigator) {

@@ -533,25 +533,40 @@
     return res.json();
   }
 
+  /* Club-bewusstes Seeding: zuerst die verein-spezifische Seed-Datei
+     <base>.<ns>.json (additiv & repo-privat), sonst der generische <base>.json.
+     So bringt ein Verein-Fork eigene Inhalts-Seeds mit (news.<id>.json …), ohne
+     die geteilten/kanonischen Seeds zu verändern – die generisch bleiben und
+     beidseitig mergebar sind. Siehe docs/bidirectional-sync.md. */
+  async function loadClubData(base) {
+    const ns =
+      (typeof window !== "undefined" && window.BSG_CLUB && window.BSG_CLUB.ns) || "";
+    if (ns) {
+      try { return await loadData(base + "." + ns + ".json"); }
+      catch (e) { /* keine verein-spezifische Datei -> generischer Fallback */ }
+    }
+    return loadData(base + ".json");
+  }
+
   /* Dynamischer Content: beim ersten Zugriff aus JSON in den Store übernehmen */
   async function ensureNews() {
     let items = getStore(KEYS.news, null);
-    if (!items) { items = await loadData("news.json"); setStore(KEYS.news, items); }
+    if (!items) { items = await loadClubData("news"); setStore(KEYS.news, items); }
     return items;
   }
   async function ensureEvents() {
     let items = getStore(KEYS.events, null);
-    if (!items) { items = await loadData("events.json"); setStore(KEYS.events, items); }
+    if (!items) { items = await loadClubData("events"); setStore(KEYS.events, items); }
     return items;
   }
   async function ensureTraining() {
     let items = getStore(KEYS.training, null);
-    if (!items) { items = await loadData("trainingszeiten.json"); setStore(KEYS.training, items); }
+    if (!items) { items = await loadClubData("trainingszeiten"); setStore(KEYS.training, items); }
     return items;
   }
   async function ensureSite() {
     let values = getStore(KEYS.site, null);
-    if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
+    if (!values) { values = await loadClubData("site"); setStore(KEYS.site, values); }
     return values;
   }
   async function ensureClub() {

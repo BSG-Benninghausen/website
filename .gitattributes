@@ -1,0 +1,36 @@
+# =====================================================================
+# Bidirektionaler Sync Upstream <-> Verein-Fork: Branding-Schutz.
+# ---------------------------------------------------------------------
+# Leitprinzip: geteilter Code ist in allen Repos identisch und mergt trivial;
+# Branding lebt ausschliesslich in den unten gelisteten, repo-privaten Dateien.
+# Diese werden mit dem "ours"-Merge-Treiber geschuetzt: bei einem Merge (egal in
+# welche Richtung) behaelt das ZIEL-Repo immer seine eigene Version dieser Datei.
+#
+# WICHTIG: merge=ours wirkt nur, wenn der Treiber pro Klon/CI registriert ist:
+#   git config merge.ours.driver true
+# Dafuer gibt es tools/configure-merge-drivers.sh. Siehe docs/bidirectional-sync.md.
+#
+# NICHT hier gelistet (bewusst geteilt/mergebar): club-config.js, *.html,
+# mock-api.js, service-worker.js, styles.css, Contract/Backend, kanonische Seeds.
+# Per-Verein-Zusatzdateien (club.<id>.json, theme.<id>.css, <name>.<id>.json,
+# <id>-logo.png) brauchen kein merge=ours: andere Pfade, das andere Repo kennt sie nie.
+# =====================================================================
+
+# Die einzige branding-bestimmende Logik-/Config-Datei
+assets/js/deploy-config.js              merge=ours
+
+# PWA-Identitaet
+manifest.webmanifest                    merge=ours
+
+# Branding-Icons an festen Pfaden (per Verein eigene Bilder, gleiche Dateinamen)
+assets/img/favicon.png                  merge=ours
+assets/img/apple-touch-icon.png         merge=ours
+assets/img/icon-192.png                 merge=ours
+assets/img/icon-512.png                 merge=ours
+assets/img/icon-maskable-512.png        merge=ours
+
+# Deploy-Infrastruktur (pro Repo eigen: Domains, Secrets, systemd, Pages)
+deploy/**                               merge=ours
+.github/workflows/deploy-beta.yml       merge=ours
+.github/workflows/deploy-prod.yml       merge=ours
+.github/workflows/deploy-pages.yml      merge=ours
