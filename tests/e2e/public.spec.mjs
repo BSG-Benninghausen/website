@@ -17,14 +17,14 @@ test.describe("Öffentliche Seiten", () => {
 
   test("Vereins-Startseite (home.html) zeigt den Hero-Text", async ({ page }) => {
     await page.goto("/home.html");
-    await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark im Team.");
+    await expect(page.locator('[data-site="hero_title"]')).toHaveText("Stark auf der Matte.");
   });
 
   test("Aktuelles rendert Seed-News aus dem Backend", async ({ page }) => {
     await page.goto("/aktuelles.html");
     // Eindeutiger Seed-News-Titel (assets/data/news.json) – erscheint nur, wenn /api/news geladen wurde.
     await expect(
-      page.getByText("Starker Auftritt beim Vereinsturnier").first()
+      page.getByText("BSG-Judoka feiern internationalen Erfolg").first()
     ).toBeVisible();
   });
 
