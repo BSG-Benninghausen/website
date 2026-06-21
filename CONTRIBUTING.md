@@ -1,13 +1,13 @@
 # Mitwirken (Contributing)
 
-Dieses Repo ist ein **generisches, white-label-fähiges Vereins-Website-Produkt** (rein statisch:
-HTML/CSS/JS, zero-dep) mit vollständigem **Mock-Backend** im Browser. Vereine betreiben es als
+Dieses Repo ist eine **white-label-fähige Vereinswebsite** (HTML/CSS/JS) mit vollständigem
+**Mock-Backend** im Browser. Vereine betreiben es als
 **Fork** mit ihrer eigenen Konfiguration (siehe [`docs/fork-onboarding.md`](docs/fork-onboarding.md));
 Verbesserungen fließen als Issues/PRs hierher zurück.
 
 ## Entwicklung
 
-Kein Build, keine Abhängigkeiten.
+Das ausgelieferte Frontend bleibt npm-frei (keine Laufzeit-Abhängigkeiten).
 
 ```bash
 # Lokale Vorschau (über HTTP, nicht file://)

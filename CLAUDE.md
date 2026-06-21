@@ -48,7 +48,7 @@ routes by editing `api-config.js`.
 
 ## Invariants (don't break these)
 
-- **Static-first / graceful degradation.** Every feature must stay useful **without** the API — the
+- **Graceful degradation.** Every feature must stay useful **without** the API — the
   API is the paid upgrade, not a hard dependency. A new network feature needs a no-API fallback
   (🔜 e.g. the contact form opens the user's mail client via `mailto:` when no API is configured;
   today `forms.js` only reports a connection error).

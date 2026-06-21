@@ -1,27 +1,25 @@
 # Vereins-Baukasten – generische Vereinswebsite
 
-Moderne, **rein statische**, white-label-fähige Website-Basis für Vereine. Kein Build-Schritt,
-keine Abhängigkeiten – nur HTML, CSS und etwas JavaScript. Läuft auf jedem Webspace, GitHub
-Pages, Netlify o. Ä. Jeder Verein ist nur **Konfiguration**, kein eigener Code – ein Verein
-betreibt seine Seite als **Fork** (siehe [`docs/fork-onboarding.md`](docs/fork-onboarding.md)).
-Referenzkunde **BSG Benninghausen** läuft als eigener Fork: <https://bsg-benninghausen.github.io/website/>.
+Moderne, white-label-fähige Vereinswebsite – HTML, CSS und etwas JavaScript mit vollständigem
+**Mock-Backend** im Browser, deploybar auf GitHub Pages o. Ä. Dieser Fork ist eine
+**Single-Tenant-Seite** für **BSG Benninghausen** (<https://bsg-benninghausen.github.io/website/>):
+Das Marken-/Layout-Branding ist **Konfiguration** (`assets/data/club.bsg.json` + Theme), kein
+hartcodierter Code; schnell ändernde Inhalte (Texte, News, Termine) bleiben dynamisch über `/api/*`.
 
-## Produkt-Portal & Referenz-Beispiele
+## Single-Tenant-Fork
 
-Die GitHub-Pages-**Startseite** (`index.html`) ist ein generisches **Produkt-Portal**: dasselbe
-white-label-fähige Frontend bedient mehrere **Referenz-Beispiele**. Der **Musterverein** ist der
-Default; seine Vereins-Startseite liegt unter **`home.html`**. Welches Beispiel aktiv ist, wählt
-`assets/js/club-config.js` über `?club=<id>` (z. B. `home.html?club=demo`) –
-jedes Beispiel hat eigenen Club-Seed (`club.<id>.json`), eigenes Theme und einen eigenen
-`localStorage`-Namespace. **Neues Beispiel = ein Eintrag in `club-config.js` + `club.<id>.json` +
-Theme**, kein weiterer Code. Details: [`docs/productization-saas-plan.md`](docs/productization-saas-plan.md) §5a.
+Die GitHub-Pages-**Startseite** (`index.html`) ist direkt die Vereins-Startseite – kein
+Produkt-Portal und kein `?club=`-Resolver mehr. `assets/js/club-config.js` hält die
+Minimalkonfig **eines** Vereins (Namespace, Theme, Seed `club.bsg.json`). Das frühere
+White-Label-Portal mit mehreren Referenz-Beispielen lebt im Upstream
+(`crypticalcode/vereins-baukasten`); zum Produktmodell siehe
+[`docs/productization-saas-plan.md`](docs/productization-saas-plan.md).
 
 ## Inhalt & Seiten
 
 | Seite | Datei | Inhalt |
 | --- | --- | --- |
-| Produkt-Portal | `index.html` | Generische Startseite: Produkt-Pitch + Referenz-Beispiele |
-| Vereins-Start (Musterverein) | `home.html` | Hero, Über uns, Angebot, Trainings-Teaser, News-Teaser, CTA |
+| Start | `index.html` | Hero, Über uns, Angebot, Trainings-Teaser, News-Teaser, CTA |
 | Trainingszeiten | `trainingszeiten.html` | Trainingsgruppen, Zeiten, Ort |
 | Team | `team.html` | Vorstand & Trainerteam |
 | Aktuelles | `aktuelles.html` | News-Liste (aus Mock-API) |
@@ -34,12 +32,12 @@ Theme**, kein weiterer Code. Details: [`docs/productization-saas-plan.md`](docs/
 ## Projektstruktur
 
 ```
-*.html                       Alle Seiten (Portal + Vereinsseiten), zero-dep
+*.html                       Alle Seiten (index.html = Start), zero-dep zur Laufzeit
 service-worker.js            PWA: Offline-Cache (VERSION mit ?v=N synchron halten)
 assets/
 ├── css/                     Design-System, Styles, Beispiel-Themes (theme.<id>.css)
 ├── js/                      mock-api.js ("Server"), main.js (BSG.*), api-config.js,
-│                            club-config.js (Beispiel-Registry), Seitenskripte, features/
+│                            club-config.js (Single-Tenant-Config), Seitenskripte, features/
 ├── data/                    Seed-JSONs (news, events, club, site, membership-types, …)
 └── img/                     Logo, Favicon, Muster (SVG)
 packages/
