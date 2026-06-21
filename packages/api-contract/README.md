@@ -96,7 +96,14 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
   `kassenwart`, `trainer`, Board-Rollen) sind **reine Rechte-Rollen**. Die öffentliche
   Team-Anzeige kommt aus **Vereinsämtern** (`positions`, Recht `manage_team`); `GET /api/team`
   rechnet `positions × users`.
-- **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Club/Klassen).
+- **Seed-Daten** entsprechend `assets/data/*.json` (News/Termine/Trainingszeiten/Site/Club/Sponsoren/Klassen).
+- **Sponsoren.** `GET /api/sponsors` antwortet öffentlich `{ ok, items: [{ id, name, logo, url, tier:
+  "premium"|"standard", description, order }] }` (sortiert nach `order`, dann Name); `POST /api/sponsors`(`/update`,`/delete`)
+  erfordert `manage_sponsors` (401/403; fehlender Name → 422; `logo` nur als gültige Data-URL, sonst `""`;
+  `url` ohne Schema → `https://`, fremdes Schema wie `javascript:` → `""`). `GET /api/sponsors-config`
+  antwortet öffentlich `{ ok, fields, values: { enabled, displayMode: "cards"|"logos"|"band", tiersEnabled,
+  showHome, showPage, showFooter, title, subtitle } }` (Default `enabled:false`, ungültiger `displayMode` → `cards`);
+  `POST /api/sponsors-config` `{ values }` ersetzt die Config (`manage_sponsors`).
 - **Vereinsdaten/Branding (White-Label).** `GET /api/club` antwortet öffentlich
   `{ ok, fields: [{key,label,type}], values: { <key>: string } }` (Seed aus `assets/data/club.json`);
   `POST /api/club` `{ values: { <key>: string } }` speichert (nur bekannte Keys) und erfordert das
