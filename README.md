@@ -1,15 +1,17 @@
-# BSG Benninghausen e.V. – Vereinswebsite
+# Vereins-Baukasten – generische Vereinswebsite
 
-Neue, moderne und **rein statische** Website für den Judo-Verein **BSG Benninghausen e.V.**
-Kein Build-Schritt, keine Abhängigkeiten – nur HTML, CSS und etwas JavaScript. Läuft auf
-jedem Webspace, GitHub Pages, Netlify o. Ä.
+Moderne, **rein statische**, white-label-fähige Website-Basis für Vereine. Kein Build-Schritt,
+keine Abhängigkeiten – nur HTML, CSS und etwas JavaScript. Läuft auf jedem Webspace, GitHub
+Pages, Netlify o. Ä. Jeder Verein ist nur **Konfiguration**, kein eigener Code – ein Verein
+betreibt seine Seite als **Fork** (siehe [`docs/fork-onboarding.md`](docs/fork-onboarding.md)).
+Referenzkunde **BSG Benninghausen** läuft als eigener Fork: <https://bsg-benninghausen.github.io/website/>.
 
 ## Produkt-Portal & Referenz-Beispiele
 
 Die GitHub-Pages-**Startseite** (`index.html`) ist ein generisches **Produkt-Portal**: dasselbe
-white-label-fähige Frontend bedient mehrere **Referenz-Beispiele**. **BSG** ist das erste; seine
-Vereins-Startseite liegt unter **`home.html`**. Welches Beispiel aktiv ist, wählt
-`assets/js/club-config.js` über `?club=<id>` (z. B. `home.html?club=bsg`, `home.html?club=demo`) –
+white-label-fähige Frontend bedient mehrere **Referenz-Beispiele**. Der **Musterverein** ist der
+Default; seine Vereins-Startseite liegt unter **`home.html`**. Welches Beispiel aktiv ist, wählt
+`assets/js/club-config.js` über `?club=<id>` (z. B. `home.html?club=demo`) –
 jedes Beispiel hat eigenen Club-Seed (`club.<id>.json`), eigenes Theme und einen eigenen
 `localStorage`-Namespace. **Neues Beispiel = ein Eintrag in `club-config.js` + `club.<id>.json` +
 Theme**, kein weiterer Code. Details: [`docs/productization-saas-plan.md`](docs/productization-saas-plan.md) §5a.
@@ -151,7 +153,7 @@ Bereitgestellte Endpunkte:
 - **Profilfoto:** Benutzer laden ihr Foto optional selbst unter „Mein Konto" hoch
   (`POST /api/account/update` Feld `photo`); es erscheint auf der Team-Karte (sonst Initialen).
 - **Seed-Admin & Beispiel-Rollen:** Beim ersten Laden legt der Mock die System-Rollen
-  *Administrator*/*Mitglied*, ein Admin-Konto **`admin@bsg-benninghausen.de`** sowie
+  *Administrator*/*Mitglied*, ein Admin-Konto **`admin@example.com`** sowie
   bearbeitbare Beispiel-Rollen **Vorstand, Pressewart, Kassenwart, Trainer** an. Anmeldung
   passwordlos per Code (im Demo angezeigt). Neue Konten erhalten die Rolle *Mitglied*.
 - **Rollen-Endpunkte:** `GET /api/permissions`, `GET/POST /api/roles`, `POST /api/roles/update`,

@@ -14,9 +14,12 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v35";
-const CACHE = "bsg-cache-" + VERSION;
-const RUNTIME = "bsg-runtime-" + VERSION;
+const VERSION = "v37";
+/* Cache-Namespace: der Fork behält den BSG-Prefix, damit Caches getrennter
+   Deployments nicht kollidieren. */
+const CACHE_NS = "bsg";
+const CACHE = CACHE_NS + "-cache-" + VERSION;
+const RUNTIME = CACHE_NS + "-runtime-" + VERSION;
 const OFFLINE_URL = "offline.html";
 
 /* Relative URLs (basis-pfad-agnostisch: werden relativ zur SW-URL aufgelöst). */
@@ -41,7 +44,6 @@ const PRECACHE_URLS = [
   "offline.html",
   "manifest.webmanifest",
 
-  "assets/css/theme.css?v=" + VERSION.slice(1),
   "assets/css/theme.bsg.css?v=" + VERSION.slice(1),
   "assets/css/theme.example.css?v=" + VERSION.slice(1),
   "assets/css/styles.css?v=" + VERSION.slice(1),
@@ -69,11 +71,15 @@ const PRECACHE_URLS = [
   "assets/data/events.json",
   "assets/data/membership-types.json",
   "assets/data/news.json",
+  "assets/data/news.bsg.json",
   "assets/data/site.json",
+  "assets/data/site.bsg.json",
   "assets/data/club.json",
   "assets/data/club.bsg.json",
   "assets/data/club.example.json",
   "assets/data/trainingszeiten.json",
+  "assets/data/trainingszeiten.bsg.json",
+  "assets/data/events.bsg.json",
 
   "assets/img/drache.png",
   "assets/img/drache-light.png",

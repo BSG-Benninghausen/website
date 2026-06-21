@@ -1,0 +1,23 @@
+{
+  "name": "bsg-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Statische Website des Judo-Vereins BSG Benninghausen e.V. (Frontend + In-Process-Mock). Monorepo-Wurzel = Frontend (zero-dep, wird unverändert statisch ausgeliefert); die npm-Workspaces ziehen nur die Tooling-Grenze zum Vertrag (packages/api-contract) und zum echten Backend (packages/backend).",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "node packages/backend/index.mjs",
+    "test": "npm run test:guard && npm run test:vendored && npm run test:contract && npm run test:persistence",
+    "test:contract": "node packages/api-contract/run.mjs",
+    "test:persistence": "node packages/backend/persistence.mjs",
+    "test:guard": "node tools/guard-versions.mjs",
+    "test:vendored": "node tools/vendor-seeds.mjs --check",
+    "vendor": "node tools/vendor-seeds.mjs",
+    "gen:demo": "node tools/gen-demo-data.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

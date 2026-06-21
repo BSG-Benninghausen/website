@@ -1,8 +1,8 @@
 name: Deploy zu GitHub Pages
 
-# Veröffentlicht die statische Website (Draft-Stufe, API-Modus "mock") auf GitHub Pages.
-# Läuft beim Push auf main. Beta/Release laufen separat auf dem Hetzner-Server
-# (siehe deploy-beta.yml / deploy-prod.yml).
+# Veröffentlicht die statische Website (API-Modus "mock") auf GitHub Pages.
+# Läuft beim Push auf main. Echte Backend-Deployments (Real-Modus pro Domain)
+# liegen in den jeweiligen Vereins-Forks, nicht in diesem generischen Repo.
 on:
   push:
     branches:

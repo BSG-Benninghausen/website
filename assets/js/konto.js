@@ -205,7 +205,7 @@
       '<article class="judopass' + (active ? "" : " judopass--inactive") + '">' +
         '<div class="judopass__head">' +
           '<img class="judopass__logo" src="assets/img/drache-light.png" alt="">' +
-          "<span>Judopass</span>" +
+          "<span>Mitgliedsausweis</span>" +
           '<span class="judopass__no">' + BSG.escape(m.passNumber || "—") + "</span>" +
         "</div>" +
         '<div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>' +
@@ -228,7 +228,7 @@
               : "") +
           "</div>" +
         "</div>" +
-        (m.photo ? "" : '<p class="judopass__warn">Foto fehlt – bitte über „Bearbeiten" ergänzen (Pflicht für den Judopass).</p>') +
+        (m.photo ? "" : '<p class="judopass__warn">Foto fehlt – bitte über „Bearbeiten" ergänzen (Pflicht für den Mitgliedsausweis).</p>') +
         '<div class="judopass__actions">' +
           '<button class="btn btn--outline btn--sm" data-edit="' + m.id + '">Bearbeiten</button>' +
           (active ? '<button class="btn btn--outline btn--sm" data-cancel="' + m.id + '">Kündigen</button>' : "") +

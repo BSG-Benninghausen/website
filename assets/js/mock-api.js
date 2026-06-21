@@ -1,5 +1,5 @@
 /* =====================================================================
-   MOCK-SERVER  ·  BSG Benninghausen
+   MOCK-SERVER  ·  Vereins-Baukasten (generisches White-Label-Frontend)
    ---------------------------------------------------------------------
    Diese Website ist rein statisch. Wo normalerweise ein Server nötig wäre
    (Formulare, News & Termine, Benutzerkonten, Mitgliedschaften), simuliert
@@ -67,7 +67,10 @@
     { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
-  const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+  /* Seed-Admin-Adresse; per window.BSG_ADMIN_EMAIL (Deploy/Fork) überschreibbar.
+     Neutraler Default; ein Fork (z. B. BSG) setzt seine eigene Adresse. */
+  const ADMIN_EMAIL =
+    (typeof window !== "undefined" && window.BSG_ADMIN_EMAIL) || "admin@example.com";
 
   /* Feature-Katalog (Reifegrad). Quelle der Wahrheit für „welche Features kennt
      das Backend" – im Mock sind alle implementiert. Im echten (privaten) Backend
@@ -312,12 +315,15 @@
     return out;
   }
 
-  /* ----- Judopass-Felder: Foto, Passnummer, Profilfelder ----- */
+  /* ----- Mitgliedsausweis-Felder: Foto, Passnummer, Profilfelder ----- */
   const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
   function nextPassNumber() {
     const n = (getStore(KEYS.passCounter, 0) || 0) + 1;
     setStore(KEYS.passCounter, n);
-    return "BSG-" + String(n).padStart(4, "0");
+    /* Prefix ist club-konfigurierbar (club-Seed: "passPrefix"); Default neutral. */
+    const club = getStore(KEYS.club, null);
+    const prefix = (club && club.passPrefix) || "MV-";
+    return prefix + String(n).padStart(4, "0");
   }
   const fromList = (list, v) => (list.includes(v) ? v : "");
   // gemeinsame Validierung & Übernahme der editierbaren Profilfelder
@@ -327,7 +333,7 @@
     const age = ageFromBirthdate(body.birthdate);
     if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
     else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
-    if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Judopass).";
+    if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Mitgliedsausweis).";
     return { age };
   }
   function memberFields(body, allowedWeights) {
@@ -530,25 +536,39 @@
     return res.json();
   }
 
+  /* Club-Namespace für Content-Seeds (White-Label, additiv): ein Beispiel/Fork
+     kann Inhalte über "<base>.<ns>.json" überschreiben (z. B. news.bsg.json),
+     ohne die generische "<base>.json" zu divergieren. ns stammt aus club-config
+     (window.BSG_CLUB.ns) – ohne Config (z. B. in Contract-Tests) gilt generisch. */
+  const CLUB_NS =
+    (typeof window !== "undefined" && window.BSG_CLUB && window.BSG_CLUB.ns) || "";
+  async function loadClubData(base) {
+    if (CLUB_NS) {
+      try { return await loadData(base.replace(/\.json$/, "." + CLUB_NS + ".json")); }
+      catch (e) { /* keine club-spezifische Datei -> generischer Fallback */ }
+    }
+    return loadData(base);
+  }
+
   /* Dynamischer Content: beim ersten Zugriff aus JSON in den Store übernehmen */
   async function ensureNews() {
     let items = getStore(KEYS.news, null);
-    if (!items) { items = await loadData("news.json"); setStore(KEYS.news, items); }
+    if (!items) { items = await loadClubData("news.json"); setStore(KEYS.news, items); }
     return items;
   }
   async function ensureEvents() {
     let items = getStore(KEYS.events, null);
-    if (!items) { items = await loadData("events.json"); setStore(KEYS.events, items); }
+    if (!items) { items = await loadClubData("events.json"); setStore(KEYS.events, items); }
     return items;
   }
   async function ensureTraining() {
     let items = getStore(KEYS.training, null);
-    if (!items) { items = await loadData("trainingszeiten.json"); setStore(KEYS.training, items); }
+    if (!items) { items = await loadClubData("trainingszeiten.json"); setStore(KEYS.training, items); }
     return items;
   }
   async function ensureSite() {
     let values = getStore(KEYS.site, null);
-    if (!values) { values = await loadData("site.json"); setStore(KEYS.site, values); }
+    if (!values) { values = await loadClubData("site.json"); setStore(KEYS.site, values); }
     return values;
   }
   async function ensureClub() {
@@ -570,7 +590,7 @@
   async function ensureDemo() {
     if (getStore(KEYS.demoVersion, 0) >= 1) return;
     let demo;
-    try { demo = await loadData("demo-data.json"); }
+    try { demo = await loadClubData("demo-data.json"); }
     catch (e) { setStore(KEYS.demoVersion, 1); return; } // ohne Datei still überspringen
     const users = getUsers();
     (demo.users || []).forEach((u) => { if (!users.some((x) => x.id === u.id || x.email === u.email)) users.push(u); });

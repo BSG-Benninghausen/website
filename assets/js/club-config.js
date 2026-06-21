@@ -4,11 +4,14 @@
    Theme-Injektion) und VOR mock-api.js (das window.BSG_CLUB liest).
 
    Ein einziges, generisches Frontend bedient mehrere "Referenz-Beispiele"
-   (Mandanten). Welches Beispiel aktiv ist, wird hier aufgelöst:
+   (Mandanten). Welches Beispiel aktiv ist, wird hier aufgelöst (stark → schwach):
      1. URL-Query   ?club=<id>   (wird in localStorage persistiert)
      2. localStorage bsg_example   (eigener Key – NICHT bsg_club: das ist im
         Mock die Club-Branding-Config KEYS.club und würde sonst kollidieren)
-     3. Default (erstes "live" Beispiel)
+     3. Deploy-Default  window.BSG_CLUB_DEFAULT = "<id>"  (vor diesem Skript
+        gesetzt, analog window.BSG_API in api-config.js) – so stellt ein Fork
+        seinen Default-Verein, ohne die geteilte DEFAULT_ID-Zeile zu editieren.
+     4. Eingebauter Default DEFAULT_ID (erstes "live" Beispiel)
 
    Ergebnis:
      window.BSG_CLUB     = { id, name, clubSeed, theme, ns }
@@ -50,8 +53,8 @@
       theme: "assets/css/theme.example.css",
       accent: "#2563eb",
       summary:
-        "Die neutrale White-Label-Vorlage – dasselbe Frontend, nur mit " +
-        "generischer Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
+        "Die neutrale White-Label-Vorlage – ein generisches Frontend mit " +
+        "Musterverein-Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
     },
   ];
   var DEFAULT_ID = "bsg";
@@ -67,7 +70,13 @@
      Club-Branding-Config, KEYS.club). */
   var SELECT_KEY = "bsg_example";
 
-  var id = DEFAULT_ID;
+  /* Deploy-Default (vor diesem Skript setzbar) überschreibt den eingebauten
+     DEFAULT_ID, ist aber schwächer als localStorage und ?club=. So setzt ein
+     Fork seinen Verein konfliktfrei, ohne die geteilte DEFAULT_ID-Zeile zu ändern. */
+  var deployDefault =
+    (typeof window.BSG_CLUB_DEFAULT === "string" && window.BSG_CLUB_DEFAULT) || "";
+
+  var id = deployDefault || DEFAULT_ID;
   try {
     var ls = localStorage.getItem(SELECT_KEY);
     if (ls) id = ls;
@@ -80,7 +89,7 @@
     }
   } catch (e3) {}
 
-  var ex = find(id) || find(DEFAULT_ID);
+  var ex = find(id) || find(deployDefault) || find(DEFAULT_ID);
 
   window.BSG_EXAMPLES = EXAMPLES;
   window.BSG_CLUB = {
@@ -90,6 +99,11 @@
     theme: ex.theme,
     ns: ex.id,
   };
+
+  /* Fork-Deploy: Seed-Admin-Adresse für BSG setzen (mock-api.js liest
+     window.BSG_ADMIN_EMAIL beim Laden; dieses Skript läuft davor). So bleibt
+     der generische Default im Upstream unangetastet. */
+  if (ex.id === "bsg") window.BSG_ADMIN_EMAIL = "admin@bsg-benninghausen.de";
 
   /* Theme nur auf den eigentlichen Vereinsseiten injizieren (<html data-club-site>).
      Das Produkt-Portal bindet seine neutrale Theme-CSS selbst statisch ein.
