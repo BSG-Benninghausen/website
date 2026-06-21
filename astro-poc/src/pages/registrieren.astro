@@ -1,0 +1,65 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Konto erstellen">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Konto erstellen</p>
+      <span class="eyebrow eyebrow--invert">Benutzerkonto</span>
+      <h1>Konto erstellen</h1>
+      <p>Mit einem kostenlosen Konto verwaltest du später Vereinsmitgliedschaften – für dich und deine Familie.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="reveal">
+        <span class="eyebrow">Warum ein Konto?</span>
+        <h2>Alles an einem Ort</h2>
+        <ul class="checklist" style="margin-top:22px">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Mitgliedschaften verwalten</b> – für dich selbst und für Familienmitglieder.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Daten ändern</b> – Anschrift und Kontoverbindung jederzeit aktualisieren.</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Schnell &amp; einfach</b> – Login ohne Passwort per E-Mail-Code.</span></li>
+        </ul>
+        <div class="notice notice--mock" style="margin-top:24px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <p>Ein Konto ist <b>noch keine Vereinsmitgliedschaft</b>. Eine Mitgliedschaft schließt du später bequem im Dashboard ab.</p>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <form class="form-card" data-api-form="/api/auth/register" data-redirect="konto.html" novalidate>
+          <h2 style="font-size:1.4rem;margin-bottom:6px">Registrieren</h2>
+          <p style="color:var(--text-soft);margin-bottom:22px;font-size:.95rem">Nur Name und E-Mail – mehr braucht es nicht.</p>
+          <div class="field">
+            <label for="name">Name <span class="req">*</span></label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="email">E-Mail <span class="req">*</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field check-row">
+            <input id="privacy" name="privacy" type="checkbox" required>
+            <label for="privacy">Ich bin mit der <a href="datenschutz.html" target="_blank">Verarbeitung meiner Daten</a> einverstanden. <span class="req">*</span></label>
+          </div>
+          <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+            <span class="spinner" aria-hidden="true"></span>
+            Konto erstellen
+          </button>
+          <div class="form-status" role="status" aria-live="polite"></div>
+          <p style="margin-top:18px;font-size:.92rem;color:var(--text-soft)">Schon ein Konto? <a href="login.html">Jetzt einloggen</a></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/forms.js"></script>
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>
