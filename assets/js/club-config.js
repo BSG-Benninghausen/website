@@ -3,15 +3,20 @@
    MUSS synchron im <head> geladen werden: VOR styles.css (für FOUC-freie
    Theme-Injektion) und VOR mock-api.js (das window.BSG_CLUB liest).
 
-   Ein einziges, generisches Frontend bedient mehrere "Referenz-Beispiele"
-   (Mandanten). Welches Beispiel aktiv ist, wird hier aufgelöst (stark → schwach):
+   GETEILTE LOGIK (in Upstream und allen Forks byte-identisch). Die einzigen
+   branding-bestimmenden Stellgrößen — die Beispiel-Registry und der
+   Default-Verein — kommen aus der repo-privaten assets/js/deploy-config.js
+   (synchron im <head> VOR dieser Datei geladen, analog api-config.js vor
+   mock-api.js). So bleibt diese Datei zwischen den Repos mergebar, während das
+   Branding ausschließlich in deploy-config.js (+ club.<id>.json / theme.<id>.css)
+   lebt. Siehe docs/bidirectional-sync.md.
+
+   Aktives Beispiel wird aufgelöst (stark → schwach):
      1. URL-Query   ?club=<id>   (wird in localStorage persistiert)
      2. localStorage bsg_example   (eigener Key – NICHT bsg_club: das ist im
         Mock die Club-Branding-Config KEYS.club und würde sonst kollidieren)
-     3. Deploy-Default  window.BSG_CLUB_DEFAULT = "<id>"  (vor diesem Skript
-        gesetzt, analog window.BSG_API in api-config.js) – so stellt ein Fork
-        seinen Default-Verein, ohne die geteilte DEFAULT_ID-Zeile zu editieren.
-     4. Eingebauter Default DEFAULT_ID (erstes "live" Beispiel)
+     3. Deploy-Default  window.BSG_CLUB_DEFAULT = "<id>"  (aus deploy-config.js)
+     4. Eingebauter Fallback BUILTIN[0] (neutrales Demo-Beispiel)
 
    Ergebnis:
      window.BSG_CLUB     = { id, name, clubSeed, theme, ns }
@@ -22,27 +27,15 @@
                     Schlüssel (bsg_*), siehe mock-api.js.
      window.BSG_EXAMPLES = ganze Registry (für das Produkt-Portal index.html)
 
-   Neues Referenz-Beispiel = EIN Eintrag hier + assets/data/club.<id>.json
-   + ein Theme — ohne den Rest des Frontends anzufassen ("BSG = Konfiguration").
+   Neues Referenz-Beispiel = EIN Eintrag in deploy-config.js + club.<id>.json
+   + ein Theme — ohne den Rest des Frontends anzufassen ("Branding = Konfiguration").
    ===================================================================== */
 (function () {
   "use strict";
 
-  var EXAMPLES = [
-    {
-      id: "bsg",
-      name: "BSG Benninghausen e.V.",
-      sport: "Judo",
-      locality: "Benninghausen",
-      status: "live",
-      clubSeed: "club.bsg.json",
-      theme: "assets/css/theme.bsg.css",
-      accent: "#e3141b",
-      summary:
-        "Judo-Verein im Kreis Soest – der erste Referenzkunde, vollständig " +
-        "eingerichtet: Training, Termine, Team, Mitgliederbereich, Turnier-" +
-        "Anmeldungen und Auszahlungen.",
-    },
+  /* Letzter Rückfall, falls deploy-config.js fehlt: das neutrale Beispiel.
+     Identisch in allen Repos – echtes Branding steht in deploy-config.js. */
+  var BUILTIN = [
     {
       id: "demo",
       name: "Musterverein",
@@ -57,7 +50,11 @@
         "generischer Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
     },
   ];
-  var DEFAULT_ID = "bsg";
+
+  var EXAMPLES =
+    (Array.isArray(window.BSG_CLUB_REGISTRY) && window.BSG_CLUB_REGISTRY.length)
+      ? window.BSG_CLUB_REGISTRY
+      : BUILTIN;
 
   function find(id) {
     for (var i = 0; i < EXAMPLES.length; i++) {
@@ -70,13 +67,12 @@
      Club-Branding-Config, KEYS.club). */
   var SELECT_KEY = "bsg_example";
 
-  /* Deploy-Default (vor diesem Skript setzbar) überschreibt den eingebauten
-     DEFAULT_ID, ist aber schwächer als localStorage und ?club=. So setzt ein
-     Fork seinen Verein konfliktfrei, ohne die geteilte DEFAULT_ID-Zeile zu ändern. */
+  /* Deploy-Default (aus deploy-config.js) – schwächer als localStorage und ?club=,
+     stärker als der eingebaute Fallback BUILTIN[0]. */
   var deployDefault =
     (typeof window.BSG_CLUB_DEFAULT === "string" && window.BSG_CLUB_DEFAULT) || "";
 
-  var id = deployDefault || DEFAULT_ID;
+  var id = deployDefault || EXAMPLES[0].id;
   try {
     var ls = localStorage.getItem(SELECT_KEY);
     if (ls) id = ls;
@@ -89,7 +85,7 @@
     }
   } catch (e3) {}
 
-  var ex = find(id) || find(deployDefault) || find(DEFAULT_ID);
+  var ex = find(id) || find(deployDefault) || EXAMPLES[0];
 
   window.BSG_EXAMPLES = EXAMPLES;
   window.BSG_CLUB = {

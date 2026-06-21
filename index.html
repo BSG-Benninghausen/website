@@ -3,15 +3,225 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BSG Benninghausen e.V. – Judo in Benninghausen</title>
-  <link rel="canonical" href="home.html">
+  <title>Vereins-Baukasten – Open-Source Vereins-Website</title>
+  <meta name="description" content="Eine generische, white-label-fähige Vereins-Website (HTML/CSS/JS, zero-dep) mit vollständigem Mock-Backend. BSG Benninghausen ist das erste von mehreren Referenz-Beispielen.">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
-  <!-- Dieser Fork ist die BSG-Vereinsseite: Wurzel leitet direkt auf die
-       Vereins-Startseite (?club=bsg verankert das BSG-Beispiel, sync-fest). -->
-  <meta http-equiv="refresh" content="0; url=home.html?club=bsg">
-  <script>location.replace("home.html?club=bsg");</script>
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#1c2230">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/theme.example.css?v=35">
+  <link rel="stylesheet" href="assets/css/styles.css?v=35">
+  <script src="assets/js/deploy-config.js?v=35"></script>
+  <script>
+    /* Wurzel-Verhalten ist Deploy-Konfiguration (deploy-config.js), nicht
+       hartkodiert: ein Verein-Fork setzt BSG_ROOT_MODE="club" und die Wurzel
+       leitet auf seine Vereins-Startseite; der generische Upstream bleibt
+       "portal" und zeigt das Produkt-Portal. So ist index.html in allen Repos
+       identisch (mergebar). Siehe docs/bidirectional-sync.md. */
+    (function () {
+      if (window.BSG_ROOT_MODE === "club") {
+        var id = (typeof window.BSG_CLUB_DEFAULT === "string" && window.BSG_CLUB_DEFAULT) || "";
+        location.replace("home.html" + (id ? "?club=" + encodeURIComponent(id) : ""));
+      }
+    })();
+  </script>
+  <script src="assets/js/club-config.js?v=35"></script>
 </head>
-<body>
-  <noscript><a href="home.html?club=bsg">Weiter zur BSG Benninghausen e.V.</a></noscript>
+<body class="portal">
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="site-header">
+    <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    <nav class="nav wrap" aria-label="Hauptnavigation">
+      <a href="index.html" class="brand">
+        <span class="brand__name"><span>Vereins-Baukasten</span><small>Open-Source · White-Label</small></span>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
+      <div class="nav__menu" id="nav-menu">
+        <ul class="nav__links">
+          <li><a href="#beispiele">Referenz-Beispiele</a></li>
+          <li><a href="#funktionen">Funktionen</a></li>
+          <li><a href="#technik">Technik</a></li>
+        </ul>
+        <div class="nav__cta"><a href="https://github.com/crypticalcode/vereins-baukasten" class="btn btn--primary" target="_blank" rel="noopener">Auf GitHub</a></div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero">
+      <img class="hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+      <span class="hero__glow hero__glow--a" aria-hidden="true"></span>
+      <span class="hero__glow hero__glow--b" aria-hidden="true"></span>
+      <div class="wrap hero__inner">
+        <div>
+          <span class="eyebrow eyebrow--invert">Open-Source Vereins-Website</span>
+          <h1>Eine Website-Basis. <span class="hl">Viele Vereine.</span></h1>
+          <p class="hero__lead">Ein generisches, white-label-fähiges Frontend (HTML/CSS/JS, ganz ohne Build &amp; Abhängigkeiten) mit komplett gemocktem Backend im Browser. Jeder Verein ist nur <strong>Konfiguration</strong> – kein eigener Code. Unten laufen mehrere Referenz-Beispiele auf <em>demselben</em> Frontend.</p>
+          <div class="hero__cta">
+            <a href="#beispiele" class="btn btn--gold btn--lg">
+              Beispiele ansehen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="https://github.com/crypticalcode/vereins-baukasten" class="btn btn--ghost btn--lg" target="_blank" rel="noopener">Quellcode</a>
+          </div>
+          <div class="hero__stats">
+            <div><strong>0</strong><span>Build-Schritte</span></div>
+            <div><strong>0</strong><span>Abhängigkeiten</span></div>
+            <div><strong>1</strong><span>Frontend für alle</span></div>
+          </div>
+        </div>
+        <aside class="hero__card" aria-label="So funktioniert es">
+          <h3>Mock ⇄ Real</h3>
+          <p class="muted">Dasselbe <code>/api/*</code>-Frontend läuft gegen ein Browser-Mock (Standard) oder ein echtes Backend – pro Route umschaltbar.</p>
+          <ul class="train-mini">
+            <li><div><b>Mock</b><br><span>Alles im Browser, localStorage</span></div><time>Standard</time></li>
+            <li><div><b>Hybrid</b><br><span>Reife Routen live, Rest Mock</span></div><time>?api=hybrid</time></li>
+            <li><div><b>Real</b><br><span>Echtes Backend pro Domain</span></div><time>?api=real</time></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- REFERENZ-BEISPIELE -->
+    <section class="section section--mist" id="beispiele">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="eyebrow">Referenz-Beispiele</span>
+          <h2>Vereine auf einem Frontend</h2>
+          <p>Jede Karte öffnet dasselbe Frontend mit einer anderen Vereins-Konfiguration (Marke, Theme, Daten). Weitere Beispiele sind in Vorbereitung.</p>
+        </div>
+        <div class="grid grid--3" data-examples>
+          <!-- live Beispiele werden aus window.BSG_EXAMPLES gerendert -->
+          <article class="card" aria-hidden="true" hidden data-example-template>
+            <div class="card__icon" data-ex-mark></div>
+            <span class="badge" data-ex-status>Live</span>
+            <h3 data-ex-name></h3>
+            <p class="muted" data-ex-meta></p>
+            <p data-ex-summary></p>
+            <a class="btn btn--outline btn--sm" data-ex-link>Beispiel öffnen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </article>
+
+          <!-- geplante (noch zu implementierende) Beispiele -->
+          <article class="card card--planned">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+            <span class="badge badge--intern">Geplant</span>
+            <h3>Weitere Sportvereine</h3>
+            <p class="muted">Fußball · Turnen · Schwimmen</p>
+            <p>Weitere Referenz-Vereine zeigen, wie sich Branding, Sparten und Inhalte rein über die Konfiguration ändern.</p>
+            <span class="btn btn--outline btn--sm" aria-disabled="true">In Vorbereitung</span>
+          </article>
+          <article class="card card--planned">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg></div>
+            <span class="badge badge--intern">Geplant</span>
+            <h3>Dein Verein?</h3>
+            <p class="muted">Mandant per Domain</p>
+            <p>Im SaaS-Modell bucht ein Verein ein Backend pro Domain – das Frontend bleibt unverändert. Siehe Produkt-Plan.</p>
+            <a class="btn btn--outline btn--sm" href="https://github.com/crypticalcode/vereins-baukasten/blob/main/docs/productization-saas-plan.md" target="_blank" rel="noopener">Produkt-Plan</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- FUNKTIONEN -->
+    <section class="section" id="funktionen">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="eyebrow">Funktionen</span>
+          <h2>Was jeder Verein bekommt</h2>
+          <p>Fertige Bausteine eines Vereinsauftritts – im Mock sofort ausprobierbar.</p>
+        </div>
+        <div class="grid grid--3">
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>
+            <h3>Öffentlicher Auftritt</h3>
+            <p>Start, Aktuelles, Termine, Trainingszeiten, Team &amp; Vorstand, Kontakt – redaktionell pflegbar.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+            <h3>Mitglieder &amp; Konten</h3>
+            <p>Login per E-Mail-Code, Mitgliederverwaltung, Haushalte, Mitgliedschaften.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/></svg></div>
+            <h3>Rollen &amp; Rechte</h3>
+            <p>Feingranulare Rechte pro Bereich, Rollen-Editor, Vereinsämter für die Team-Seite.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/></svg></div>
+            <h3>Turniere &amp; Auszahlungen</h3>
+            <p>Turnier-Anmeldungen mit Alters-/Gewichtsklassen und (gemockten) Auszahlungen an Veranstalter.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/></svg></div>
+            <h3>Feature-Gating &amp; Beta</h3>
+            <p>Funktionen als Beta an einzelne Rollen freigeben, pro Mandant buchen – ohne Redeploy.</p>
+          </article>
+          <article class="card">
+            <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg></div>
+            <h3>PWA &amp; Offline</h3>
+            <p>Installierbar, voll offline-fähig per Service-Worker – ohne Build.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TECHNIK -->
+    <section class="section section--sand" id="technik">
+      <div class="wrap split">
+        <div class="split__text">
+          <span class="eyebrow">Technik</span>
+          <h2>Rein statisch, white-label, testgetrieben</h2>
+          <p>Das Frontend spricht ausschließlich <code>/api/*</code>. Im Standard beantwortet ein in den Browser gepatchtes Mock-Backend (<code>mock-api.js</code>) jede Anfrage lokal und legt Daten in <code>localStorage</code> ab. Branding (<code>club.json</code>) und Theme (<code>theme.css</code>) sind reine Konfiguration.</p>
+          <ul class="check-list">
+            <li>Kein Build, keine Abhängigkeiten – nur HTML, CSS, Vanilla-JS.</li>
+            <li>Mock ⇄ Real-Router: reife Backend-Routen einzeln „live" schalten.</li>
+            <li>Zero-dep Contract-Tests prüfen Mock und echtes Backend identisch.</li>
+            <li>Neues Beispiel = ein Eintrag in <code>club-config.js</code> + <code>club.&lt;id&gt;.json</code>.</li>
+          </ul>
+          <div class="hero__cta">
+            <a href="home.html?club=bsg" class="btn btn--primary">BSG-Beispiel öffnen</a>
+            <a href="https://github.com/crypticalcode/vereins-baukasten" class="btn btn--ghost" target="_blank" rel="noopener">Repository</a>
+          </div>
+        </div>
+        <aside class="split__media">
+          <div class="media-frame media-frame--code">
+            <pre class="code-snip"><code>// club-config.js – ein Beispiel hinzufügen
+{
+  id: "mein-verein",
+  name: "Mein Verein e.V.",
+  clubSeed: "club.mein-verein.json",
+  theme: "assets/css/theme.mein-verein.css"
+}</code></pre>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> Vereins-Baukasten · Open-Source-Frontend mit Mock-Backend</span>
+        <span><a href="https://github.com/crypticalcode/vereins-baukasten" target="_blank" rel="noopener">GitHub</a> · <a href="home.html">BSG-Beispiel</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/portal.js?v=35" defer></script>
+  <script>
+    /* App-Shell auch vom Portal aus offline-fähig machen (PWA). */
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("service-worker.js").catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

@@ -45,10 +45,10 @@ const PRECACHE_URLS = [
   "manifest.webmanifest",
 
   "assets/css/theme.css?v=" + VERSION.slice(1),
-  "assets/css/theme.bsg.css?v=" + VERSION.slice(1),
   "assets/css/theme.example.css?v=" + VERSION.slice(1),
   "assets/css/styles.css?v=" + VERSION.slice(1),
 
+  "assets/js/deploy-config.js?v=" + VERSION.slice(1),
   "assets/js/club-config.js?v=" + VERSION.slice(1),
   "assets/js/portal.js?v=" + VERSION.slice(1),
   "assets/js/api-config.js?v=" + VERSION.slice(1),
@@ -74,13 +74,11 @@ const PRECACHE_URLS = [
   "assets/data/news.json",
   "assets/data/site.json",
   "assets/data/club.json",
-  "assets/data/club.bsg.json",
   "assets/data/club.example.json",
   "assets/data/trainingszeiten.json",
 
   "assets/img/drache.png",
   "assets/img/drache-light.png",
-  "assets/img/bsg-logo.png",
   "assets/img/favicon.png",
   "assets/img/apple-touch-icon.png",
   "assets/img/hero-pattern.svg",
@@ -140,7 +138,7 @@ self.addEventListener("fetch", (event) => {
           return res;
         })
         .catch(() =>
-          // ignoreSearch: Navigationen mit Query (z. B. "/" -> home.html?club=bsg)
+          // ignoreSearch: Navigationen mit Query (z. B. "/" -> home.html?club=<id>)
           // sollen den precachten Seiten-Eintrag (ohne Query) treffen, statt auf
           // offline.html zu fallen.
           caches.match(req, { ignoreSearch: true }).then((cached) => cached || caches.match(OFFLINE_URL))
