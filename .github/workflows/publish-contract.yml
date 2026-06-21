@@ -47,12 +47,9 @@ jobs:
       - name: Contract-Tests · Mock
         run: node packages/api-contract/run.mjs
 
-      - name: Contract-Tests · echtes Backend
-        run: |
-          BSG_DEV=1 node packages/backend/index.mjs & echo $! > /tmp/srv.pid
-          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/news >/dev/null 2>&1 && break; sleep 0.5; done
-          TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs
-          kill "$(cat /tmp/srv.pid)" 2>/dev/null || true
+      # Hinweis: Die Real-Modus-Validierung gegen das echte Backend läuft seit dem
+      # Phase-3-Split in der eigenen CI des Backend-Repos (vereins-baukasten-backend),
+      # das den veröffentlichten/gepinnten Vertrag erfüllt. Hier genügt der Mock-Gate.
 
       # --- Tag == package.json-Version (nur beim Tag-Push) ---
       - name: Tag-/Versions-Abgleich

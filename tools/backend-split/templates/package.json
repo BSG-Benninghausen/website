@@ -1,0 +1,21 @@
+{
+  "name": "vereins-baukasten-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eigenständiges /api/*-Backend des Vereins-Baukastens – erfüllt denselben Vertrag wie der In-Process-Mock (assets/js/mock-api.js im Frontend-Repo). Ohne Framework, ohne Laufzeit-Abhängigkeiten (nur node:-Builtins). Aus dem Monorepo extrahiert via tools/backend-split/extract.sh.",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "npm run test:vendored && npm run test:persistence",
+    "test:vendored": "node tools/vendor-seeds.mjs --check",
+    "test:persistence": "node persistence.mjs",
+    "test:contract": "BSG_MOCK_SRC=contract/mock-src.stub.js TEST_BASE=http://localhost:3000 node contract/run.mjs",
+    "vendor": "node tools/vendor-seeds.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "//deps": "Keine Laufzeit- UND keine Dev-Abhängigkeiten: der Vertrag (Suiten + Seeds) ist nach contract/ vendored, Seeds laufzeitseitig nach data/. Phase 3b kann contract/ durch die devDependency @crypticalcode/api-contract (GitHub Packages) ersetzen.",
+  "dependencies": {}
+}

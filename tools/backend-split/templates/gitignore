@@ -1,0 +1,7 @@
+node_modules/
+*.log
+*.tmp
+.DS_Store
+# Laufzeit-Snapshot der opt-in-Persistenz (BSG_DATA_FILE), falls ins Repo gelegt:
+/state.json
+/data/*.tmp

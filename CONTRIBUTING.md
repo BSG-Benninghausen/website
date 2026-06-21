@@ -18,13 +18,13 @@ node --check assets/js/<datei>.js
 
 # Contract-Tests (Mock + echtes Backend) – aus dem Repo-Root
 node packages/api-contract/run.mjs                                   # Mock
-TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # gegen packages/backend/
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # gegen ein echtes Backend (vereins-baukasten-backend)
 
 # Cache-Busting-Konsistenz prüfen
 node tools/guard-versions.mjs
 
-# Browser-E2E (isolierte devDeps unter tests/e2e/)
-cd tests/e2e && npm install && npx playwright test
+# Browser-E2E (isolierte devDeps unter tests/e2e/) – Backend-Repo auschecken, BSG_BACKEND_DIR setzen
+cd tests/e2e && npm install && BSG_BACKEND_DIR=../../../vereins-baukasten-backend npx playwright test
 ```
 
 ## Konventionen
@@ -35,7 +35,9 @@ cd tests/e2e && npm install && npx playwright test
   änderst, erhöhe `N` auf **allen** `*.html` gemeinsam und passe `VERSION` in `service-worker.js`
   an (`node tools/guard-versions.mjs` prüft das). Beispiel:
   `grep -rl "v=N" *.html | xargs sed -i 's/?v=N/?v=N+1/g'`.
-- **CI grün halten.** `ci.yml` läuft Contract-Tests (Mock + Real) und E2E. Wenn du eine Route
+- **CI grün halten.** `ci.yml` läuft die Contract-Tests (Mock) + Guards und die E2E gegen das
+  gepinnte Backend (`backend-ref.json`, Secret `BACKEND_REPO_TOKEN`; ohne Token wird E2E grün
+  übersprungen). Real-Modus/Persistenz laufen in der CI des Backend-Repos. Wenn du eine Route
   änderst, ergänze/aktualisiere eine Suite in `packages/api-contract/`.
 - **Branding ist Konfiguration, kein Code.** Neue Vereins-/Marken-Inhalte gehören in
   `assets/data/club.<id>.json` + `assets/css/theme.<id>.css` + einen Registry-Eintrag in
