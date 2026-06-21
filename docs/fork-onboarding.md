@@ -76,3 +76,8 @@ Drei Wege – je weniger geteilte Zeilen du editierst, desto konfliktfreier blei
 - **Beitragen:** Bugs/Wünsche als **Issue** im Haupt-Repo; Fixes/Features als **PR aus dem Fork**
   gegen `main` (vereins-neutral, ohne deine club-spezifischen Inhalte). Siehe
   [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+- **Automatischer Mergeback (optional):** Setze die Repo-Variable `MERGEBACK_ENABLED=true` und die
+  Secrets `ANTHROPIC_API_KEY` + die GitHub-App-Credentials, dann übernimmt ein Bot den Upstream-PR
+  für dich: er extrahiert aus deinen Fork-PRs den generischen, vereins-neutralen Anteil und schlägt
+  ihn automatisch im Haupt-Repo vor. Setup & Details:
+  [`docs/mergeback-pipeline.md`](mergeback-pipeline.md).

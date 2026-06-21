@@ -1,0 +1,182 @@
+name: Mergeback · Propose upstream PR
+
+# Läuft im FORK eines Vereins. Dieser Workflow ist generisches Produkt: er wird
+# vom Hauptrepo ausgeliefert und kommt per `git merge upstream/main` in den Fork.
+# Im Hauptrepo selbst ist er ein No-op (siehe `if:` unten).
+#
+# Aufgabe: aus einem Fork-PR den GENERISCHEN, vereins-neutralen Anteil
+# extrahieren, Rest-Identität neutralisieren und einen separaten PR gegen
+# crypticalcode/vereins-baukasten:main öffnen/aktualisieren.
+#
+# Voraussetzungen im Fork (siehe docs/mergeback-pipeline.md):
+#   • Repo-Variable  MERGEBACK_ENABLED = "true"            (Opt-in)
+#   • Secret         CLAUDE_CODE_OAUTH_TOKEN (Abo, `claude setup-token`) ODER
+#                     ANTHROPIC_API_KEY (API)               (claude-code-action)
+#   • GitHub-App "Mergeback Bot": Secrets MERGEBACK_APP_ID + MERGEBACK_APP_PRIVATE_KEY
+#     (App installiert auf dem Hauptrepo mit contents:write + pull_requests:write).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:                       # reine Config-/Branding-PRs überspringen (spart Agent-Kosten)
+      - "assets/js/**"
+      - "assets/css/styles.css"
+      - "**/*.html"
+      - "service-worker.js"
+      - "tests/**"
+      - "packages/**"
+      - "tools/**"
+      - "docs/**"
+      - "**/*.md"
+
+permissions:
+  contents: read
+  pull-requests: write           # Kommentar zurück auf den Fork-PR
+
+concurrency:
+  group: mergeback-propose-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  UPSTREAM: crypticalcode/vereins-baukasten
+
+jobs:
+  propose:
+    # No-op im Hauptrepo; nur in aktivierten Forks; Loop-Schutz (kein Bot, kein mergeback/-Branch).
+    if: >-
+      github.repository != 'crypticalcode/vereins-baukasten'
+      && vars.MERGEBACK_ENABLED == 'true'
+      && github.actor != 'mergeback-bot[bot]'
+      && !startsWith(github.event.pull_request.head.ref, 'mergeback/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Upstream-Diff berechnen
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM}.git"
+          git fetch --no-tags --depth=200 upstream main
+          git diff upstream/main...HEAD > /tmp/fork.diff
+          test -s /tmp/fork.diff || echo "(leerer Diff)"
+
+      - name: Klassifizieren
+        id: classify
+        run: |
+          node tools/classify-diff.mjs /tmp/fork.diff | tee /tmp/verdict.json
+          echo "verdict=$(node -p "require('/tmp/verdict.json').verdict")" >> "$GITHUB_OUTPUT"
+
+      - name: Kommentar – nichts vorzuschlagen
+        if: steps.classify.outputs.verdict == 'nothing'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number,
+              body: "🟦 **Mergeback:** Dieser PR betrifft nur Branding/Config – nichts Vereins-Neutrales zum Upstream-Vorschlag." });
+
+      - name: Kommentar – braucht Mensch (entangled)
+        if: steps.classify.outputs.verdict == 'needs_human'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const v = require('/tmp/verdict.json');
+            const list = (v.entangled || []).join(', ') || '—';
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number,
+              body: `⚠️ **Mergeback (Hand anlegen):** Generische Änderung und Vereins-Branding sind im selben Hunk verschränkt (\`${list}\`). Bitte die generischen Änderungen in einen eigenen Commit/Hunk trennen – dann läuft der Mergeback automatisch.` });
+
+      # ---------- ab hier nur bei verdict == propose ----------
+      - name: GitHub-App-Token (Cross-Repo, least privilege)
+        if: steps.classify.outputs.verdict == 'propose'
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MERGEBACK_APP_ID }}
+          private-key: ${{ secrets.MERGEBACK_APP_PRIVATE_KEY }}
+          owner: crypticalcode
+          repositories: vereins-baukasten
+
+      - name: Neutralen Upstream-Branch bauen (nur generische Dateien)
+        if: steps.classify.outputs.verdict == 'propose'
+        run: |
+          set -euo pipefail
+          node tools/classify-diff.mjs --neutralize /tmp/fork.diff > /tmp/neutralize.json
+          BR="mergeback/from-${{ github.repository_owner }}/pr-${{ github.event.pull_request.number }}"
+          echo "BR=$BR" >> "$GITHUB_ENV"
+          git config user.name  "mergeback-bot"
+          git config user.email "mergeback-bot[bot]@users.noreply.github.com"
+          git checkout -B "$BR" upstream/main
+          # nur die als generisch klassifizierten Dateien vom Fork-Head übernehmen …
+          node -p "require('/tmp/neutralize.json').include_files.join('\n')" > /tmp/include.txt
+          while IFS= read -r f; do [ -n "$f" ] && git checkout "$GITHUB_SHA" -- "$f"; done < /tmp/include.txt
+          # … und deterministisch Rest-Identität neutralisieren (Werte aus neutral_baseline).
+          node -e '
+            const fs=require("fs"); const n=require("/tmp/neutralize.json");
+            for (const f of n.include_files) { let s=fs.readFileSync(f,"utf8");
+              for (const r of n.replacements) s=s.replace(new RegExp(r.pattern,"gi"), r.replacement);
+              fs.writeFileSync(f,s); }
+          '
+          # Frische: Cache-Bust bumpen, wenn ein Produkt-Asset betroffen ist.
+          if grep -qE '^(assets/js/|assets/css/styles\.css)' /tmp/include.txt; then node tools/bump-cachebust.mjs; fi
+          git add -A
+
+      - name: Claude – Neutralität & Fitness (semantisch)
+        if: steps.classify.outputs.verdict == 'propose'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Read,Edit,Bash(node tools/classify-diff.mjs --verify *),Bash(git diff*)" --max-turns 12'
+          prompt: |
+            Du bereitest einen Upstream-PR ins GENERISCHE Produkt-Repo vor. Quelle der
+            Wahrheit für die Grenze ist upstream-manifest.json. Das Arbeitsverzeichnis
+            enthält bereits nur die generischen Dateien (deterministisch neutralisiert).
+            1. Entferne jede verbliebene Vereins-Identität (Namen/Handles/Adressen/Theme-
+               Farben – siehe forbidden_patterns + identity_field_keys) und ersetze sie mit
+               Werten aus neutral_baseline (packages/api-contract/data/club.example.json).
+            2. Erweitere den Scope NICHT (keine Datei außerhalb der bereits geänderten).
+            3. Beurteile, ob die Änderung generisch ins Hauptrepo gehört oder fork-lokal ist.
+            4. Schreibe das Ergebnis nach /tmp/agent-verdict.txt als genau zwei Zeilen:
+               CONFIDENCE: <0-100>
+               VERDICT: <propose|hold>
+
+      - name: Verify (Agent darf den Scope nicht geweitet haben)
+        if: steps.classify.outputs.verdict == 'propose'
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached upstream/main > /tmp/final.patch
+          node tools/classify-diff.mjs --verify /tmp/final.patch
+          git commit -m "Mergeback: ${{ github.event.pull_request.title }}" || echo "nichts zu committen"
+
+      - name: Upstream-PR öffnen/aktualisieren (idempotent)
+        if: steps.classify.outputs.verdict == 'propose'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          set -euo pipefail
+          CONF=$(sed -n 's/^CONFIDENCE:\s*//p' /tmp/agent-verdict.txt 2>/dev/null || echo "")
+          AVERDICT=$(sed -n 's/^VERDICT:\s*//p' /tmp/agent-verdict.txt 2>/dev/null || echo "propose")
+          if [ "$AVERDICT" = "hold" ]; then echo "Agent rät zu hold – kein Upstream-PR."; exit 0; fi
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${UPSTREAM}.git" "HEAD:${BR}"
+          SRC="${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+          BODY=$(printf 'Automatischer Mergeback aus einem Fork-PR (vereins-neutral, generisch).\n\nmergeback-source: %s\nmergeback-confidence: %s\n' "$SRC" "${CONF:-?}")
+          EXIST=$(gh pr list --repo "$UPSTREAM" --head "$BR" --json number --jq '.[0].number' || echo "")
+          if [ -z "$EXIST" ]; then
+            gh pr create --repo "$UPSTREAM" --base main --head "$BR" \
+              --title "Mergeback: ${{ github.event.pull_request.title }}" \
+              --body "$BODY" --label mergeback,automated
+          fi
+
+      - name: Kommentar zurück auf den Fork-PR
+        if: steps.classify.outputs.verdict == 'propose'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let conf = '?'; try { conf = (fs.readFileSync('/tmp/agent-verdict.txt','utf8').match(/CONFIDENCE:\s*(\d+)/)||[])[1] || '?'; } catch {}
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number,
+              body: `✅ **Mergeback:** vereins-neutraler PR gegen \`${process.env.UPSTREAM}\` geöffnet/aktualisiert (Branch \`${process.env.BR}\`, Konfidenz ${conf}).` });

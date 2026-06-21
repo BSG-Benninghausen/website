@@ -1,0 +1,115 @@
+name: Mergeback · Gate & auto-merge
+
+# Läuft im HAUPTREPO auf den vom Bot geöffneten Mergeback-PRs. Übernimmt Review
+# und (bei grün + hoher Konfidenz) den Auto-Squash-Merge. Die eigentlichen
+# TESTS laufen getrennt in ci.yml (Trigger `pull_request`, contents:read) – dieses
+# Gate WARTET nur auf deren Required-Checks und führt KEINEN untrusted PR-Code mit
+# Secrets aus (Sicherheit bei `pull_request_target`).
+#
+# Aktivierung: Repo-Variable MERGEBACK_ENABLED = "true", Secret CLAUDE_CODE_OAUTH_TOKEN
+# (Abo) oder ANTHROPIC_API_KEY (API),
+# Branch Protection mit Required Checks (Contract-Tests, Browser-E2E, mergeback/agent-review).
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: mergeback-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    # Nur Bot-Mergeback-PRs; normale Menschen-PRs laufen durch den üblichen Review.
+    if: >-
+      vars.MERGEBACK_ENABLED == 'true'
+      && contains(github.event.pull_request.labels.*.name, 'mergeback')
+      && !contains(github.event.pull_request.labels.*.name, 'do-not-merge')
+      && !contains(github.event.pull_request.labels.*.name, 'needs-human')
+    runs-on: ubuntu-latest
+    steps:
+      # WICHTIG: Basis (main) auschecken – die vertrauenswürdigen tools/*, NICHT der PR-Head.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Den PR nur als DATEN (Diff) holen – kein Checkout/Ausführen des Head-Codes.
+      - name: PR-Diff als Daten holen
+        run: |
+          git fetch --no-tags origin "${{ github.event.pull_request.head.sha }}"
+          git diff "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > /tmp/pr.diff
+
+      - name: Neutralitäts-Recheck (Defense-in-Depth, vertrauenswürdige Tools)
+        run: node tools/classify-diff.mjs --verify /tmp/pr.diff
+
+      - name: Contract-Delta erkennen (informativ)
+        run: node tools/detect-contract-change.mjs /tmp/pr.diff | tee /tmp/contract.json
+
+      - name: Claude-Review (Konventionen, die Tests nicht prüfen)
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Nur lesen + vertrauenswürdige Base-Tools – kein Ausführen von PR-Head-Skripten.
+          claude_args: '--allowedTools "Read,Bash(node tools/classify-diff.mjs *),Bash(node tools/detect-contract-change.mjs *)" --max-turns 15'
+          prompt: |
+            Review den Mergeback-PR anhand von /tmp/pr.diff und der Konventionen in CLAUDE.md.
+            Prüfe insbesondere:
+            • Neutralität – keine Vereins-Identität (Quelle: upstream-manifest.json).
+            • Additive Seed-Migrationen (bsg_seed_version; nie destruktiv).
+            • Permission-Gating neuer Routen (hasPerm; neue Keys in PERMISSIONS + Migration).
+            • Cache-Bust-Bump vorhanden, wenn assets/js/** oder assets/css/styles.css geändert.
+            • Test-Abdeckung neuer/geänderter Routen (packages/api-contract/**).
+            • FEATURES-Katalog identisch in assets/js/mock-api.js UND packages/backend/api.mjs.
+            Schreibe das Ergebnis nach /tmp/review.txt als genau zwei Zeilen:
+              REVIEW_VERDICT: approve|request_changes
+              REVIEW_CONFIDENCE: 0-100
+
+      - name: Agent-Verdict als Required-Check veröffentlichen
+        id: verdict
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let v = 'request_changes', c = 0;
+            try {
+              const t = fs.readFileSync('/tmp/review.txt', 'utf8');
+              v = (t.match(/REVIEW_VERDICT:\s*(\w+)/) || [])[1] || v;
+              c = parseInt((t.match(/REVIEW_CONFIDENCE:\s*(\d+)/) || [])[1] || '0', 10);
+            } catch {}
+            const ok = v === 'approve' && c >= 90;
+            await github.rest.checks.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              name: 'mergeback/agent-review',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: ok ? 'success' : 'neutral',
+              output: { title: `${v} (Konfidenz ${c})`, summary: `Agent-Review: ${v}, Konfidenz ${c}/100.` },
+            });
+            core.setOutput('ok', ok ? '1' : '0');
+
+      # Auto-Merge nur aktivieren – GitHub mergt erst, wenn ALLE Required-Checks grün sind
+      # (Contract-Tests, Browser-E2E, mergeback/agent-review). Das UND erzwingt Branch Protection.
+      - name: Auto-Squash-Merge aktivieren
+        if: steps.verdict.outputs.ok == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --squash --auto
+
+      - name: Sonst eskalieren (needs-human)
+        if: steps.verdict.outputs.ok != '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({ ...context.repo, issue_number: context.issue.number, labels: ['needs-human'] });
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number,
+              body: '⛔ **Mergeback-Gate:** Auto-Merge gestoppt (Agent-Review nicht *approve* oder Konfidenz < 90). Bitte manuell prüfen.' });

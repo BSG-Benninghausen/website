@@ -46,6 +46,11 @@ cd tests/e2e && npm install && npx playwright test
 - **Issues** hier im Haupt-Repo eröffnen (dafür ist kein Fork nötig).
 - **Fixes/Features** als **Pull Request aus deinem Fork** gegen `main` einreichen. Halte den PR
   klein und vereins-neutral (keine club-spezifischen Inhalte im Upstream-PR).
+- **Automatischer Mergeback (optional):** Ist im Fork `MERGEBACK_ENABLED=true` gesetzt, **baust du
+  den Upstream-PR nicht selbst** – öffne einfach einen PR in deinem Fork. Ein Bot extrahiert den
+  generischen Anteil, neutralisiert ihn und öffnet/aktualisiert den vereins-neutralen PR gegen
+  `main`. Halte generische Änderungen und Branding in **getrennten** Hunks (sonst meldet der Bot
+  `needs-human`). Details: [`docs/mergeback-pipeline.md`](docs/mergeback-pipeline.md).
 
 Mehr zur Architektur: [`CLAUDE.md`](CLAUDE.md), [`README.md`](README.md),
 [`docs/productization-saas-plan.md`](docs/productization-saas-plan.md).
