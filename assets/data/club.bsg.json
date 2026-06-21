@@ -14,5 +14,6 @@
   "city": "59556 Lippstadt",
   "description": "Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte willkommen – kostenloses Probetraining bei der BSG Benninghausen e.V.",
   "logo": "assets/img/bsg-logo.png",
-  "theme_color": "#0d0d12"
+  "theme_color": "#0d0d12",
+  "pass_label": "Judopass"
 }
