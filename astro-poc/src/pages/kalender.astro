@@ -1,0 +1,39 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Termine & Kalender">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Termine</p>
+      <span class="eyebrow eyebrow--invert">Kalender</span>
+      <h1>Kommende Termine</h1>
+      <p>Training, Turniere, Prüfungen und Feste – alle wichtigen Termine auf einen Blick.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Demnächst</span>
+        <h2>Das steht an</h2>
+        <p>Es werden nur Termine ab heute angezeigt – sortiert nach Datum.</p>
+      </div>
+      <div class="events" data-events>
+        <div class="skeleton" style="min-height:84px"></div>
+        <div class="skeleton" style="min-height:84px"></div>
+        <div class="skeleton" style="min-height:84px"></div>
+      </div>
+      <div class="notice notice--mock" style="margin-top:30px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v14H4zM4 9h16M9 13h7M9 16h4"/></svg>
+        <p><b>Hinweis:</b> Die Termine stammen in dieser Demo aus einer simulierten API (<code>/api/events</code>) und lassen sich in <code>assets/data/events.json</code> pflegen.</p>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/kalender.js"></script>
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>

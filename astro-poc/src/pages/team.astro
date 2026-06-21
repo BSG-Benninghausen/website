@@ -1,0 +1,61 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Team & Vorstand">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Team</p>
+      <span class="eyebrow eyebrow--invert">Die Menschen dahinter</span>
+      <h1>Unser Team</h1>
+      <p>Ein engagierter Vorstand und erfahrene Trainer:innen sorgen dafür, dass Judo bei uns Spaß macht und voranbringt.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Vorstand</span>
+        <h2>Der Vorstand</h2>
+        <p>Ehrenamtlich im Einsatz für den Verein.</p>
+      </div>
+      <div class="grid grid--4" data-team-vorstand>
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--sand">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Auf der Matte</span>
+        <h2>Trainerteam</h2>
+        <p>Sie bringen euch Judo bei – mit Geduld, Erfahrung und Begeisterung.</p>
+      </div>
+      <div class="grid grid--3" data-team-trainer>
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+      <div class="notice notice--mock" style="margin-top:30px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p>Du möchtest dich engagieren oder unser Team verstärken? <a href="kontakt.html">Sprich uns gerne an.</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section--tight">
+    <div class="wrap">
+      <div class="cta-band reveal">
+        <span class="cta-band__glow" aria-hidden="true"></span>
+        <h2>Lust, Teil des Teams zu werden?</h2>
+        <p>Komm zum kostenlosen Probetraining und lerne uns persönlich kennen.</p>
+        <div class="hero__cta"><a href="anmeldung.html" class="btn btn--gold btn--lg">Probetraining anfragen</a></div>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/team.js"></script>
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>
