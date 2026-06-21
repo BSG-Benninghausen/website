@@ -126,6 +126,7 @@
     }
     const has = (p) => s.isAdmin || (s.perms && s.perms.includes(p));
     setHidden("[data-members-link]", !has("view_members"));
+    setHidden("[data-users-link]", !has("manage_users"));
     setHidden("[data-redaktion-link]", !(has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts") || has("manage_sponsors")));
     setHidden("[data-admin-link]", !(has("manage_roles") || has("manage_users") || has("manage_team") || has("manage_features") || has("book_features")));
   }

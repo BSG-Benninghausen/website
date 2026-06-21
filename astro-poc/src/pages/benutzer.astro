@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base pageTitle="Benutzer" noindex={true}>
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Benutzer</p>
+      <span class="eyebrow eyebrow--invert">Verwaltung</span>
+      <h1>Benutzer</h1>
+      <p>Login-Konten verwalten: Rollen zuweisen, Konten sperren/entsperren oder löschen. Die Mitgliedschafts-Datensätze (Beiträge, Pässe) pflegst du unter <a href="mitglieder.html">Mitglieder</a>.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p id="users-loading" class="center" style="color:var(--text-soft)">Lade Benutzer …</p>
+      <div id="users-meta" class="billing-summary" hidden></div>
+      <div id="users-status" class="form-status" role="status" aria-live="polite"></div>
+      <div id="users-list" class="adm-users" hidden></div>
+      <div class="notice notice--mock" style="margin-top:26px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p>Ein gesperrtes Konto kann sich nicht mehr einloggen. Benutzer mit offenen Mitgliedschaften lassen sich erst löschen, wenn die Mitgliedschaften entfernt sind. Mindestens ein Administrator bleibt immer erhalten.</p>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="assets/js/benutzer.js"></script>
+  </Fragment>
+</Base>

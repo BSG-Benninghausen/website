@@ -355,7 +355,7 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
   const getUserById = (id) => db.users.find((u) => u.id === id);
   function publicUser(u) {
     if (!u) return null;
-    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, photo: u.photo || "", roles: u.roles || ["member"], createdAt: u.createdAt };
+    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, photo: u.photo || "", roles: u.roles || ["member"], active: u.active !== false, createdAt: u.createdAt };
   }
   function userPermissions(user) {
     if (!user) return [];
@@ -865,6 +865,7 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       if (!isEmail(body.email)) return J({ ok: false, message: "Bitte gültige E-Mail-Adresse angeben.", errors: { email: "Ungültige E-Mail." } }, 422);
       const user = findUserByEmail(body.email);
       if (!user) return J({ ok: false, message: "Kein Konto mit dieser E-Mail gefunden. Bitte zuerst registrieren.", errors: { email: "Unbekannte E-Mail." } }, 404);
+      if (user.active === false) return J({ ok: false, message: "Dieses Konto ist deaktiviert. Bitte wende dich an den Vorstand." }, 403);
       const code = genCode();
       db.codes[user.email] = code;
       // devCode wird nur in Test-/Dev-Umgebungen mitgeliefert (kein echter E-Mail-Versand):
@@ -878,6 +879,7 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
         return J({ ok: false, message: "Code ungültig oder abgelaufen. Bitte erneut anfordern.", errors: { code: "Falscher Code." } }, 401);
       }
       delete db.codes[user.email];
+      if (user.active === false) return J({ ok: false, message: "Dieses Konto ist deaktiviert. Bitte wende dich an den Vorstand." }, 403);
       ctx.setSession(user.id);
       return J({ ok: true, user: publicUser(user), message: "Willkommen zurück, " + user.name.split(" ")[0] + "!" });
     },
@@ -979,8 +981,50 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
     "GET /api/users": async (_body, ctx) => {
       const user = ctx.currentUser();
       if (!hasPerm(user, "manage_users")) return deny(user);
-      const items = db.users.map((u) => ({ id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"] }));
+      const items = db.users.map((u) => ({
+        id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"],
+        active: u.active !== false, createdAt: u.createdAt || null,
+        membershipCount: db.memberships.filter((m) => m.userId === u.id).length,
+        isSelf: u.id === user.id,
+      }));
       return J({ ok: true, items });
+    },
+    /* Konto sperren/entsperren (Login-Zugriff). Recht manage_users.
+       Schutz: nicht das eigene Konto, nicht den letzten aktiven Administrator. */
+    "POST /api/users/status": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_users")) return deny(user);
+      if (typeof body.active !== "boolean") return J({ ok: false, message: "Bitte Status angeben.", errors: { active: "Boolescher Wert erwartet." } }, 422);
+      const idx = db.users.findIndex((u) => u.id === body.userId);
+      if (idx === -1) return J({ ok: false, message: "Benutzer nicht gefunden." }, 404);
+      if (body.active === false) {
+        if (db.users[idx].id === user.id) return J({ ok: false, message: "Du kannst dein eigenes Konto nicht deaktivieren." }, 409);
+        if ((db.users[idx].roles || []).includes("admin")) {
+          const otherActiveAdmins = db.users.filter((u, i) => i !== idx && (u.roles || []).includes("admin") && u.active !== false).length;
+          if (otherActiveAdmins === 0) return J({ ok: false, message: "Es muss mindestens ein aktiver Administrator bestehen bleiben." }, 409);
+        }
+      }
+      db.users[idx].active = body.active;
+      return J({ ok: true, user: { id: db.users[idx].id, name: db.users[idx].name, email: db.users[idx].email, active: db.users[idx].active }, message: body.active ? "Konto aktiviert." : "Konto deaktiviert." });
+    },
+    /* Benutzer (Login-Konto) löschen. Recht manage_users. Schutz: nicht das eigene
+       Konto, nicht den letzten Administrator, nicht bei offenen Mitgliedschaften.
+       Vereinsämter dieses Benutzers werden mitgelöscht. */
+    "POST /api/users/delete": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_users")) return deny(user);
+      const idx = db.users.findIndex((u) => u.id === body.userId);
+      if (idx === -1) return J({ ok: false, message: "Benutzer nicht gefunden." }, 404);
+      if (db.users[idx].id === user.id) return J({ ok: false, message: "Du kannst dein eigenes Konto nicht löschen." }, 409);
+      if ((db.users[idx].roles || []).includes("admin")) {
+        const otherAdmins = db.users.filter((u, i) => i !== idx && (u.roles || []).includes("admin")).length;
+        if (otherAdmins === 0) return J({ ok: false, message: "Es muss mindestens ein Administrator bestehen bleiben." }, 409);
+      }
+      const owned = db.memberships.filter((m) => m.userId === db.users[idx].id).length;
+      if (owned > 0) return J({ ok: false, message: "Dieser Benutzer hat noch " + owned + " Mitgliedschaft(en). Bitte diese zuerst entfernen." }, 409);
+      const removed = db.users.splice(idx, 1)[0];
+      db.positions = db.positions.filter((p) => p.userId !== removed.id);
+      return J({ ok: true, message: "Benutzer gelöscht." });
     },
     "POST /api/users/roles": async (body, ctx) => {
       const user = ctx.currentUser();

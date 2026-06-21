@@ -408,7 +408,7 @@
   const getUserById = (id) => getUsers().find((u) => u.id === id);
   function publicUser(u) {
     if (!u) return null;
-    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, photo: u.photo || "", roles: u.roles || ["member"], createdAt: u.createdAt };
+    return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, photo: u.photo || "", roles: u.roles || ["member"], active: u.active !== false, createdAt: u.createdAt };
   }
   const getSession = () => getStore(KEYS.session, null);
   const setSession = (userId) => setStore(KEYS.session, { token: genId("tok"), userId });
@@ -1063,6 +1063,7 @@
       if (!isEmail(body.email)) return json({ ok: false, message: "Bitte gültige E-Mail-Adresse angeben.", errors: { email: "Ungültige E-Mail." } }, 422);
       const user = findUserByEmail(body.email);
       if (!user) return json({ ok: false, message: "Kein Konto mit dieser E-Mail gefunden. Bitte zuerst registrieren.", errors: { email: "Unbekannte E-Mail." } }, 404);
+      if (user.active === false) return json({ ok: false, message: "Dieses Konto ist deaktiviert. Bitte wende dich an den Vorstand." }, 403);
       const codes = getStore(KEYS.codes, {});
       const code = genCode();
       codes[user.email] = code;
@@ -1078,6 +1079,7 @@
         return json({ ok: false, message: "Code ungültig oder abgelaufen. Bitte erneut anfordern.", errors: { code: "Falscher Code." } }, 401);
       }
       delete codes[user.email]; setStore(KEYS.codes, codes);
+      if (user.active === false) return json({ ok: false, message: "Dieses Konto ist deaktiviert. Bitte wende dich an den Vorstand." }, 403);
       setSession(user.id);
       return json({ ok: true, user: publicUser(user), message: "Willkommen zurück, " + user.name.split(" ")[0] + "!" });
     },
@@ -1202,8 +1204,58 @@
     "GET /api/users": async () => {
       const user = currentUser();
       if (!hasPerm(user, "manage_users")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
-      const items = getUsers().map((u) => ({ id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"] }));
+      const memberships = getStore(KEYS.memberships, []);
+      const items = getUsers().map((u) => ({
+        id: u.id, name: u.name, email: u.email, roles: u.roles || ["member"],
+        active: u.active !== false, createdAt: u.createdAt || null,
+        membershipCount: memberships.filter((m) => m.userId === u.id).length,
+        isSelf: u.id === user.id,
+      }));
       return json({ ok: true, items });
+    },
+
+    /* Konto sperren/entsperren (Login-Zugriff). Recht manage_users.
+       Schutz: nicht das eigene Konto, nicht den letzten aktiven Administrator. */
+    "POST /api/users/status": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_users")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (typeof body.active !== "boolean") return json({ ok: false, message: "Bitte Status angeben.", errors: { active: "Boolescher Wert erwartet." } }, 422);
+      const users = getUsers();
+      const idx = users.findIndex((u) => u.id === body.userId);
+      if (idx === -1) return json({ ok: false, message: "Benutzer nicht gefunden." }, 404);
+      if (body.active === false) {
+        if (users[idx].id === user.id) return json({ ok: false, message: "Du kannst dein eigenes Konto nicht deaktivieren." }, 409);
+        if ((users[idx].roles || []).includes("admin")) {
+          const otherActiveAdmins = users.filter((u, i) => i !== idx && (u.roles || []).includes("admin") && u.active !== false).length;
+          if (otherActiveAdmins === 0) return json({ ok: false, message: "Es muss mindestens ein aktiver Administrator bestehen bleiben." }, 409);
+        }
+      }
+      users[idx].active = body.active;
+      setUsers(users);
+      return json({ ok: true, user: { id: users[idx].id, name: users[idx].name, email: users[idx].email, active: users[idx].active }, message: body.active ? "Konto aktiviert." : "Konto deaktiviert." });
+    },
+
+    /* Benutzer (Login-Konto) löschen. Recht manage_users. Schutz: nicht das
+       eigene Konto, nicht den letzten Administrator, nicht bei offenen
+       Mitgliedschaften (diese zuerst entfernen). Vereinsämter werden mitgelöscht. */
+    "POST /api/users/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_users")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const users = getUsers();
+      const idx = users.findIndex((u) => u.id === body.userId);
+      if (idx === -1) return json({ ok: false, message: "Benutzer nicht gefunden." }, 404);
+      if (users[idx].id === user.id) return json({ ok: false, message: "Du kannst dein eigenes Konto nicht löschen." }, 409);
+      if ((users[idx].roles || []).includes("admin")) {
+        const otherAdmins = users.filter((u, i) => i !== idx && (u.roles || []).includes("admin")).length;
+        if (otherAdmins === 0) return json({ ok: false, message: "Es muss mindestens ein Administrator bestehen bleiben." }, 409);
+      }
+      const memberships = getStore(KEYS.memberships, []);
+      const owned = memberships.filter((m) => m.userId === users[idx].id).length;
+      if (owned > 0) return json({ ok: false, message: "Dieser Benutzer hat noch " + owned + " Mitgliedschaft(en). Bitte diese zuerst entfernen." }, 409);
+      const removed = users.splice(idx, 1)[0];
+      setUsers(users);
+      setPositions(getPositions().filter((p) => p.userId !== removed.id));
+      return json({ ok: true, message: "Benutzer gelöscht." });
     },
 
     "POST /api/users/roles": async (body) => {

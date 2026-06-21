@@ -1,6 +1,7 @@
 /* =====================================================================
-   admin.js – Administration: Rollen, Berechtigungen, Benutzer
-   Geschützt: nur für Benutzer mit manage_roles und/oder manage_users.
+   admin.js – Administration: Rollen, Vereinsämter, Features/Buchung.
+   Benutzer-/Login-Konten liegen auf einer eigenen Seite (benutzer.js).
+   Geschützt: manage_roles / manage_team / manage_features / book_features.
    ===================================================================== */
 (function () {
   "use strict";
@@ -10,7 +11,7 @@
   let roles = [];   // alle Rollen
   let posUsers = []; // {id,name} für den Mitglieder-Picker der Vereinsämter
   let featureRoles = []; // {id,label} für die Rollen-Auswahl der Feature-Freigabe
-  let can = { roles: false, users: false, team: false, features: false };
+  let can = { roles: false, team: false, features: false };
 
   async function postJSON(url, data) {
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -35,11 +36,10 @@
     } catch (e) { window.location.href = "login.html"; return; }
 
     can.roles = me.isAdmin || me.permissions.includes("manage_roles");
-    can.users = me.isAdmin || me.permissions.includes("manage_users");
     can.team = me.isAdmin || me.permissions.includes("manage_team");
     can.features = me.isAdmin || me.permissions.includes("manage_features");
     can.booking = me.isAdmin || me.permissions.includes("book_features");
-    if (!can.roles && !can.users && !can.team && !can.features && !can.booking) { window.location.href = "konto.html"; return; }
+    if (!can.roles && !can.team && !can.features && !can.booking) { window.location.href = "konto.html"; return; }
 
     $("#admin-loading").hidden = true;
     $("#admin").hidden = false;
@@ -50,11 +50,6 @@
       renderRoleCreate();
       renderRoles();
       $("#roles-section").hidden = false;
-    }
-    if (can.users) {
-      if (!roles.length) await loadRoles();   // für Rollen-Auswahl
-      await loadUsers();
-      $("#users-section").hidden = false;
     }
     if (can.team) {
       await loadPositions();
@@ -105,30 +100,6 @@
         "</div>"
       );
     }).join("");
-  }
-
-  /* ---------- Benutzer ---------- */
-  async function loadUsers() {
-    const wrap = $("#users-list");
-    try {
-      const items = (await (await fetch("/api/users")).json()).items || [];
-      wrap.innerHTML = items.map(userRow).join("");
-    } catch (e) {
-      wrap.innerHTML = '<p class="load-error">Benutzer konnten nicht geladen werden.</p>';
-    }
-  }
-  function userRow(u) {
-    const roleChecks = roles.map((r) =>
-      '<label class="perm-check"><input type="checkbox" value="' + r.id + '"' +
-      ((u.roles || []).includes(r.id) ? " checked" : "") + "> " + BSG.escape(r.label) + "</label>"
-    ).join("");
-    return (
-      '<div class="adm-user" data-user="' + u.id + '">' +
-        '<div class="adm-user__id"><b>' + BSG.escape(u.name) + "</b><span>" + BSG.escape(u.email) + "</span></div>" +
-        '<fieldset class="perm-grid">' + roleChecks + "</fieldset>" +
-        '<button class="btn btn--primary btn--sm" data-save-user="' + u.id + '">Rollen speichern</button>' +
-      "</div>"
-    );
   }
 
   /* ---------- Vereinsämter (öffentliche Team-Seite) ---------- */
@@ -246,7 +217,6 @@
       if (res.ok && data.ok) {
         createForm.reset();
         await loadRoles(); renderRoles();
-        if (can.users) await loadUsers();
         toast("ok", data.message);
       } else {
         if (data.errors && data.errors.label) {
@@ -302,7 +272,6 @@
     $("#admin").addEventListener("click", async (e) => {
       const saveRole = e.target.closest("[data-save-role]");
       const delRole = e.target.closest("[data-del-role]");
-      const saveUser = e.target.closest("[data-save-user]");
       const savePos = e.target.closest("[data-save-position]");
       const delPos = e.target.closest("[data-del-position]");
       const saveFeat = e.target.closest("[data-save-feature]");
@@ -336,16 +305,8 @@
       if (delRole) {
         if (!confirm("Diese Rolle wirklich löschen?")) return;
         const { res, data } = await postJSON("/api/roles/delete", { id: delRole.getAttribute("data-del-role") });
-        if (res.ok && data.ok) { await loadRoles(); renderRoles(); if (can.users) await loadUsers(); }
+        if (res.ok && data.ok) { await loadRoles(); renderRoles(); }
         toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
-      }
-
-      if (saveUser) {
-        const row = saveUser.closest(".adm-user");
-        const newRoles = checkedValues(row.querySelector(".perm-grid"));
-        const { res, data } = await postJSON("/api/users/roles", { userId: saveUser.getAttribute("data-save-user"), roles: newRoles });
-        toast(res.ok && data.ok ? "ok" : "err", data.message || "Fehler.");
-        if (res.ok && data.ok) await loadUsers();
       }
 
       if (savePos) {
