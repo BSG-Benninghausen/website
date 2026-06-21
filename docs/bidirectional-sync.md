@@ -49,23 +49,34 @@ deploy/**                               merge=ours
 sh tools/configure-merge-drivers.sh        # = git config merge.ours.driver true
 ```
 
-Ohne diesen Schritt greift die Allowlist nicht. Der `true`-Treiber ist ein No-Op, der den Merge mit
-Exit 0 abschließt und so die **eigene** (Ziel-Repo-)Version behält.
+Der `true`-Treiber ist ein No-Op, der den Merge mit Exit 0 abschließt und so die **eigene**
+(Ziel-Repo-)Version behält.
+
+> **Wichtig – merge=ours allein genügt NICHT.** Der Treiber greift nur bei einem **Konflikt**, also
+> wenn **beide** Seiten dieselbe Datei geändert haben. Hat nur die *Gegenseite* eine Branding-Datei
+> geändert (das eigene Repo nicht), nimmt Git sie **ohne Konflikt** an und würde das eigene Branding
+> überschreiben. Deshalb immer über den Wrapper `tools/sync-merge.sh` mergen (siehe unten): er
+> stellt nach dem Merge alle merge=ours-Pfade aus dem eigenen HEAD wieder her und schließt damit die
+> Lücke in **beide** Richtungen.
 
 ## Sync-Workflow
 
 **Einmalig pro Klon:** `sh tools/configure-merge-drivers.sh`
 
-**Upstream → Fork** (Features/Fixes ziehen):
+**Immer über den branding-sicheren Wrapper mergen** (statt `git merge` direkt):
+
 ```sh
-git fetch upstream && git merge upstream/main
-# Geteilte Dateien mergen sauber; Branding-Dateien bleiben (merge=ours).
-# Einzige reguläre Reibung: ?v=N in *.html (s. u.).
+# Upstream → Fork (Features/Fixes ziehen):
+git fetch upstream && sh tools/sync-merge.sh upstream/main
+
+# Fork → Upstream (Verbesserung zurückgeben; idealerweise als vereins-neutraler PR):
+git fetch fork && sh tools/sync-merge.sh fork/main
 ```
 
-**Fork → Upstream** (Verbesserung zurückgeben): als **vereins-neutralen** PR gegen `main` öffnen
-(keine club-spezifischen Inhalte). Branding-Dateien des Forks bleiben beim Upstream unverändert
-(merge=ours), generische Code-Änderungen werden übernommen.
+Der Wrapper merged (merge=ours löst Beidseitig-geändert-Konflikte), stellt danach **alle**
+Branding-Dateien aus dem eigenen HEAD wieder her (deckt Nur-Gegenseite-geändert ab) und meldet
+verbleibende Konflikte in *geteilten* Dateien zur manuellen Lösung. Einzige reguläre Reibung danach:
+`?v=N` in `*.html` (s. u.). Anschließend committen: `git commit --no-edit`.
 
 ## Einzige wiederkehrende Reibung: Cache-Busting `?v=N`
 
