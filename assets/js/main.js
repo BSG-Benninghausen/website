@@ -115,7 +115,7 @@
     if (!s) { // ausgeloggt: Default-HTML (Login sichtbar, Menü/Verwaltung verborgen)
       loginLinks.forEach((a) => { a.hidden = false; });
       if (accMenu) accMenu.hidden = true;
-      setHidden("[data-members-link],[data-redaktion-link],[data-admin-link]", true);
+      setHidden("[data-members-link],[data-redaktion-link],[data-admin-link],[data-shop-admin-link]", true);
       return;
     }
     loginLinks.forEach((a) => { a.hidden = true; });
@@ -147,6 +147,8 @@
     setHidden("[data-members-link]", !(has("view_members") || has("manage_users")));
     setHidden("[data-redaktion-link]", !(has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts") || has("manage_sponsors")));
     setHidden("[data-admin-link]", !(has("manage_roles") || has("manage_users") || has("manage_team") || has("manage_features") || has("book_features")));
+    // Webshop-Verwaltung: eigenes, isoliertes Recht (Betreiber = Privatperson, NICHT der Vorstand).
+    setHidden("[data-shop-admin-link]", !has("manage_shop"));
   }
 
   const navHasAccount = document.querySelector("[data-account-link], [data-account-menu], [data-admin-link], [data-redaktion-link], [data-members-link]");

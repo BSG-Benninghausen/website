@@ -43,6 +43,10 @@
     featureBookings: "bsg_feature_bookings",
     sponsors: "bsg_sponsors",
     sponsorsConfig: "bsg_sponsors_config",
+    shopProducts: "bsg_shop_products",
+    shopOrders: "bsg_shop_orders",
+    shopMandates: "bsg_shop_mandates",
+    shopConfig: "bsg_shop_config",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -68,6 +72,7 @@
     { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
     { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
     { key: "manage_sponsors", label: "Sponsoren verwalten" },
+    { key: "manage_shop", label: "Webshop verwalten (Produkte, Bestellungen, Förder-Status)" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   /* Seed-Admin-Adresse; per window.BSG_ADMIN_EMAIL (Deploy/Fork) überschreibbar.
@@ -248,6 +253,93 @@
       subtitle: norm(r.subtitle),
     };
   }
+
+  /* ----- Webshop -----
+     Eigenständiger Shop (Betreiber = Privatperson, z. B. Julian Becker – NICHT der
+     Verein). Produkte tragen je Stufe eigene Preise: extern / mitglied / gesponsert
+     (gesponsert optional, fällt sonst auf mitglied zurück). Online-Checkout (SEPA-
+     Lastschrift) nur für eingeloggte, aktive Mitglieder. Betreiber-/Rechtsdaten
+     liegen in der Shop-Config (shop.json / shop.<ns>.json), getrennt von /api/club. */
+  const SHOP_CATEGORIES = ["gi", "guertel", "merch"];
+  const shopCategory = (v) => (SHOP_CATEGORIES.includes(v) ? v : "merch");
+  const SHOP_ORDER_STATUSES = ["offen", "mandat_erteilt", "bezahlt", "versendet", "storniert"];
+  const SHOP_CONFIG_FIELDS = [
+    { key: "enabled", label: "Shop aktivieren", type: "checkbox" },
+    { key: "showPage", label: "Shop-Seite im Menü verlinken", type: "checkbox" },
+    { key: "title", label: "Überschrift", type: "text" },
+    { key: "subtitle", label: "Untertitel", type: "textarea" },
+    { key: "operatorName", label: "Betreiber (Name)", type: "text" },
+    { key: "operatorAddress", label: "Betreiber – Anschrift", type: "textarea" },
+    { key: "operatorEmail", label: "Betreiber – E-Mail (für Anfragen)", type: "text" },
+    { key: "operatorIban", label: "Betreiber – IBAN (SEPA-Gläubiger)", type: "text" },
+    { key: "creditorId", label: "Gläubiger-Identifikationsnummer", type: "text" },
+    { key: "legalImpressum", label: "Impressum (Shop-Betreiber)", type: "textarea" },
+    { key: "legalAgb", label: "AGB", type: "textarea" },
+    { key: "legalWiderruf", label: "Widerrufsbelehrung", type: "textarea" },
+  ];
+  const SHOP_CONFIG_DEFAULTS = { enabled: false, showPage: false, title: "Vereinsshop", subtitle: "" };
+  function normShopConfig(raw) {
+    const r = raw && typeof raw === "object" ? raw : {};
+    const ibanRaw = norm(r.operatorIban);
+    return {
+      enabled: asBool(r.enabled),
+      showPage: "showPage" in r ? asBool(r.showPage) : false,
+      title: norm(r.title) || SHOP_CONFIG_DEFAULTS.title,
+      subtitle: norm(r.subtitle),
+      operatorName: norm(r.operatorName),
+      operatorAddress: norm(r.operatorAddress),
+      operatorEmail: norm(r.operatorEmail),
+      operatorIban: ibanRaw && isIban(ibanRaw) ? fmtIban(ibanRaw) : "",
+      creditorId: norm(r.creditorId),
+      legalImpressum: norm(r.legalImpressum),
+      legalAgb: norm(r.legalAgb),
+      legalWiderruf: norm(r.legalWiderruf),
+    };
+  }
+  // Öffentliches Subset der Shop-Config: ohne sensible Betreiber-Bankdaten
+  // (operatorIban/creditorId). Diese liefert GET nur an manage_shop aus.
+  function shopConfigPublic(cfg) {
+    const { operatorIban, creditorId, ...pub } = cfg;
+    return pub;
+  }
+  function productErrors(b) {
+    const e = {};
+    if (norm(b.name).length < 2) e.name = "Bitte einen Produktnamen angeben.";
+    const src = b.prices && typeof b.prices === "object" ? b.prices : b;
+    if (!(num(src.extern) > 0)) e.extern = "Bitte einen Externen-Preis (> 0) angeben.";
+    if (!(num(src.mitglied) > 0)) e.mitglied = "Bitte einen Mitglieder-Preis (> 0) angeben.";
+    return e;
+  }
+  function productFields(b) {
+    const src = b.prices && typeof b.prices === "object" ? b.prices : b;
+    const prices = { extern: num(src.extern), mitglied: num(src.mitglied) };
+    const g = num(src.gesponsert);
+    if (g > 0) prices.gesponsert = g;
+    return {
+      name: norm(b.name),
+      category: shopCategory(b.category),
+      description: norm(b.description),
+      prices,
+      active: "active" in b ? asBool(b.active) : true,
+      order: num(b.order),
+    };
+  }
+  /* Preis-Stufe des aktuellen Nutzers: gesponsert > aktives Mitglied > extern. */
+  function shopTierFor(user) {
+    if (!user) return "extern";
+    if (user.shopSponsored) return "gesponsert";
+    const active = getStore(KEYS.memberships, []).some((m) => m.userId === user.id && m.status === "aktiv");
+    return active ? "mitglied" : "extern";
+  }
+  function shopPriceFor(product, tier) {
+    const pr = (product && product.prices) || {};
+    if (tier === "gesponsert") return pr.gesponsert != null ? pr.gesponsert : (pr.mitglied != null ? pr.mitglied : pr.extern);
+    if (tier === "mitglied") return pr.mitglied != null ? pr.mitglied : pr.extern;
+    return pr.extern;
+  }
+  // Online-Checkout (SEPA-Lastschrift) nur für eingeloggte, aktive Mitglieder.
+  const shopCanCheckout = (user) => !!user && getStore(KEYS.memberships, []).some((m) => m.userId === user.id && m.status === "aktiv");
+  const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
   /* ----- Vereinsdaten / Branding: Schema (White-Label-Config) -----
      Treibt Name, Sport, Adresse, Kontakt, Impressum & Logo der gesamten Site
@@ -582,6 +674,12 @@
       grantS("vorstand"); grantS("pressewart"); grantS("vorsitz1");
       setStore(KEYS.seedVersion, 10);
     }
+    // Migration v11: Webshop-Recht. Eigene Rolle „Shop-Betreiber" (Julian Becker, privat).
+    // BEWUSST NICHT an den Vorstand vergeben – der Shop ist rechtlich vom Verein getrennt.
+    if (seedVersion < 11) {
+      if (!roles.some((r) => r.id === "shop")) roles.push({ id: "shop", label: "Shop-Betreiber", permissions: ["manage_shop"], system: false });
+      setStore(KEYS.seedVersion, 11);
+    }
     setRoles(roles);
 
     const users = getUsers();
@@ -642,6 +740,24 @@
   async function ensureSponsorsConfig() {
     let cfg = getStore(KEYS.sponsorsConfig, null);
     if (!cfg) { cfg = normSponsorsConfig({}); setStore(KEYS.sponsorsConfig, cfg); }
+    return cfg;
+  }
+  async function ensureShopProducts() {
+    let items = getStore(KEYS.shopProducts, null);
+    if (!items) {
+      try { items = await loadClubData("shop-products.json"); } catch (e) { items = []; }
+      setStore(KEYS.shopProducts, items);
+    }
+    return items;
+  }
+  async function ensureShopConfig() {
+    let cfg = getStore(KEYS.shopConfig, null);
+    if (!cfg) {
+      let raw = {};
+      try { raw = await loadClubData("shop.json"); } catch (e) { raw = {}; }
+      cfg = normShopConfig(raw);
+      setStore(KEYS.shopConfig, cfg);
+    }
     return cfg;
   }
   async function ensureClub() {
@@ -765,6 +881,177 @@
       const cfg = normSponsorsConfig(values);
       setStore(KEYS.sponsorsConfig, cfg);
       return json({ ok: true, values: cfg, message: "Sponsoren-Einstellungen gespeichert." });
+    },
+
+    /* ---------- Webshop: Konfiguration (Betreiber & Recht) ---------- */
+    "GET /api/shop-config": async () => {
+      const user = currentUser();
+      const cfg = normShopConfig(await ensureShopConfig());
+      const values = hasPerm(user, "manage_shop") ? cfg : shopConfigPublic(cfg);
+      return json({ ok: true, fields: SHOP_CONFIG_FIELDS, values });
+    },
+    "POST /api/shop-config": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      const cfg = normShopConfig(values);
+      setStore(KEYS.shopConfig, cfg);
+      return json({ ok: true, values: cfg, message: "Shop-Einstellungen gespeichert." });
+    },
+
+    /* ---------- Webshop: Produkte ---------- */
+    "GET /api/shop/products": async () => {
+      const user = currentUser();
+      const manage = hasPerm(user, "manage_shop");
+      const tier = shopTierFor(user);
+      const items = (await ensureShopProducts()).slice()
+        .filter((p) => manage || p.active !== false)
+        .sort((a, b) => (num(a.order) - num(b.order)) || a.name.localeCompare(b.name, "de"))
+        .map((p) => {
+          const out = {
+            id: p.id, name: p.name, category: p.category, description: p.description || "",
+            image: p.image || "", active: p.active !== false, order: num(p.order),
+            prices: { extern: p.prices.extern, mitglied: p.prices.mitglied },
+            yourTier: tier, yourPrice: shopPriceFor(p, tier),
+          };
+          // Förderpreis nur Verwaltung offenlegen (interne Sonderkondition).
+          if (manage && p.prices.gesponsert != null) out.prices.gesponsert = p.prices.gesponsert;
+          return out;
+        });
+      return json({ ok: true, items, tier });
+    },
+    "POST /api/shop/products": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = productErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureShopProducts();
+      const item = { id: genId("prod"), ...productFields(body), image: isPhoto(body.image) ? body.image : "" };
+      items.push(item); setStore(KEYS.shopProducts, items);
+      return json({ ok: true, item, message: "Produkt angelegt." }, 201);
+    },
+    "POST /api/shop/products/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = productErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureShopProducts();
+      const idx = items.findIndex((p) => p.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Produkt nicht gefunden." }, 404);
+      const image = body.image === "" ? "" : (isPhoto(body.image) ? body.image : (items[idx].image || ""));
+      items[idx] = { ...items[idx], ...productFields(body), image };
+      setStore(KEYS.shopProducts, items);
+      return json({ ok: true, item: items[idx], message: "Produkt gespeichert." });
+    },
+    "POST /api/shop/products/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = await ensureShopProducts();
+      if (!items.some((p) => p.id === body.id)) return json({ ok: false, message: "Produkt nicht gefunden." }, 404);
+      setStore(KEYS.shopProducts, items.filter((p) => p.id !== body.id));
+      return json({ ok: true, message: "Produkt gelöscht." });
+    },
+
+    /* ---------- Webshop: Förder-Status (gesponserte Einzelperson) ---------- */
+    "POST /api/shop/sponsored": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (typeof body.sponsored !== "boolean") return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { sponsored: "Boolean erwartet." } }, 422);
+      const users = getUsers();
+      // Betreiber hat keinen Mitglieder-Listenzugriff: Auswahl per userId ODER E-Mail.
+      const idx = body.userId
+        ? users.findIndex((u) => u.id === body.userId)
+        : (body.email ? users.findIndex((u) => u.email === lc(body.email)) : -1);
+      if (idx === -1) return json({ ok: false, message: "Benutzer nicht gefunden.", errors: { email: "Kein Konto mit dieser E-Mail." } }, 404);
+      users[idx].shopSponsored = body.sponsored;
+      setUsers(users);
+      return json({ ok: true, user: { id: users[idx].id, name: users[idx].name, email: users[idx].email, shopSponsored: !!users[idx].shopSponsored }, message: body.sponsored ? "Förder-Status gesetzt." : "Förder-Status entfernt." });
+    },
+
+    /* ---------- Webshop: SEPA-Lastschriftmandat ---------- */
+    "GET /api/shop/mandate": async () => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const mandate = getStore(KEYS.shopMandates, []).filter((m) => m.userId === user.id && m.status === "aktiv").slice(-1)[0] || null;
+      return json({ ok: true, mandate });
+    },
+    "POST /api/shop/mandate": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      if (!shopCanCheckout(user)) return json({ ok: false, message: "Nur aktive Vereinsmitglieder können ein SEPA-Mandat erteilen." }, 403);
+      if (!asBool(body.consent)) return json({ ok: false, message: "Bitte das SEPA-Lastschriftmandat bestätigen.", errors: { consent: "Bitte bestätigen." } }, 422);
+      const iban = norm(body.iban) ? body.iban : user.iban;
+      if (!iban || !isIban(iban)) return json({ ok: false, code: "ACCOUNT_INCOMPLETE", message: "Bitte zuerst eine gültige IBAN im Konto hinterlegen." }, 409);
+      const cfg = await ensureShopConfig();
+      const mandates = getStore(KEYS.shopMandates, []);
+      mandates.forEach((m) => { if (m.userId === user.id && m.status === "aktiv") m.status = "widerrufen"; });
+      const mandate = {
+        id: genId("man"), userId: user.id,
+        mandateRef: "SHOP-" + user.id.replace(/^usr-/, "").toUpperCase().slice(0, 8) + "-" + Date.now().toString(36).toUpperCase(),
+        iban: fmtIban(iban), accountHolder: norm(body.accountHolder) || user.name,
+        creditorId: cfg.creditorId || "", creditorName: cfg.operatorName || "",
+        consentAt: new Date().toISOString(), status: "aktiv", createdAt: new Date().toISOString(),
+      };
+      mandates.push(mandate); setStore(KEYS.shopMandates, mandates);
+      return json({ ok: true, mandate, message: "SEPA-Lastschriftmandat gespeichert." }, 201);
+    },
+
+    /* ---------- Webshop: Bestellungen ---------- */
+    "GET /api/shop/orders": async () => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      const items = getStore(KEYS.shopOrders, []).filter((o) => o.userId === user.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return json({ ok: true, items });
+    },
+    "POST /api/shop/orders": async (body) => {
+      const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
+      if (!shopCanCheckout(user)) return json({ ok: false, message: "Nur aktive Vereinsmitglieder können bestellen. Externe Interessenten bestellen bitte per Anfrage." }, 403);
+      const cart = Array.isArray(body.items) ? body.items : [];
+      const errors = {};
+      if (!cart.length) errors.items = "Bitte mindestens ein Produkt wählen.";
+      if (!asBool(body.consent)) errors.consent = "Bitte die SEPA-Lastschrift bestätigen.";
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const mandate = getStore(KEYS.shopMandates, []).filter((m) => m.userId === user.id && m.status === "aktiv").slice(-1)[0];
+      if (!mandate) return json({ ok: false, code: "NO_MANDATE", message: "Bitte zuerst ein SEPA-Lastschriftmandat erteilen." }, 409);
+      const products = await ensureShopProducts();
+      const tier = shopTierFor(user);
+      const lines = [];
+      for (const it of cart) {
+        const p = products.find((x) => x.id === it.productId && x.active !== false);
+        const qty = Math.floor(num(it.qty));
+        if (!p) { errors.items = "Produkt nicht gefunden."; break; }
+        if (!(qty >= 1)) { errors.items = "Ungültige Menge."; break; }
+        const unitPrice = shopPriceFor(p, tier);
+        lines.push({ productId: p.id, name: p.name, qty, tier, unitPrice, lineTotal: round2(unitPrice * qty) });
+      }
+      if (errors.items) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const total = round2(lines.reduce((s, l) => s + l.lineTotal, 0));
+      const now = new Date().toISOString();
+      const order = { id: genId("ord"), userId: user.id, items: lines, total, tier, mandateId: mandate.id, status: "mandat_erteilt", note: norm(body.note), createdAt: now, updatedAt: now };
+      const orders = getStore(KEYS.shopOrders, []); orders.push(order); setStore(KEYS.shopOrders, orders);
+      return json({ ok: true, order, message: "Bestellung aufgegeben. Der Betrag wird per SEPA-Lastschrift eingezogen." }, 201);
+    },
+    "GET /api/shop/admin/orders": async () => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const usersById = {}; getUsers().forEach((u) => { usersById[u.id] = u; });
+      const items = getStore(KEYS.shopOrders, []).map((o) => {
+        const ow = usersById[o.userId] || {};
+        return { ...o, ownerName: ow.name || "—", ownerEmail: ow.email || "—" };
+      }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return json({ ok: true, items });
+    },
+    "POST /api/shop/orders/status": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_shop")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      if (!SHOP_ORDER_STATUSES.includes(body.status)) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors: { status: "Ungültiger Status." } }, 422);
+      const orders = getStore(KEYS.shopOrders, []);
+      const idx = orders.findIndex((o) => o.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Bestellung nicht gefunden." }, 404);
+      orders[idx].status = body.status; orders[idx].updatedAt = new Date().toISOString();
+      setStore(KEYS.shopOrders, orders);
+      return json({ ok: true, order: orders[idx], message: "Bestellstatus aktualisiert." });
     },
 
     "GET /api/age-classes": async () => {

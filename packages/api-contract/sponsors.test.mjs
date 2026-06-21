@@ -5,7 +5,7 @@ export const name = "Sponsoren (CRUD, Tiers & Anzeige-Konfiguration)";
 export default async function run(api, ck) {
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("15 Berechtigungen inkl. manage_sponsors", d.items.length === 15 && d.items.some((p) => p.key === "manage_sponsors"));
+  ck("16 Berechtigungen inkl. manage_sponsors", d.items.length === 16 && d.items.some((p) => p.key === "manage_sponsors"));
   [s, d] = await api.getJ("/api/roles");
   ck("vorstand + pressewart haben manage_sponsors", ["vorstand", "pressewart"].every((id) => d.items.find((r) => r.id === id).permissions.includes("manage_sponsors")));
 

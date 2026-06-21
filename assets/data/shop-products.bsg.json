@@ -1,0 +1,7 @@
+[
+  { "id": "prod-gi-basic", "name": "Judo-Anzug (Gi) Einsteiger", "category": "gi", "description": "Robuster Einsteiger-Anzug aus 100% Baumwolle. Ideal für Anfänger und das erste Training.", "image": "", "prices": { "extern": 49.9, "mitglied": 39.9, "gesponsert": 19.9 }, "active": true, "order": 1 },
+  { "id": "prod-gi-comp", "name": "Judo-Anzug (Gi) Wettkampf", "category": "gi", "description": "IJF-tauglicher Wettkampfanzug, schwere Qualität.", "image": "", "prices": { "extern": 89.9, "mitglied": 74.9, "gesponsert": 44.9 }, "active": true, "order": 2 },
+  { "id": "prod-belt-white", "name": "Judo-Gürtel (Weiß bis Braun)", "category": "guertel", "description": "Baumwoll-Gürtel in allen Kyu-Farben. Bitte Farbe & Länge bei der Abholung angeben.", "image": "", "prices": { "extern": 12.9, "mitglied": 9.9, "gesponsert": 5 }, "active": true, "order": 3 },
+  { "id": "prod-shirt", "name": "Vereins-T-Shirt", "category": "merch", "description": "T-Shirt mit dem Logo der BSG Benninghausen.", "image": "", "prices": { "extern": 18, "mitglied": 14 }, "active": true, "order": 4 },
+  { "id": "prod-hoodie", "name": "Vereins-Hoodie", "category": "merch", "description": "Kapuzenpullover mit Vereinslogo, kuschelig warm.", "image": "", "prices": { "extern": 39.9, "mitglied": 32.9 }, "active": true, "order": 5 }
+]

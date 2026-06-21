@@ -5,7 +5,7 @@ export const name = "Inhalte & Rechte (News/Termine/Mitglieder-Lesezugriff)";
 export default async function run(api, ck) {
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("15 Berechtigungen", d.items.length === 15 && d.items.some((p) => p.key === "manage_news") && d.items.some((p) => p.key === "manage_team") && d.items.some((p) => p.key === "view_finance") && d.items.some((p) => p.key === "manage_club"));
+  ck("16 Berechtigungen", d.items.length === 16 && d.items.some((p) => p.key === "manage_news") && d.items.some((p) => p.key === "manage_team") && d.items.some((p) => p.key === "view_finance") && d.items.some((p) => p.key === "manage_club"));
   [s, d] = await api.getJ("/api/roles");
   const ex = ["vorstand", "pressewart", "kassenwart", "trainer"];
   ck("Beispiel-Rollen geseedet", ex.every((id) => d.items.some((r) => r.id === id)));
