@@ -37,6 +37,9 @@ jobs:
             node --check "$f"
           done
 
+      - name: Mergeback-Tools · Self-Test (classify-diff / detect-contract-change)
+        run: node --test tools/classify-diff.test.mjs tools/detect-contract-change.test.mjs
+
       - name: Versions-Guard (Cache-Busting)
         run: node tools/guard-versions.mjs
 

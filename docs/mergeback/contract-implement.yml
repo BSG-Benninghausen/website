@@ -1,0 +1,104 @@
+# TEMPLATE für das Backend-Repo (crypticalcode/bsg-backend) — NICHT im Frontend-/
+# Monorepo aktiv. Beim Phase-3-Split (docs/phase-3-backend-split-runbook.md) nach
+# `.github/workflows/contract-implement.yml` im Backend-Repo kopieren.
+#
+# Zweck (Stage 4 der Mergeback-Pipeline): Sobald im Hauptrepo eine Vertragsänderung
+# nach main gemergt und als contract-vX.Y.Z publiziert wurde, feuert das Hauptrepo ein
+# repository_dispatch hierher. Ein Agent hebt die Contract-Dependency, implementiert die
+# neue/geänderte reale Route in api.mjs, verifiziert gegen die Contract-Suite und öffnet
+# einen DRAFT-PR (Backend berührt reale Persistenz/Deploy -> bewusst kein Auto-Merge).
+#
+# Voraussetzungen im Backend-Repo:
+#   • Secret ANTHROPIC_API_KEY
+#   • Secret/Token mit read:packages für die @crypticalcode/api-contract devDependency
+#   • Push/PR laufen im EIGENEN Repo -> der eingebaute github.token reicht
+#     (permissions: contents:write + pull-requests:write unten). Keine App nötig.
+
+name: Contract · Implement endpoint
+
+on:
+  repository_dispatch:
+    types: [contract-changed]      # vom Hauptrepo gefeuert (mit client_payload)
+  workflow_dispatch:
+    inputs:
+      contract_version:
+        description: "Contract-Version, z. B. 1.4.0 (ohne contract-v Präfix)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    env:
+      CONTRACT_VERSION: ${{ github.event.client_payload.contract_version || inputs.contract_version }}
+      ADDED_ROUTES: ${{ join(github.event.client_payload.added_routes, ', ') }}
+      CHANGED_FEATURES: ${{ join(github.event.client_payload.changed_features, ', ') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@crypticalcode"
+
+      - name: Contract-Dependency heben + Seeds neu vendoren
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          npm pkg set "devDependencies.@crypticalcode/api-contract=^${CONTRACT_VERSION}"
+          npm ci
+          node tools/vendor-seeds.mjs
+          node tools/vendor-seeds.mjs --check
+
+      - name: Backend starten (Dev) für Verify
+        run: |
+          BSG_DEV=1 node index.mjs > /tmp/be.log 2>&1 &
+          echo "PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/age-classes >/dev/null && break; sleep 0.5; done
+
+      - name: Claude – reale Route implementieren
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: '--allowedTools "Read,Edit,Bash(npx bsg-contract*),Bash(curl*),Bash(node *)" --max-turns 30'
+          prompt: |
+            Die Contract-Version wurde auf ${{ env.CONTRACT_VERSION }} gehoben.
+            Neue/geänderte Routen: ${{ env.ADDED_ROUTES }}
+            Geänderte Features: ${{ env.CHANGED_FEATURES }}
+            Aufgabe:
+            1. Führe `TEST_BASE=http://localhost:3000 npx bsg-contract` aus – sie ist für die
+               neuen/geänderten Routen rot.
+            2. Implementiere/justiere die passenden Handler in api.mjs, bis die Suite grün ist.
+               Spiegele den FEATURES-Katalog, falls er sich geändert hat.
+            3. Verwende NUR node:-Builtins (keine neuen Runtime-Dependencies — Invariante des
+               install-freien Deploys). Ändere NICHT den Vertrag (api-contract).
+
+      - name: Verify – Contract-Suite muss grün sein
+        run: TEST_BASE=http://localhost:3000 npx bsg-contract
+
+      - name: Backend stoppen
+        if: always()
+        run: kill "${PID}" 2>/dev/null || true
+
+      - name: Draft-PR öffnen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BR="contract/implement-${CONTRACT_VERSION}"
+          git config user.name  "mergeback-bot"
+          git config user.email "mergeback-bot[bot]@users.noreply.github.com"
+          git checkout -B "$BR"
+          git add -A
+          git commit -m "Implement contract v${CONTRACT_VERSION} (${ADDED_ROUTES:-changes})" || { echo "nichts zu committen"; exit 0; }
+          git push -f origin "HEAD:${BR}"
+          gh pr create --base main --head "$BR" --draft \
+            --title "Implement contract v${CONTRACT_VERSION}" \
+            --body "Automatisch generierte reale Implementierung für Contract v${CONTRACT_VERSION}. **Mensch-Review erforderlich** (reale Persistenz/Deploy). Routen: ${ADDED_ROUTES:-—}." \
+            || echo "PR existiert evtl. bereits."

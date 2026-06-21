@@ -1,0 +1,96 @@
+name: Contract · Detect, version & notify backend
+
+# Läuft im HAUPTREPO bei Push auf main. Erkennt /api/*-Vertragsänderungen
+# (tools/detect-contract-change.mjs), bumpt die Contract-Version, setzt den Tag
+# contract-vX.Y.Z (-> feuert publish-contract.yml) und benachrichtigt das
+# Backend-Repo per repository_dispatch (-> contract-implement.yml dort).
+#
+# Inert bis Aktivierung: Repo-Variable MERGEBACK_ENABLED = "true".
+# Cross-Repo-Dispatch nutzt die GitHub-App "Mergeback Bot" (Secrets MERGEBACK_APP_ID
+# + MERGEBACK_APP_PRIVATE_KEY), installiert auf crypticalcode/bsg-backend.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/js/mock-api.js"
+      - "packages/api-contract/**"
+      - "packages/backend/api.mjs"
+
+permissions:
+  contents: write          # Version-Bump-Commit + Tag pushen
+
+concurrency:
+  group: contract-notify
+  cancel-in-progress: false
+
+jobs:
+  notify-backend:
+    if: >-
+      vars.MERGEBACK_ENABLED == 'true'
+      && !startsWith(github.event.head_commit.message, 'chore(contract): bump')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Contract-Delta des Push erkennen
+        id: delta
+        run: |
+          git diff "${{ github.event.before }}" "${{ github.event.after }}" > /tmp/push.diff || \
+            git diff "${{ github.event.after }}~1" "${{ github.event.after }}" > /tmp/push.diff
+          node tools/detect-contract-change.mjs /tmp/push.diff | tee /tmp/contract.json
+          echo "changed=$(node -p "require('/tmp/contract.json').contract_changed")" >> "$GITHUB_OUTPUT"
+          echo "bump=$(node -p "require('/tmp/contract.json').bump")" >> "$GITHUB_OUTPUT"
+
+      - name: Version bumpen + Tag setzen
+        id: ver
+        if: steps.delta.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          NEW=$(node -e '
+            const fs=require("fs"); const p="packages/api-contract/package.json";
+            const j=JSON.parse(fs.readFileSync(p,"utf8"));
+            let [a,b,c]=j.version.split(".").map(Number);
+            const bump=process.argv[1];
+            if(bump==="major"){a++;b=0;c=0} else if(bump==="minor"){b++;c=0} else {c++}
+            j.version=`${a}.${b}.${c}`; fs.writeFileSync(p, JSON.stringify(j,null,2)+"\n");
+            console.log(j.version);
+          ' "${{ steps.delta.outputs.bump }}")
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          git config user.name  "mergeback-bot"
+          git config user.email "mergeback-bot[bot]@users.noreply.github.com"
+          git commit -am "chore(contract): bump to v${NEW}"
+          git tag "contract-v${NEW}"
+          git push origin HEAD:main
+          git push origin "contract-v${NEW}"     # -> publish-contract.yml veröffentlicht das Package
+
+      - name: App-Token fürs Backend-Repo (Dispatch)
+        id: app
+        if: steps.delta.outputs.changed == 'true'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.MERGEBACK_APP_ID }}
+          private-key: ${{ secrets.MERGEBACK_APP_PRIVATE_KEY }}
+          owner: crypticalcode
+          repositories: bsg-backend
+
+      - name: Backend-Repo benachrichtigen (repository_dispatch)
+        if: steps.delta.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          set -euo pipefail
+          PAYLOAD=$(node -e '
+            const c=require("/tmp/contract.json");
+            console.log(JSON.stringify({ event_type:"contract-changed", client_payload:{
+              contract_version:"${{ steps.ver.outputs.version }}",
+              added_routes:c.added_routes, removed_routes:c.removed_routes,
+              changed_features:c.changed_features, changed_seeds:c.changed_seeds }}));
+          ')
+          echo "$PAYLOAD" | gh api repos/crypticalcode/bsg-backend/dispatches --input -
