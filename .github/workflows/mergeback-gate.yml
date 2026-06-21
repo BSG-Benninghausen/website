@@ -61,7 +61,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Nur lesen + vertrauenswürdige Base-Tools – kein Ausführen von PR-Head-Skripten.
-          claude_args: '--allowedTools "Read,Bash(node tools/classify-diff.mjs *),Bash(node tools/detect-contract-change.mjs *)" --max-turns 15'
+          claude_args: '--allowedTools "Read,Write,Bash(node tools/classify-diff.mjs *),Bash(node tools/detect-contract-change.mjs *)" --max-turns 15'
           prompt: |
             Review den Mergeback-PR anhand von /tmp/pr.diff und der Konventionen in CLAUDE.md.
             Prüfe insbesondere:

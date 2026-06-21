@@ -142,7 +142,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--allowedTools "Read,Edit,Bash(node tools/classify-diff.mjs --verify *),Bash(git diff*)" --max-turns 12'
+          claude_args: '--allowedTools "Read,Edit,Write,Bash(node tools/classify-diff.mjs --verify *),Bash(git diff*)" --max-turns 12'
           prompt: |
             Du bereitest einen Upstream-PR ins GENERISCHE Produkt-Repo vor. Quelle der
             Wahrheit für die Grenze ist upstream-manifest.json. Das Arbeitsverzeichnis
