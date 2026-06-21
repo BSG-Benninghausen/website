@@ -63,8 +63,6 @@ const PRECACHE_URLS = [
   "assets/js/mitglieder.js?v=" + VERSION.slice(1),
   "assets/js/redaktion.js?v=" + VERSION.slice(1),
   "assets/js/admin.js?v=" + VERSION.slice(1),
-  "assets/js/features/loader.js?v=" + VERSION.slice(1),
-  "assets/js/features/beitragsrechner.js?v=" + VERSION.slice(1),
 
   "assets/data/age-classes.json",
   "assets/data/weight-classes.json",

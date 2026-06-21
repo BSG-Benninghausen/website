@@ -34,13 +34,13 @@ export default async function run(api, ck) {
   [s, d] = await api.getJ("/api/capabilities");
   ck("rebuchtes payouts wieder sichtbar", !!d.features.payouts);
 
-  // Buchung schlägt Freigabe: beitragsrechner public freigeben, aber entbuchen -> unsichtbar
+  // Buchung schlägt Freigabe: demofeature public freigeben, aber entbuchen -> unsichtbar
   await api.asAdmin();
-  await api.post("/api/features/release", { key: "beitragsrechner", release: "public" });
-  await api.postJ("/api/features/book", { key: "beitragsrechner", booked: false });
+  await api.post("/api/features/release", { key: "demofeature", release: "public" });
+  await api.postJ("/api/features/book", { key: "demofeature", booked: false });
   await api.logout();
   [s, d] = await api.getJ("/api/capabilities");
-  ck("nicht gebucht schlägt öffentliche Freigabe", !d.features.beitragsrechner);
+  ck("nicht gebucht schlägt öffentliche Freigabe", !d.features.demofeature);
 
   // Recht via Migration v9: vorstand darf buchen
   const vera = api.email("verabook");
