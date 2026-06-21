@@ -1,0 +1,95 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+---
+<Base pageTitle="Kontakt & Impressum">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Kontakt</p>
+      <span class="eyebrow eyebrow--invert">Sag Hallo</span>
+      <h1>Kontakt &amp; Impressum</h1>
+      <p>Fragen zum Training, zur Mitgliedschaft oder zum Verein? Schreib uns – wir helfen gern weiter.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="reveal">
+        <span class="eyebrow">Schreib uns</span>
+        <h2>Nachricht senden</h2>
+        <p style="color:var(--text-soft);margin:12px 0 26px">Wir melden uns so schnell wie möglich zurück.</p>
+        <ul class="info-list">
+          <li>
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+            <div><b>Trainingsort</b><span>{club.venue}<br>{club.street}, {club.city}</span></div>
+          </li>
+          <li>
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <div><b>E-Mail</b><span><a href={`mailto:${club.email}`}>{club.email}</a></span></div>
+          </li>
+          <li>
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+            <div><b>Instagram</b><span><a href={club.instagram_url} target="_blank" rel="noopener">{club.instagram_handle}</a></span></div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="reveal">
+        <form class="form-card" data-api-form="/api/kontakt" novalidate>
+          <div class="field">
+            <label for="name">Name <span class="req">*</span></label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="email">E-Mail <span class="req">*</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+            <p class="field__error"></p>
+          </div>
+          <div class="field">
+            <label for="message">Nachricht <span class="req">*</span></label>
+            <textarea id="message" name="message" required placeholder="Wie können wir helfen?"></textarea>
+            <p class="field__error"></p>
+          </div>
+          <div class="field check-row">
+            <input id="privacy" name="privacy" type="checkbox" required>
+            <label for="privacy">Ich bin mit der Verarbeitung meiner Daten einverstanden. <span class="req">*</span></label>
+          </div>
+          <button type="submit" class="btn btn--primary btn--lg" style="width:100%;justify-content:center">
+            <span class="spinner" aria-hidden="true"></span>
+            Nachricht senden
+          </button>
+          <div class="form-status" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- IMPRESSUM – Adresse/Name kommen zur Build-Zeit aus club.json -->
+  <section class="section section--sand">
+    <div class="wrap" style="max-width:760px">
+      <div class="section-head">
+        <span class="eyebrow">Rechtliches</span>
+        <h2>Impressum</h2>
+        <p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz).</p>
+      </div>
+      <div class="card" style="line-height:1.9">
+        <p><b>{club.name}</b><br>{club.street}<br>{club.city}</p>
+        <p style="margin-top:16px"><b>Vertreten durch den Vorstand:</b><br>
+        Lukas Zientek (1. Vorsitzender)<br>
+        Christopher Masjosthusmann (2. Vorsitzender)</p>
+        <p style="margin-top:16px"><b>Kontakt:</b><br>
+        E-Mail: <a href={`mailto:${club.email}`}>{club.email}</a></p>
+        <p style="margin-top:16px"><b>Verantwortlich für den Inhalt (§ 18 Abs. 2 MStV):</b><br>
+        Sarah Zientek (Pressewartin), Anschrift wie oben.</p>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/forms.js"></script>
+    <script is:inline src="/assets/js/sponsors.js"></script>
+  </Fragment>
+</Base>

@@ -1,0 +1,108 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base>
+  <!-- HERO -->
+  <section class="hero">
+    <img class="hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
+    <span class="hero__glow hero__glow--a" aria-hidden="true"></span>
+    <span class="hero__glow hero__glow--b" aria-hidden="true"></span>
+    <img class="hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <div class="wrap hero__inner">
+      <div>
+        <span class="eyebrow eyebrow--invert" data-site="hero_eyebrow">Sport in Benninghausen</span>
+        <h1><span data-site="hero_title">Stark im Team.</span> <span class="hl" data-site="hero_title_hl">Stark im Leben.</span></h1>
+        <p class="hero__lead" data-site="hero_subtitle">Judo für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
+        <div class="hero__cta">
+          <a href="anmeldung.html" class="btn btn--gold btn--lg">
+            Kostenloses Probetraining
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="trainingszeiten.html" class="btn btn--ghost btn--lg">Trainingszeiten</a>
+        </div>
+        <div class="hero__stats">
+          <div><strong>3</strong><span>Trainingsgruppen</span></div>
+          <div><strong>5+</strong><span>Aktive</span></div>
+          <div><strong>ab 5</strong><span>Jahren dabei</span></div>
+        </div>
+      </div>
+      <aside class="hero__card" aria-label="Nächstes Training">
+        <h3 data-site="hero_card_title">Nächstes Training</h3>
+        <p class="muted" data-site="hero_card_note">Mittwochs &amp; freitags · Sporthalle Benninghausen</p>
+        <ul class="train-mini" data-training-mini>
+          <li><div><b>Kinder</b><br><span>ab 5 Jahre</span></div><time>17:00–18:00</time></li>
+          <li><div><b>Aktive</b><br><span>ab Gelb-Gurt / ca. 8 J.</span></div><time>18:00–19:30</time></li>
+          <li><div><b>Erwachsene</b><br><span>Sport &amp; Fitness</span></div><time>18:15–19:45</time></li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ANGEBOT -->
+  <section class="section section--sand">
+    <div class="wrap">
+      <div class="section-head center">
+        <span class="eyebrow">Das lernst du bei uns</span>
+        <h2>Judo von Grund auf</h2>
+        <p>Technik, Kondition und Kopf – Judo trainiert den ganzen Menschen.</p>
+      </div>
+      <div class="grid grid--4">
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/></svg></div>
+          <h3>Falltechnik</h3>
+          <p>Sicher fallen lernen (Ukemi) – die wichtigste Grundlage für Judo und Alltag.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/></svg></div>
+          <h3>Wurftechniken</h3>
+          <p>Nage-waza: kontrolliert werfen mit Timing, Balance und Körperspannung.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg></div>
+          <h3>Bodentechniken</h3>
+          <p>Ne-waza: Halte-, Hebel- und Würgegriffe – mit Köpfchen statt Kraft.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/></svg></div>
+          <h3>Selbstverteidigung</h3>
+          <p>Sich behaupten können – das stärkt Selbstbewusstsein und Sicherheit.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- AKTUELLES TEASER (dynamisch via news.js) -->
+  <section class="section section--mist">
+    <div class="wrap">
+      <div class="section-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;max-width:100%">
+        <div style="max-width:560px">
+          <span class="eyebrow">Aktuelles</span>
+          <h2>Neues aus dem Verein</h2>
+          <p>Turniererfolge, Prüfungen und Vereinsleben – das tut sich im Verein.</p>
+        </div>
+        <a href="aktuelles.html" class="btn btn--outline">Alle Beiträge</a>
+      </div>
+      <div class="news-grid" data-news data-news-limit="3">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPONSOREN (dynamisch via sponsors.js) -->
+  <section class="section section--sand" data-sponsors-section hidden>
+    <div class="wrap">
+      <div class="section-head center" style="max-width:600px;margin:0 auto 42px">
+        <span class="eyebrow" style="justify-content:center">Partner</span>
+        <h2 data-sponsors-title>Unsere Sponsoren</h2>
+        <p data-sponsors-subtitle hidden></p>
+      </div>
+      <div data-sponsors data-sponsors-home></div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="/assets/js/sponsors.js"></script>
+    <script is:inline src="/assets/js/news.js"></script>
+    <script is:inline src="/assets/js/trainingszeiten.js"></script>
+  </Fragment>
+</Base>
