@@ -41,6 +41,8 @@
     demoVersion: "bsg_demo_version",
     featureFlags: "bsg_feature_flags",
     featureBookings: "bsg_feature_bookings",
+    sponsors: "bsg_sponsors",
+    sponsorsConfig: "bsg_sponsors_config",
   };
   const TOURNAMENT_TYPES = ["Turnier", "Meisterschaft"];
 
@@ -65,6 +67,7 @@
     { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
     { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
     { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
+    { key: "manage_sponsors", label: "Sponsoren verwalten" },
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   /* Seed-Admin-Adresse; per window.BSG_ADMIN_EMAIL (Deploy/Fork) überschreibbar.
@@ -159,6 +162,21 @@
     if (norm(b.excerpt).length < 10) e.excerpt = "Bitte einen kurzen Anrisstext (min. 10 Zeichen).";
     return e;
   }
+  // URL normalisieren: leer bleibt leer; nur http/https zulassen; fehlendes Schema ->
+  // https:// voranstellen; jedes andere Schema (javascript:/data:/…) verwerfen (XSS-Schutz).
+  const normUrl = (v) => {
+    const s = norm(v);
+    if (!s) return "";
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return "";
+    return "https://" + s;
+  };
+  function sponsorErrors(b) {
+    const e = {};
+    if (norm(b.name).length < 2) e.name = "Bitte einen Sponsor-Namen angeben.";
+    return e;
+  }
+  const sponsorFields = (b) => ({ name: norm(b.name), url: normUrl(b.url), tier: sponsorTier(b.tier), description: norm(b.description), order: num(b.order) });
   function eventErrors(b) {
     const e = {};
     if (norm(b.title).length < 3) e.title = "Bitte einen Titel angeben.";
@@ -194,6 +212,40 @@
     { key: "cta_text", label: "Call-to-Action · Text", type: "textarea" },
   ];
   const SITE_KEYS = SITE_FIELDS.map((f) => f.key);
+
+  /* ----- Sponsoren: Anzeige-Konfiguration (Schema) -----
+     Steuert, OB Sponsoren überhaupt erscheinen (enabled), in welchem Stil
+     (displayMode), ob Premium-Stufen genutzt werden (tiersEnabled) und an welchen
+     Stellen (showHome/showPage/showFooter). Der Verein entscheidet selbst – Default
+     enabled:false, also zunächst unsichtbar. Frontend liest dies über sponsors.js. */
+  const SPONSORS_MODES = ["cards", "logos", "band"];
+  const SPONSORS_CONFIG_FIELDS = [
+    { key: "enabled", label: "Sponsoren anzeigen", type: "checkbox" },
+    { key: "displayMode", label: "Darstellung", type: "select", options: SPONSORS_MODES },
+    { key: "tiersEnabled", label: "Premium-Stufen verwenden (sonst alle gleich)", type: "checkbox" },
+    { key: "showHome", label: "Auf der Startseite zeigen", type: "checkbox" },
+    { key: "showPage", label: "Eigene Sponsoren-Seite verlinken", type: "checkbox" },
+    { key: "showFooter", label: "Logo-Leiste im Footer zeigen", type: "checkbox" },
+    { key: "title", label: "Überschrift", type: "text" },
+    { key: "subtitle", label: "Untertitel", type: "textarea" },
+  ];
+  const SPONSORS_CONFIG_DEFAULTS = { enabled: false, displayMode: "cards", tiersEnabled: false, showHome: true, showPage: true, showFooter: false, title: "Unsere Sponsoren", subtitle: "" };
+  const sponsorTier = (v) => (v === "premium" ? "premium" : "standard");
+  const asBool = (v) => v === true || v === "true" || v === "on" || v === 1 || v === "1";
+  function normSponsorsConfig(raw) {
+    const r = raw && typeof raw === "object" ? raw : {};
+    const mode = SPONSORS_MODES.includes(r.displayMode) ? r.displayMode : SPONSORS_CONFIG_DEFAULTS.displayMode;
+    return {
+      enabled: asBool(r.enabled),
+      displayMode: mode,
+      tiersEnabled: asBool(r.tiersEnabled),
+      showHome: "showHome" in r ? asBool(r.showHome) : true,
+      showPage: "showPage" in r ? asBool(r.showPage) : true,
+      showFooter: asBool(r.showFooter),
+      title: norm(r.title) || SPONSORS_CONFIG_DEFAULTS.title,
+      subtitle: norm(r.subtitle),
+    };
+  }
 
   /* ----- Vereinsdaten / Branding: Schema (White-Label-Config) -----
      Treibt Name, Sport, Adresse, Kontakt, Impressum & Logo der gesamten Site
@@ -418,8 +470,8 @@
   /* Seed: Standardrollen + Admin-Konto (idempotent). Rollen sind reine Rechte-Objekte;
      die öffentliche Team-Anzeige läuft über Vereinsämter (positions), siehe GET /api/team. */
   const EXAMPLE_ROLES = [
-    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
-    { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
+    { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts", "manage_sponsors"], system: false },
+    { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site", "manage_sponsors"], system: false },
     { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false },
     { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
   ];
@@ -519,6 +571,12 @@
       grantB("vorstand"); grantB("vorsitz1");
       setStore(KEYS.seedVersion, 9);
     }
+    // Migration v10: Sponsoren-Recht an Vorstand, Pressewart & 1. Vorsitzenden.
+    if (seedVersion < 10) {
+      const grantS = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_sponsors")) r.permissions.push("manage_sponsors"); };
+      grantS("vorstand"); grantS("pressewart"); grantS("vorsitz1");
+      setStore(KEYS.seedVersion, 10);
+    }
     setRoles(roles);
 
     const users = getUsers();
@@ -570,6 +628,16 @@
     let values = getStore(KEYS.site, null);
     if (!values) { values = await loadClubData("site.json"); setStore(KEYS.site, values); }
     return values;
+  }
+  async function ensureSponsors() {
+    let items = getStore(KEYS.sponsors, null);
+    if (!items) { items = await loadData("sponsors.json"); setStore(KEYS.sponsors, items); }
+    return items;
+  }
+  async function ensureSponsorsConfig() {
+    let cfg = getStore(KEYS.sponsorsConfig, null);
+    if (!cfg) { cfg = normSponsorsConfig({}); setStore(KEYS.sponsorsConfig, cfg); }
+    return cfg;
   }
   async function ensureClub() {
     let values = getStore(KEYS.club, null);
@@ -643,6 +711,55 @@
       if (!items.some((n) => n.id === body.id)) return json({ ok: false, message: "Newsmeldung nicht gefunden." }, 404);
       setStore(KEYS.news, items.filter((n) => n.id !== body.id));
       return json({ ok: true, message: "Newsmeldung gelöscht." });
+    },
+
+    /* ---------- Sponsoren ---------- */
+    "GET /api/sponsors": async () => {
+      const items = (await ensureSponsors()).slice().sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name, "de"));
+      return json({ ok: true, items });
+    },
+    "POST /api/sponsors": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = sponsorErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureSponsors();
+      const item = { id: genId("spo"), ...sponsorFields(body), logo: isPhoto(body.logo) ? body.logo : "" };
+      items.push(item); setStore(KEYS.sponsors, items);
+      return json({ ok: true, item, message: "Sponsor angelegt." }, 201);
+    },
+    "POST /api/sponsors/update": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const errors = sponsorErrors(body);
+      if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const items = await ensureSponsors();
+      const idx = items.findIndex((s) => s.id === body.id);
+      if (idx === -1) return json({ ok: false, message: "Sponsor nicht gefunden." }, 404);
+      const logo = body.logo === "" ? "" : (isPhoto(body.logo) ? body.logo : (items[idx].logo || ""));
+      items[idx] = { ...items[idx], ...sponsorFields(body), logo };
+      setStore(KEYS.sponsors, items);
+      return json({ ok: true, item: items[idx], message: "Sponsor gespeichert." });
+    },
+    "POST /api/sponsors/delete": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const items = await ensureSponsors();
+      if (!items.some((s) => s.id === body.id)) return json({ ok: false, message: "Sponsor nicht gefunden." }, 404);
+      setStore(KEYS.sponsors, items.filter((s) => s.id !== body.id));
+      return json({ ok: true, message: "Sponsor gelöscht." });
+    },
+    "GET /api/sponsors-config": async () => {
+      const cfg = await ensureSponsorsConfig();
+      return json({ ok: true, fields: SPONSORS_CONFIG_FIELDS, values: normSponsorsConfig(cfg) });
+    },
+    "POST /api/sponsors-config": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      const cfg = normSponsorsConfig(values);
+      setStore(KEYS.sponsorsConfig, cfg);
+      return json({ ok: true, values: cfg, message: "Sponsoren-Einstellungen gespeichert." });
     },
 
     "GET /api/age-classes": async () => {

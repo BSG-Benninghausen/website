@@ -1,0 +1,6 @@
+[
+  { "id": "spo-musterbau", "name": "Musterbau GmbH", "logo": "", "url": "https://example.com", "tier": "premium", "description": "Hauptsponsor seit 2015 – regionaler Baupartner aus Lippstadt.", "order": 1 },
+  { "id": "spo-sparkasse", "name": "Sparkasse Lippstadt", "logo": "", "url": "", "tier": "premium", "description": "Finanzpartner des Vereins und Förderer der Jugendarbeit.", "order": 2 },
+  { "id": "spo-baeckerei", "name": "Bäckerei Sonne", "logo": "", "url": "", "tier": "standard", "description": "Unterstützt unsere Jugendturniere mit Verpflegung.", "order": 3 },
+  { "id": "spo-sporthaus", "name": "Sporthaus Aktiv", "logo": "", "url": "", "tier": "standard", "description": "Ausrüster für Gi und Matten.", "order": 4 }
+]

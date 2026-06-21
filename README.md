@@ -91,6 +91,8 @@ Bereitgestellte Endpunkte:
 | `GET /api/team` | Team & Vorstand – **aus den Vereinsämtern × Nutzern** berechnet (öffentlich) |
 | `GET /api/positions` · `POST /api/positions`(`/update`,`/delete`) | Vereinsämter (Team-Seite) lesen & pflegen (`manage_team`) |
 | `GET /api/site` · `POST /api/site` | Startseiten-Texte lesen (öffentlich) · speichern (`manage_site`) |
+| `GET /api/sponsors` · `POST /api/sponsors`(`/update`,`/delete`) | Sponsoren lesen (öffentlich) · pflegen (`manage_sponsors`) |
+| `GET /api/sponsors-config` · `POST /api/sponsors-config` | Sponsoren-Anzeige (an/aus, Stil, Premium-Stufen, Platzierungen) lesen (öffentlich) · speichern (`manage_sponsors`) |
 | `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Impressum, Logo, Tagline, Markenfarbe) |
 | `GET /api/manifest` | PWA-Manifest aus der Club-Config (rohes Objekt, öffentlich). Das echte Backend liefert `/manifest.webmanifest` pro Domain darüber aus; `<title>`/`theme-color`/App-Titel setzt `main.js` client-seitig aus `/api/club` |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
@@ -140,7 +142,7 @@ Bereitgestellte Endpunkte:
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
   `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`,
-  `manage_payouts`, `manage_features`, `book_features`.
+  `manage_payouts`, `manage_features`, `book_features`, `manage_sponsors`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
   Startseiten-Texte, Vereinsdaten/Branding, Vereinsämter) ist einzeln zuweisbar.
 - **Vereinsämter ≠ Rollen:** Rollen geben **ausschließlich Rechte**; die öffentliche

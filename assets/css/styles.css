@@ -654,3 +654,48 @@ button { font: inherit; cursor: pointer; }
 .media-frame--code { aspect-ratio: auto; display: grid; align-items: stretch; }
 .code-snip { margin: 0; padding: clamp(18px, 3vw, 28px); overflow: auto; color: var(--text-invert); font-size: .9rem; line-height: 1.6; }
 .code-snip code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+
+/* =====================================================================
+   Sponsoren – Logo-Wand, Karten & Logo-Leiste (+ Premium-Stufe)
+   ===================================================================== */
+.sponsors__tier + .sponsors__tier { margin-top: 28px; }
+
+/* Einzelner Sponsor (Basis für alle Modi) */
+.sponsor { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; text-decoration: none; color: inherit; }
+a.sponsor { transition: transform .3s var(--ease); }
+a.sponsor:hover { transform: translateY(-4px); }
+
+/* Logo-Box: Logo proportional einpassen, sonst Namens-Fallback */
+.sponsor-logo { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 3 / 2; padding: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.sponsor-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.sponsor-logo__name { font-family: var(--font-display); font-weight: 600; color: var(--text-soft); font-size: 1.02rem; }
+.sponsor-link { font-size: .9rem; font-weight: 600; color: var(--accent); }
+
+/* Karten-Modus */
+.sponsor--card { padding: 22px; }
+.sponsor--card .sponsor-logo { aspect-ratio: 16 / 9; margin-bottom: 4px; }
+.sponsor--card h3 { font-size: 1.1rem; }
+.sponsor--card p { color: var(--text-soft); font-size: .96rem; }
+
+/* Logo-Leiste: kompakter, zentrierter Streifen */
+.sponsors__group--band { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+.sponsors__group--band .sponsor { width: 160px; }
+.sponsors__group--band .sponsor-logo { aspect-ratio: 5 / 3; padding: 12px; }
+
+/* Premium-Prominenz: Gold-Rahmen + größere Logos, weniger Spalten in der Premium-Reihe */
+.sponsor--premium .sponsor-logo { border-color: var(--gold); box-shadow: inset 0 0 0 2px var(--gold), var(--shadow-sm); }
+.sponsors__tier--premium .sponsors__group--cards.grid--3,
+.sponsors__tier--premium .sponsors__group--logos.grid--4 { grid-template-columns: repeat(2, 1fr); }
+.sponsors__tier--premium .sponsor-logo { aspect-ratio: 16 / 9; }
+@media (max-width: 600px) {
+  .sponsors__tier--premium .sponsors__group--cards.grid--3,
+  .sponsors__tier--premium .sponsors__group--logos.grid--4 { grid-template-columns: 1fr; }
+}
+
+/* Footer-Logo-Leiste (seitenweit) */
+.sponsors-footer { margin-top: 36px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,.12); text-align: center; }
+.sponsors-footer__label { display: block; font-family: var(--font-display); font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-soft); margin-bottom: 16px; }
+.sponsors-footer__row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px; }
+.sponsors-footer .sponsor { width: 120px; }
+.sponsors-footer .sponsor-logo { aspect-ratio: 5 / 3; padding: 10px; background: rgba(255,255,255,.95); border-color: transparent; }
+.sponsors-footer .sponsor-logo__name { font-size: .82rem; color: var(--night); }

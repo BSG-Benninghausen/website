@@ -42,6 +42,7 @@ const PERMISSIONS = [
   { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
   { key: "manage_features", label: "Features & Beta-Freigabe verwalten" },
   { key: "book_features", label: "Funktionen buchen/freischalten (Provisionierung)" },
+  { key: "manage_sponsors", label: "Sponsoren verwalten" },
 ];
 const ALL_PERMS = PERMISSIONS.map((p) => p.key);
 /* Seed-Admin-Adresse; per Env ADMIN_EMAIL (Deploy/Fork) überschreibbar.
@@ -130,8 +131,8 @@ function buildManifest(club) {
 
 // Rollen sind reine Rechte-Objekte; die öffentliche Team-Anzeige läuft über Vereinsämter (positions).
 const EXAMPLE_ROLES = [
-  { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts"], system: false },
-  { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site"], system: false },
+  { id: "vorstand", label: "Vorstand", permissions: ["manage_users", "manage_news", "manage_events", "manage_training", "manage_site", "manage_team", "manage_memberships", "view_members", "view_finance", "manage_payouts", "manage_sponsors"], system: false },
+  { id: "pressewart", label: "Pressewart", permissions: ["manage_news", "manage_site", "manage_sponsors"], system: false },
   { id: "kassenwart", label: "Kassenwart", permissions: ["view_members", "view_finance", "manage_payouts"], system: false },
   { id: "trainer", label: "Trainer", permissions: ["manage_training", "view_members"], system: false },
 ];
@@ -244,6 +245,50 @@ function newsErrors(b) {
   if (norm(b.excerpt).length < 10) e.excerpt = "Bitte einen kurzen Anrisstext (min. 10 Zeichen).";
   return e;
 }
+
+/* Sponsoren-Anzeige-Konfiguration (Schema) – 1:1 zum Mock. Steuert ob/wie/wo
+   Sponsoren erscheinen. Default enabled:false (Verein entscheidet selbst). */
+const SPONSORS_MODES = ["cards", "logos", "band"];
+const SPONSORS_CONFIG_FIELDS = [
+  { key: "enabled", label: "Sponsoren anzeigen", type: "checkbox" },
+  { key: "displayMode", label: "Darstellung", type: "select", options: SPONSORS_MODES },
+  { key: "tiersEnabled", label: "Premium-Stufen verwenden (sonst alle gleich)", type: "checkbox" },
+  { key: "showHome", label: "Auf der Startseite zeigen", type: "checkbox" },
+  { key: "showPage", label: "Eigene Sponsoren-Seite verlinken", type: "checkbox" },
+  { key: "showFooter", label: "Logo-Leiste im Footer zeigen", type: "checkbox" },
+  { key: "title", label: "Überschrift", type: "text" },
+  { key: "subtitle", label: "Untertitel", type: "textarea" },
+];
+const SPONSORS_CONFIG_DEFAULTS = { enabled: false, displayMode: "cards", tiersEnabled: false, showHome: true, showPage: true, showFooter: false, title: "Unsere Sponsoren", subtitle: "" };
+const sponsorTier = (v) => (v === "premium" ? "premium" : "standard");
+const asBool = (v) => v === true || v === "true" || v === "on" || v === 1 || v === "1";
+const normUrl = (v) => {
+  const s = norm(v);
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return ""; // anderes Schema (javascript:/data:/…) verwerfen (XSS-Schutz)
+  return "https://" + s;
+};
+function normSponsorsConfig(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const mode = SPONSORS_MODES.includes(r.displayMode) ? r.displayMode : SPONSORS_CONFIG_DEFAULTS.displayMode;
+  return {
+    enabled: asBool(r.enabled),
+    displayMode: mode,
+    tiersEnabled: asBool(r.tiersEnabled),
+    showHome: "showHome" in r ? asBool(r.showHome) : true,
+    showPage: "showPage" in r ? asBool(r.showPage) : true,
+    showFooter: asBool(r.showFooter),
+    title: norm(r.title) || SPONSORS_CONFIG_DEFAULTS.title,
+    subtitle: norm(r.subtitle),
+  };
+}
+function sponsorErrors(b) {
+  const e = {};
+  if (norm(b.name).length < 2) e.name = "Bitte einen Sponsor-Namen angeben.";
+  return e;
+}
+const sponsorFields = (b) => ({ name: norm(b.name), url: normUrl(b.url), tier: sponsorTier(b.tier), description: norm(b.description), order: num(b.order) });
 function eventErrors(b) {
   const e = {};
   if (norm(b.title).length < 3) e.title = "Bitte einen Titel angeben.";
@@ -418,6 +463,13 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       grant("vorsitz1", ["book_features"]);
       db.seedVersion = 9;
     }
+    // Migration v10: Sponsoren-Recht an Vorstand, Pressewart & 1. Vorsitzenden.
+    if (db.seedVersion < 10) {
+      grant("vorstand", ["manage_sponsors"]);
+      grant("pressewart", ["manage_sponsors"]);
+      grant("vorsitz1", ["manage_sponsors"]);
+      db.seedVersion = 10;
+    }
 
     if (!db.users.some((u) => u.email === ADMIN_EMAIL)) {
       db.users.push({ id: "usr-admin", name: "Administrator", email: ADMIN_EMAIL, address: null, iban: null, roles: ["admin"], createdAt: new Date().toISOString() });
@@ -433,6 +485,8 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
     db.training = loadSeed("trainingszeiten.json");
     db.site = loadSeed("site.json");
     db.club = loadSeed("club.json");
+    db.sponsors = loadSeed("sponsors.json");
+    db.sponsorsConfig = normSponsorsConfig({});
     db.registrations = []; db.payouts = []; db.codes = {}; db.passCounter = 0; db.seedVersion = 0;
     db.positions = [];
     db.featureFlags = {};
@@ -509,6 +563,47 @@ export function createApi({ dataDir, dev = true, dataFile = "", clubNs = "" }) {
       if (!db.news.some((n) => n.id === body.id)) return J({ ok: false, message: "Newsmeldung nicht gefunden." }, 404);
       db.news = db.news.filter((n) => n.id !== body.id);
       return J({ ok: true, message: "Newsmeldung gelöscht." });
+    },
+
+    /* ---------- Sponsoren ---------- */
+    "GET /api/sponsors": async () => {
+      const items = db.sponsors.slice().sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name, "de"));
+      return J({ ok: true, items });
+    },
+    "POST /api/sponsors": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return deny(user);
+      const errors = sponsorErrors(body);
+      if (Object.keys(errors).length) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const item = { id: genId("spo"), ...sponsorFields(body), logo: isPhoto(body.logo) ? body.logo : "" };
+      db.sponsors.push(item);
+      return J({ ok: true, item, message: "Sponsor angelegt." }, 201);
+    },
+    "POST /api/sponsors/update": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return deny(user);
+      const errors = sponsorErrors(body);
+      if (Object.keys(errors).length) return J({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
+      const idx = db.sponsors.findIndex((s) => s.id === body.id);
+      if (idx === -1) return J({ ok: false, message: "Sponsor nicht gefunden." }, 404);
+      const logo = body.logo === "" ? "" : (isPhoto(body.logo) ? body.logo : (db.sponsors[idx].logo || ""));
+      db.sponsors[idx] = { ...db.sponsors[idx], ...sponsorFields(body), logo };
+      return J({ ok: true, item: db.sponsors[idx], message: "Sponsor gespeichert." });
+    },
+    "POST /api/sponsors/delete": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return deny(user);
+      if (!db.sponsors.some((s) => s.id === body.id)) return J({ ok: false, message: "Sponsor nicht gefunden." }, 404);
+      db.sponsors = db.sponsors.filter((s) => s.id !== body.id);
+      return J({ ok: true, message: "Sponsor gelöscht." });
+    },
+    "GET /api/sponsors-config": async () => J({ ok: true, fields: SPONSORS_CONFIG_FIELDS, values: normSponsorsConfig(db.sponsorsConfig) }),
+    "POST /api/sponsors-config": async (body, ctx) => {
+      const user = ctx.currentUser();
+      if (!hasPerm(user, "manage_sponsors")) return deny(user);
+      const values = body.values && typeof body.values === "object" ? body.values : body;
+      db.sponsorsConfig = normSponsorsConfig(values);
+      return J({ ok: true, values: db.sponsorsConfig, message: "Sponsoren-Einstellungen gespeichert." });
     },
 
     "GET /api/age-classes": async () => J({ ok: true, items: allAgeClassLabels(ageCfg) }),

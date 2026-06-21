@@ -72,6 +72,7 @@
     return html;
   }
   const trainingRow = (t) => adminRow(t.title, t.start + (t.end ? "–" + t.end : "") + " Uhr" + (t.ageGroup ? " · " + t.ageGroup : ""), t.id);
+  const sponsorRow = (s) => adminRow(s.name, (s.tier === "premium" ? "Premium" : "Standard") + (s.url ? " · " + s.url : ""), s.id);
 
   /* Optionaler Bild-Upload (News): Vorschau + Verkleinern via BSG.readAndResize */
   function makeImageInput(o) {
@@ -145,8 +146,9 @@
     const canTraining = can("manage_training");
     const canSite = can("manage_site");
     const canPayouts = can("manage_payouts");
+    const canSponsors = can("manage_sponsors");
     CAN_PAYOUTS = canPayouts;
-    if (!canNews && !canEvents && !canTraining && !canSite && !canPayouts) { location.href = "konto.html"; return; }
+    if (!canNews && !canEvents && !canTraining && !canSite && !canPayouts && !canSponsors) { location.href = "konto.html"; return; }
 
     $("#red-loading").hidden = true; $("#red").hidden = false;
 
@@ -208,6 +210,53 @@
     if (canSite) {
       await setupSiteEditor();
     }
+
+    if (canSponsors) {
+      const img = makeImageInput({ input: "#s-logo", preview: "#s-logo-preview", ph: "#s-logo-ph", clear: "#s-logo-clear", field: "[data-sponsor-logo-field]" });
+      const ed = setupEditor({
+        listEl: $("#sponsors-list"), form: $("#sponsor-form"), resetBtn: $("#sponsor-reset"), formTitle: $("#sponsor-form-title"),
+        api: "/api/sponsors", newTitle: "Neuer Sponsor", editTitle: "Sponsor bearbeiten", render: sponsorRow,
+        collect: (fd) => { fd.logo = img.get(); },
+        onFill: (it) => { img.set(it.logo || ""); },
+        onReset: () => { img.reset(); },
+      });
+      await ed.load();
+      await setupSponsorsConfigEditor();
+      $("#sponsors-section").hidden = false;
+    }
+  }
+
+  /* Sponsoren-Anzeige-Einstellungen: festes Formular (Checkboxen + Select). */
+  async function setupSponsorsConfigEditor() {
+    const form = $("#sponsors-config-form");
+    let data;
+    try { data = await (await fetch("/api/sponsors-config")).json(); } catch (e) { return; }
+    if (!data || !data.ok) return;
+    const v = data.values || {};
+    const setCb = (name, on) => { if (form.elements[name]) form.elements[name].checked = !!on; };
+    setCb("enabled", v.enabled); setCb("tiersEnabled", v.tiersEnabled);
+    setCb("showHome", v.showHome); setCb("showPage", v.showPage); setCb("showFooter", v.showFooter);
+    if (form.elements.displayMode) form.elements.displayMode.value = v.displayMode || "cards";
+    if (form.elements.title) form.elements.title.value = v.title || "";
+    if (form.elements.subtitle) form.elements.subtitle.value = v.subtitle || "";
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const values = {
+        enabled: form.elements.enabled.checked,
+        tiersEnabled: form.elements.tiersEnabled.checked,
+        showHome: form.elements.showHome.checked,
+        showPage: form.elements.showPage.checked,
+        showFooter: form.elements.showFooter.checked,
+        displayMode: form.elements.displayMode.value,
+        title: form.elements.title.value,
+        subtitle: form.elements.subtitle.value,
+      };
+      const btn = form.querySelector("[type=submit]"); btn.setAttribute("aria-busy", "true");
+      const { res, data: d } = await postJSON("/api/sponsors-config", { values });
+      btn.removeAttribute("aria-busy");
+      if (res.ok && d.ok) { status(form, "ok", d.message); toast("ok", d.message); }
+      else status(form, "err", d.message || "Fehler.");
+    });
   }
 
   /* Startseiten-Texte: dynamisches Formular aus /api/site */

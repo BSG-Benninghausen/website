@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v37";
+const VERSION = "v38";
 /* Cache-Namespace: der Fork behält den BSG-Prefix, damit Caches getrennter
    Deployments nicht kollidieren. */
 const CACHE_NS = "bsg";
@@ -40,6 +40,7 @@ const PRECACHE_URLS = [
   "redaktion.html",
   "admin.html",
   "registrieren.html",
+  "sponsoren.html",
   "404.html",
   "offline.html",
   "manifest.webmanifest",
@@ -56,6 +57,7 @@ const PRECACHE_URLS = [
   "assets/js/auth.js?v=" + VERSION.slice(1),
   "assets/js/forms.js?v=" + VERSION.slice(1),
   "assets/js/news.js?v=" + VERSION.slice(1),
+  "assets/js/sponsors.js?v=" + VERSION.slice(1),
   "assets/js/trainingszeiten.js?v=" + VERSION.slice(1),
   "assets/js/team.js?v=" + VERSION.slice(1),
   "assets/js/kalender.js?v=" + VERSION.slice(1),
@@ -71,6 +73,7 @@ const PRECACHE_URLS = [
   "assets/data/events.json",
   "assets/data/membership-types.json",
   "assets/data/news.json",
+  "assets/data/sponsors.json",
   "assets/data/news.bsg.json",
   "assets/data/site.json",
   "assets/data/site.bsg.json",
