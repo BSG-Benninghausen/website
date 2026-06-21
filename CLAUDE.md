@@ -14,7 +14,7 @@ customer *BSG Benninghausen* runs as its own fork (`bsg-benninghausen.github.io/
 
 The static site (HTML/CSS/vanilla JS) is **fully usable on its own**: `assets/js/mock-api.js` patches
 `window.fetch` and answers every `/api/*` request locally from `localStorage`. The **paid product is
-API access** — a real backend (`packages/backend/`, deployed per tenant) implements the same `/api/*` contract,
+API access** — a real backend (its own repo `crypticalcode/vereins-baukasten-backend`, pinned via `backend-ref.json`; deployed per tenant) implements the same `/api/*` contract,
 and `assets/js/api-config.js` routes `mock | hybrid | real`, so endpoints are promoted one at a time.
 **Same `/api/*` contract on both sides; the frontend code never changes.**
 
@@ -30,8 +30,9 @@ Three cooperating places, one shared contract:
   `docs/fork-onboarding.md`); features are built here to club wish against the mock. Because club
   files aren't upstream's, pulls stay conflict-free. Club content lives in editable seeds
   (`assets/data/*.json`).
-- **Real backend** — `packages/backend/` implements the `/api/*` contract; deployed per tenant (Hetzner). API
-  access is the paid layer. (Future repo split: `docs/backend-repo-separation-plan.md`.)
+- **Real backend** — its own repo `crypticalcode/vereins-baukasten-backend` (pinned via `backend-ref.json`)
+  implements the `/api/*` contract; deployed per tenant (Hetzner). API access is the paid layer. (Split
+  rationale: `docs/backend-repo-separation-plan.md`.)
 
 Flow (🔜 = target; automation not yet wired):
 
@@ -52,8 +53,8 @@ routes by editing `api-config.js`.
   API is the paid upgrade, not a hard dependency. A new network feature needs a no-API fallback
   (🔜 e.g. the contact form opens the user's mail client via `mailto:` when no API is configured;
   today `forms.js` only reports a connection error).
-- **One contract, two implementations.** `mock-api.js` and the real backend (`packages/backend/`) must never
-  diverge. The same suite in `packages/api-contract/` validates both (`node packages/api-contract/run.mjs`;
+- **One contract, two implementations.** `mock-api.js` and the real backend (its own repo, pinned via
+  `backend-ref.json`) must never diverge. The same suite in `packages/api-contract/` validates both (`node packages/api-contract/run.mjs`;
   `TEST_BASE=… node packages/api-contract/run.mjs` for real) and must stay green in CI. Add or change a route ⇒ add or update a suite.
 - **Forks pull conflict-free.** Club customization lives in **additive, club-owned files**; don't
   bake club specifics into shared code. Seeds (`assets/data/*.json`) are per-club data a small club
@@ -85,5 +86,6 @@ Browser-E2E (Playwright under `tests/e2e/`), test filters, and the full workflow
   provisioning/booking, SaaS phases.
 - **`docs/backend-repo-separation-plan.md`** — splitting the backend into its own repo + the shared
   contract package.
-- **`packages/backend/README.md`** — the real backend and its persistence / multi-tenant seam.
+- **`backend-ref.json`** — pins the external backend repo (`crypticalcode/vereins-baukasten-backend`) for
+  CI/E2E; the real backend and its persistence / multi-tenant seam now live there.
 - **`packages/api-contract/README.md`** — the contract a real backend must satisfy.

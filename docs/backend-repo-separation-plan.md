@@ -1,8 +1,12 @@
 # Backend-Trennung: eigenes Repo + Contract-Package
 
-Status: **Phase 0–2 umgesetzt** (Vertrag gekapselt, Workspace-Grenze gezogen, Vertrag als Package
-veröffentlichbar). Die Git-Trennung (Phase 3) ist **bewusst zurückgestellt**, bis ein konkreter
-Treiber existiert (echte DB-Persistenz, eigener Deploy-Zyklus, getrennte Teams, zu schwere CI).
+Status: **Phase 0–3 umgesetzt** (Vertrag gekapselt, Workspace-Grenze gezogen, Vertrag als Package
+veröffentlichbar, **Backend in eigenes Repo ausgegliedert** + Monorepo-Cleanup). Das Backend lebt
+jetzt in `crypticalcode/vereins-baukasten-backend`, im Monorepo gepinnt über
+[`backend-ref.json`](../backend-ref.json) und erzeugt/aktualisiert via
+[`tools/backend-split/`](../tools/backend-split/). Offen: der Vertrags-Split (Phase 3b: Contract als
+gepinnte Package-Dependency statt vendored) und die volle CI/CD-Verdrahtung (Phase 4, u. a.
+Deploy A/B, Secret `BACKEND_REPO_TOKEN` für die E2E gegen das private Backend-Repo).
 Begleitdokument zur Produktvision: [`productization-saas-plan.md`](./productization-saas-plan.md).
 
 Tragendes Prinzip: **ein gemeinsamer Vertrag, an dem Mock und echtes Backend mit identischen Tests
@@ -93,6 +97,14 @@ Heute ein PR; nach dem Split:
 
 ## 4. Phase 3 — Backend ausgliedern (inkrementell, wenn ein Treiber kommt)
 
+> **Werkzeug:** [`tools/backend-split/extract.sh`](../tools/backend-split/) automatisiert die
+> Schritte 1–2 (Inhalt) und ist re-runnbar (zugleich Sync-Mechanismus). Empfohlen ist der
+> Snapshot-Modus `--no-history` (braucht kein `git-filter-repo`); das Skript flacht
+> `packages/backend/` auf die Wurzel, vendored den Vertrag nach `contract/` und die Seeds nach
+> `data/`, schreibt die Seed-/Static-Pfade um und prüft das Ergebnis end-to-end (Contract-Suite im
+> Real-Modus). Bis ein Package-Konsum (Phase 3b) greift, wird der Vertrag **vendored** statt als
+> devDependency gezogen — so bleibt das Backend-Repo ohne Registry-Token CI-grün.
+
 **Backend zuerst**, Vertrag + Frontend bleiben vorerst im Monorepo (Contract-Split = späteres
 Phase 3b). Bis der Monorepo-Cleanup gemergt ist, ist alles reversibel. Ablauf in Kürze:
 
@@ -161,8 +173,8 @@ brauchen `SameSite=None; Secure` statt `Lax` (**neuer Code**, plus CSRF-Überleg
 | **0. Harness entkoppeln** | `BSG_MOCK_SRC`/`BSG_DATA_DIR`-Parametrisierung; `run.mjs` setzt Defaults | nein | ✅ |
 | **1. Workspace-Grenze** | npm-Workspaces: `packages/api-contract/` + `packages/backend/`, Root = Frontend; Seeds zentral + vendored. **Empfohlener Halte-/Endpunkt ohne Treiber.** | nein | ✅ |
 | **2. Package veröffentlichen** | `@crypticalcode/api-contract` nach GitHub Packages (Publish-on-Tag); Konsum per Name nur Dev/Test; Renovate eingerichtet | nein | ✅ |
-| **3. Backend splitten** | `git filter-repo` `packages/backend` → eigenes Repo; Seeds vendored/install-frei; Deploy Option A; Monorepo-Cleanup (§4) | **ja** | offen |
-| **4. CI/CD verdrahten** | pro Repo eigene `ci.yml`; Deploy A/B; E2E im FE-Repo gegen gepinntes Backend; Phase 3b (Contract-Split) | ja | offen |
+| **3. Backend splitten** | Snapshot via `tools/backend-split/extract.sh --no-history` → eigenes Repo; Seeds vendored/install-frei; Deploy Option A; Monorepo-Cleanup (§4): `packages/backend/` entfernt, `backend-ref.json` gepinnt | **ja** | ✅ |
+| **4. CI/CD verdrahten** | FE-CI: Mock + Guards; Backend-Repo-CI: Real + Persistenz; E2E im FE-Repo gegen das gepinnte Backend (Secret `BACKEND_REPO_TOKEN`, sonst grün übersprungen). Offen: Deploy A/B, Phase 3b (Contract-Split) | ja | teilweise |
 
 ---
 
