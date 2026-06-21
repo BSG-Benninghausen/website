@@ -77,7 +77,7 @@ Bereitgestellte Endpunkte:
 | `GET /api/events` | Termine aus `assets/data/events.json` |
 | `POST /api/anmeldung` | Probetraining-Anmeldung (Validierung, Speicherung in `localStorage`) |
 | `POST /api/kontakt` | Kontaktnachricht (Validierung, Speicherung in `localStorage`) |
-| `GET /api/membership-types` | Beitragstypen aus `assets/data/membership-types.json` |
+| `GET /api/membership-types` · `POST /api/membership-types` | Beitragstypen lesen (öffentlich, Seed `assets/data/membership-types.json`) · Mitgliedsbeiträge bearbeiten (Recht `manage_fees`) |
 | `POST /api/auth/register` | Konto anlegen (Name + E-Mail), setzt Session |
 | `POST /api/auth/request-code` | Anmeldecode anfordern (Mock liefert `devCode` zurück) |
 | `POST /api/auth/login` | Login mit E-Mail + Code |
@@ -123,6 +123,9 @@ Bereitgestellte Endpunkte:
 - **Beitrag automatisch:** Der Mitgliedschaftstyp ergibt sich aus dem **Alter** (Altersbänder
   in `assets/data/membership-types.json`). Ist der **Familien-Pauschalbeitrag günstiger** als
   die Summe der Einzelbeiträge, wird er automatisch angesetzt (Beitragsübersicht im Dashboard).
+  Die **Monatsbeiträge** (je Altersband + Familien-Pauschale) sind über die Redaktion editierbar
+  (Recht `manage_fees`, `POST /api/membership-types`); die Bandstruktur (Label/Altersbereich)
+  bleibt dabei stabil. Änderungen gelten für **neu berechnete** Beiträge.
 - **Mitglieder bearbeiten & Judopass:** Jedes Mitglied lässt sich bearbeiten
   (`POST /api/memberships/update`, nur Eigentümer) und wird als kleiner **Judopass** angezeigt.
   Pflicht-**Foto** (clientseitig verkleinert, als Data-URL gespeichert) plus optional Gewichtsklasse,
@@ -138,7 +141,7 @@ Bereitgestellte Endpunkte:
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`,
-  `bsg_site`, `bsg_club`, `bsg_payouts`, `bsg_positions`, `bsg_feature_flags`,
+  `bsg_site`, `bsg_club`, `bsg_membership_types`, `bsg_payouts`, `bsg_positions`, `bsg_feature_flags`,
   `bsg_feature_bookings`, `bsg_seed_version`, `bsg_pass_counter`,
   `bsg_sponsors`, `bsg_sponsors_config`, `bsg_shop_products`, `bsg_shop_orders`,
   `bsg_shop_mandates`, `bsg_shop_config`.
@@ -149,7 +152,7 @@ Bereitgestellte Endpunkte:
   **Administrator** können Rollen anlegen, deren Berechtigungen setzen und Benutzern Rollen
   zuweisen. Berechtigungs-Katalog (`PERMISSIONS` in `assets/js/mock-api.js`):
   `manage_roles`, `manage_users`, `manage_news`, `manage_events`, `manage_training`,
-  `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `view_members`, `view_finance`,
+  `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `manage_fees`, `view_members`, `view_finance`,
   `manage_payouts`, `manage_features`, `book_features`, `manage_sponsors`, `manage_shop`.
   Die Rechte sind **fein getrennt** – jeder Inhaltsbereich (News, Termine, Trainingszeiten,
   Startseiten-Texte, Vereinsdaten/Branding, Vereinsämter) ist einzeln zuweisbar.
@@ -188,6 +191,10 @@ Bereitgestellte Endpunkte:
   **Trainingszeiten** (`manage_training`, `assets/data/trainingszeiten.json` → `trainingszeiten.html`,
   Startseiten-Teaser, Hero-Mini) und **Startseiten-Texte** (`manage_site`, `assets/data/site.json` →
   per `[data-site="key"]` auf der Startseite; Felder-Schema `SITE_FIELDS` in `mock-api.js`).
+  **Mitgliedsbeiträge** (`manage_fees`, Seed `assets/data/membership-types.json`): die Monats-
+  beiträge je Altersband und die Familien-Pauschale; die Bandstruktur (Label/Altersbereich)
+  bleibt erhalten. Der Beitrag eines Mitglieds wird beim Anlegen/Bearbeiten aus dem Alter neu
+  berechnet (`GET/POST /api/membership-types`).
   **Team & Vorstand** wird über die **Vereinsämter** (`manage_team`, Admin → Vereinsämter)
   gepflegt und von `GET /api/team` aus Ämtern × Nutzern berechnet (siehe oben).
   Termine können den Typ **Turnier** oder **Meisterschaft** haben, dazu

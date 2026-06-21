@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v42";
+const VERSION = "v43";
 /* Cache-Namespace: der Fork behält den BSG-Prefix, damit Caches getrennter
    Deployments nicht kollidieren. */
 const CACHE_NS = "bsg";

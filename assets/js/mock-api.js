@@ -35,6 +35,7 @@
     registrations: "bsg_registrations",
     training: "bsg_training",
     site: "bsg_site",
+    membershipTypes: "bsg_membership_types",
     club: "bsg_club",
     payouts: "bsg_payouts",
     positions: "bsg_positions",
@@ -66,6 +67,7 @@
     { key: "manage_club", label: "Vereinsdaten & Branding bearbeiten (Name, Kontakt, Impressum)" },
     { key: "manage_team", label: "Team-Seite / Vereinsämter verwalten" },
     { key: "manage_memberships", label: "Mitgliedschaften aller Nutzer verwalten" },
+    { key: "manage_fees", label: "Mitgliedsbeiträge bearbeiten" },
     { key: "view_members", label: "Mitgliederliste einsehen (lesend)" },
     { key: "view_finance", label: "Kontoverbindungen (IBAN) & Beiträge einsehen (lesend)" },
     { key: "manage_payouts", label: "Teilnahmegebühren überweisen (Auszahlungen)" },
@@ -410,6 +412,23 @@
     return age;
   }
   const bandForAge = (age, bands) => bands.find((b) => age >= b.minAge && age <= b.maxAge) || null;
+  /* Beiträge aus dem Editor auf die gespeicherte Beitragstabelle anwenden.
+     Editierbar sind nur die Euro-Beträge (feeMonthly je Altersband + Familien-
+     Pauschale); die Bandstruktur (id/label/Altersbereich) bleibt erhalten, damit
+     die Altersabdeckung lückenlos und bestehende Zuordnungen stabil bleiben. */
+  const money2 = (v) => Math.round(Math.max(0, num(v)) * 100) / 100;
+  function applyMembershipFees(stored, raw) {
+    // Prototyp-freies Objekt: Band-IDs kommen aus dem Request; so kann ein Eintrag
+    // mit id "__proto__" o. Ä. keinen Prototyp verbiegen (Prototype-Pollution-Schutz).
+    const incoming = Object.create(null);
+    (Array.isArray(raw.ageBands) ? raw.ageBands : []).forEach((b) => { if (b && b.id != null) incoming[b.id] = b; });
+    const ageBands = (stored.ageBands || []).map((b) => {
+      const inc = incoming[b.id];
+      return { ...b, feeMonthly: inc && inc.feeMonthly != null ? money2(inc.feeMonthly) : b.feeMonthly };
+    });
+    const familyFlatMonthly = raw.familyFlatMonthly != null ? money2(raw.familyFlatMonthly) : stored.familyFlatMonthly;
+    return { ageBands, familyFlatMonthly };
+  }
   function billingSummary(active, familyFlat) {
     const sumIndividual = active.reduce((s, m) => s + (m.individualFee || 0), 0);
     return {
@@ -680,6 +699,12 @@
       if (!roles.some((r) => r.id === "shop")) roles.push({ id: "shop", label: "Shop-Betreiber", permissions: ["manage_shop"], system: false });
       setStore(KEYS.seedVersion, 11);
     }
+    // Migration v12: Beitrags-Recht (Mitgliedsbeiträge) an Vorstand, 1. Vorsitzenden & Kassenwart.
+    if (seedVersion < 12) {
+      const grantFee = (id) => { const r = roles.find((x) => x.id === id); if (r && r.permissions && !r.permissions.includes("manage_fees")) r.permissions.push("manage_fees"); };
+      grantFee("vorstand"); grantFee("vorsitz1"); grantFee("kassenwart");
+      setStore(KEYS.seedVersion, 12);
+    }
     setRoles(roles);
 
     const users = getUsers();
@@ -731,6 +756,13 @@
     let values = getStore(KEYS.site, null);
     if (!values) { values = await loadClubData("site.json"); setStore(KEYS.site, values); }
     return values;
+  }
+  /* Mitgliedsbeiträge: beim ersten Zugriff aus membership-types.json in den Store
+     übernehmen (seed-on-read), danach über POST /api/membership-types editierbar. */
+  async function ensureMembershipTypes() {
+    let cfg = getStore(KEYS.membershipTypes, null);
+    if (!cfg) { cfg = await loadData("membership-types.json"); setStore(KEYS.membershipTypes, cfg); }
+    return cfg;
   }
   async function ensureSponsors() {
     let items = getStore(KEYS.sponsors, null);
@@ -1279,7 +1311,7 @@
       const user = currentUser();
       if (!hasPerm(user, "view_members")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
       const fin = hasPerm(user, "view_finance");
-      const cfg = await loadData("membership-types.json");
+      const cfg = await ensureMembershipTypes();
       const acfg = await loadData("age-classes.json");
       const users = getUsers();
       const byId = {}; users.forEach((u) => { byId[u.id] = u; });
@@ -1310,8 +1342,16 @@
     },
 
     "GET /api/membership-types": async () => {
-      const cfg = await loadData("membership-types.json");
+      const cfg = await ensureMembershipTypes();
       return json({ ok: true, ageBands: cfg.ageBands, familyFlatMonthly: cfg.familyFlatMonthly });
+    },
+    "POST /api/membership-types": async (body) => {
+      const user = currentUser();
+      if (!hasPerm(user, "manage_fees")) return json({ ok: false, message: "Keine Berechtigung." }, user ? 403 : 401);
+      const stored = await ensureMembershipTypes();
+      const next = applyMembershipFees(stored, body && typeof body === "object" ? body : {});
+      setStore(KEYS.membershipTypes, next);
+      return json({ ok: true, ageBands: next.ageBands, familyFlatMonthly: next.familyFlatMonthly, message: "Mitgliedsbeiträge gespeichert." });
     },
 
     /* ---------- Probetraining & Kontakt ---------- */
@@ -1616,7 +1656,7 @@
       const user = currentUser();
       if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
       const stored = getStore(KEYS.memberships, []).filter((m) => m.userId === user.id);
-      const cfg = await loadData("membership-types.json");
+      const cfg = await ensureMembershipTypes();
       const acfg = await loadData("age-classes.json");
       const items = stored.map((m) => ({ ...m, competitionClasses: classesForAge(ageInYear(m.birthdate), m.gender, acfg) }));
       const active = items.filter((m) => m.status === "aktiv");
@@ -1632,7 +1672,7 @@
         return json({ ok: false, code: "ACCOUNT_INCOMPLETE", message: "Bitte zuerst Anschrift und Kontoverbindung im Konto hinterlegen – darunter werden alle Mitglieder deines Haushalts angemeldet." }, 409);
       }
 
-      const cfg = await loadData("membership-types.json");
+      const cfg = await ensureMembershipTypes();
       const errors = {};
       const { age } = memberProfile(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
@@ -1660,7 +1700,7 @@
       const idx = all.findIndex((m) => m.id === body.id && m.userId === user.id);
       if (idx === -1) return json({ ok: false, message: "Mitgliedschaft nicht gefunden." }, 404);
 
-      const cfg = await loadData("membership-types.json");
+      const cfg = await ensureMembershipTypes();
       const errors = {};
       const { age } = memberProfile(body, errors);
       if (Object.keys(errors).length) return json({ ok: false, message: "Bitte Eingaben prüfen.", errors }, 422);
