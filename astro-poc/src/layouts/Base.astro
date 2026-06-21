@@ -18,7 +18,7 @@ interface Props {
 }
 const { pageTitle = "", description = club.description, noindex = false } = Astro.props;
 const title = pageTitle ? `${pageTitle} – ${club.name}` : `${club.name} – ${club.tagline}`;
-const logo = "/" + club.logo;
+const logo = club.logo;
 const year = new Date().getFullYear();
 
 // Die Hauptnavigation als Daten – statt 17× kopiertem Markup.
@@ -39,17 +39,21 @@ const navLinks = [
   <title>{title}</title>
   <meta name="description" content={description} />
   {noindex && <meta name="robots" content="noindex" />}
-  <link rel="icon" type="image/png" href="/assets/img/favicon.png" />
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <meta name="theme-color" content={club.theme_color} />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content={club.short_name} />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
   <!-- Single-Tenant: BSG_CLUB direkt setzen (mock-api.js liest es) – ersetzt club-config.js -->
   <script is:inline set:html={`window.BSG_CLUB={id:"bsg",name:${JSON.stringify(club.name)},clubSeed:"club.bsg.json",ns:"bsg"};window.BSG_ADMIN_EMAIL="admin@bsg-benninghausen.de";`}></script>
-  <link rel="stylesheet" href="/assets/css/theme.bsg.css" />
-  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/theme.bsg.css" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -143,9 +147,9 @@ const navLinks = [
     </div>
   </footer>
 
-  <script is:inline src="/assets/js/api-config.js"></script>
-  <script is:inline src="/assets/js/mock-api.js"></script>
-  <script is:inline src="/assets/js/main.js"></script>
+  <script is:inline src="assets/js/api-config.js"></script>
+  <script is:inline src="assets/js/mock-api.js"></script>
+  <script is:inline src="assets/js/main.js"></script>
   <slot name="scripts" />
 </body>
 </html>
