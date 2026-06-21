@@ -57,7 +57,7 @@
         "Musterverein-Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
     },
   ];
-  var DEFAULT_ID = "bsg";
+  var DEFAULT_ID = "demo";
 
   function find(id) {
     for (var i = 0; i < EXAMPLES.length; i++) {
