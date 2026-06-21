@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+const ADMIN_EMAIL = "admin@example.com";
 
 /* Mock-Quelle und Seed-Verzeichnis sind per Env überschreibbar – dieses Package
    (@crypticalcode/api-contract) ist die Single Source of Truth des Vertrags (Tests + Seeds).

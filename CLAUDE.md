@@ -4,8 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A **purely static** website for the Judo club *BSG Benninghausen e.V.* (German-language UI).
-No build step, no framework, no dependencies — just HTML, CSS, and vanilla JS. All "server"
+A **purely static**, white-label **Vereins-Baukasten** (generic German club website; German-language
+UI). The repo is the generic product; an individual club runs its own site as a **fork** with its
+branding as configuration (see `docs/fork-onboarding.md`). Reference customer *BSG Benninghausen*
+runs as its own fork (`bsg-benninghausen.github.io/website`); the default example here is the neutral
+*Musterverein*. No build step, no framework, no dependencies — just HTML, CSS, and vanilla JS. All "server"
 behavior is **mocked in the browser**: `assets/js/mock-api.js` patches `window.fetch`, answers
 every `/api/*` request locally, and persists data in `localStorage`. The dispatcher is also a
 **mock⇄real router**: `assets/js/api-config.js` (loaded before `mock-api.js`) sets
@@ -28,54 +31,25 @@ python3 -m http.server 8000      # then open http://localhost:8000
 node --check assets/js/<file>.js
 
 # Contract tests (run from repo root) — exits non-zero on failure
-node packages/api-contract/run.mjs                       # mock mode (default)
-node packages/api-contract/run.mjs tournaments payouts   # filter by filename substring
-TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # against a real backend
-# Or via the root workspace scripts:
-npm test            # guard + vendored-seed check + mock contract + backend persistence
-npm start           # boot the real backend (packages/backend/index.mjs)
-
-# Seeds: canonical in packages/api-contract/data/, vendored into assets/data/ for the browser
-node tools/vendor-seeds.mjs            # re-vendor after editing canonical seeds
-node tools/vendor-seeds.mjs --check    # CI gate: assets/data == canonical
+node tests/run.mjs                       # mock mode (default)
+node tests/run.mjs tournaments payouts   # filter by filename substring
+TEST_BASE=http://localhost:3000 node tests/run.mjs   # against a real backend
 
 # Browser-E2E (Playwright) — isolated devDeps under tests/e2e/ (site stays zero-dep)
 cd tests/e2e && npm install && npx playwright install chromium   # one-time (Linux: add --with-deps for system libs, as CI does)
-npx playwright test                      # Playwright boots packages/backend/ itself, runs Chromium
+npx playwright test                      # Playwright boots server/ itself, runs Chromium
 ```
 
-**Workspace layout (Phases 1–2 of the backend-repo separation).** npm workspaces draw a tooling
-boundary *without* changing the shipped static site (root stays zero-dep): the repo **root is the
-frontend** (`*.html`, `assets/`, `mock-api.js`); `packages/api-contract/` is the **contract**
-(test suites + harness + `run.mjs` + canonical `data/` seeds + prose `README.md`);
-`packages/backend/` is the **real backend** (`api.mjs`, `index.mjs`, `store.mjs`, `persistence.mjs`,
-formerly `server/`). Seeds live canonically in `packages/api-contract/data/` and are **vendored**
-into `assets/data/` (committed, browser-served) by `tools/vendor-seeds.mjs`; CI fails on drift. See
-`docs/backend-repo-separation-plan.md` for the full roadmap (Phases 3–4 not yet done).
-
-**Phase 2 — the contract is a publishable package.** `packages/api-contract/` is published as
-**`@crypticalcode/api-contract`** to GitHub Packages on a `contract-vX.Y.Z` tag
-(`.github/workflows/publish-contract.yml`; version must match the tag). Inside the monorepo nothing
-is fetched: the scoped name resolves to the local workspace (`npm install` links it), so CI/dev stay
-install- and token-free (root `.npmrc` only maps the scope→registry for *external* consumers).
-**Lean coupling:** only dev/test consumption goes by name (`bsg-contract` bin); the **backend's
-runtime seed loading stays a relative path** (`new URL("../api-contract/data/", import.meta.url)` in
-`index.mjs`/`persistence.mjs`) so the Hetzner deploy remains **install-free** (no `node_modules`,
-systemd runs `node packages/backend/index.mjs`). **Invariant:** never make `packages/backend/*.mjs`
-`import` the package — that would break the install-free server. Renovate (`renovate.json`) is wired
-but only bites after the repo split (Phase 3).
-
-**Contract-test suite (`packages/api-contract/`).** Same assertions validate either the in-process
-mock OR a real backend (selected by `TEST_BASE`) — this is what keeps the mock contract and the
-backend in sync. `harness.mjs` exposes `createClient({mode,base})` with API-only helpers (`login`,
+**Contract-test suite (`tests/`).** Same assertions validate either the in-process mock OR a real
+backend (selected by `TEST_BASE`) — this is what keeps the mock contract and a future backend in
+sync. `tests/harness.mjs` exposes `createClient({mode,base})` with API-only helpers (`login`,
 `newUser`, `me`, `asAdmin`, `setHousehold`, `email`); mock mode loads `mock-api.js` into an
-**isolated sandbox** (per-suite fresh `window`/`localStorage`, seed JSON from `data/`), real mode does
-HTTP with a cookie jar. The mock source and seed dir are overridable via `BSG_MOCK_SRC`/`BSG_DATA_DIR`
-(defaults: the frontend `mock-api.js` and the package's own `data/`). Each `*.test.mjs` is one domain
-suite (`export const name`, `export default async (api, ck) => …`; `export const mockOnly = true` for
-dispatcher-only suites like `api-switch`). Tests never touch `localStorage` directly and use per-run
-unique emails so they can run against a persistent backend. When you add/change a route, add or update
-a suite. See `packages/api-contract/README.md` for the backend contract a real implementation must satisfy.
+**isolated sandbox** (per-suite fresh `window`/`localStorage`, seed JSON from disk), real mode does
+HTTP with a cookie jar. Each `tests/*.test.mjs` is one domain suite (`export const name`,
+`export default async (api, ck) => …`; `export const mockOnly = true` for dispatcher-only suites
+like `api-switch`). Tests never touch `localStorage` directly and use per-run unique emails so they
+can run against a persistent backend. When you add/change a route, add or update a suite. See
+`tests/README.md` for the backend contract a real implementation must satisfy.
 
 ## Critical conventions
 
@@ -156,7 +130,7 @@ This single file is the backend. Key pieces:
 A capability layer hides features that have no real backend (so production never suggests
 non-existent functionality) and marks new ones as Beta. **Two orthogonal axes** per feature:
 a **maturity** `status` (`beta`/`stable`) declared in the `FEATURES` catalog (mirrored in
-`mock-api.js` and `packages/backend/api.mjs` — the catalog itself is the contract; a real backend that hasn't
+`mock-api.js` and `server/api.mjs` — the catalog itself is the contract; a real backend that hasn't
 caught up simply omits the key, hiding it in `real` mode), and a **release scope**
 (`"public"|"off"|{roles:[…]}`) set at runtime by a superadmin (`manage_features`) and stored in
 `bsg_feature_flags`. `GET /api/capabilities` is **user-specific**: returns only features the current

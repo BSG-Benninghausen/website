@@ -45,10 +45,10 @@ const PERMISSIONS = [
 ];
 const ALL_PERMS = PERMISSIONS.map((p) => p.key);
 /* Seed-Admin-Adresse; per Env ADMIN_EMAIL (Deploy/Fork) überschreibbar.
-   Default bleibt BSG, damit bestehende Deployments und Contract-Tests greifen. */
+   Neutraler Default; ein Fork (z. B. BSG) setzt seine eigene Adresse. */
 const ADMIN_EMAIL =
   (typeof process !== "undefined" && process.env && process.env.ADMIN_EMAIL) ||
-  "admin@bsg-benninghausen.de";
+  "admin@example.com";
 
 /* Feature-Katalog (Reifegrad) – 1:1 zum Mock. Source of Truth „welche Features
    kennt das Backend". status: "stable" | "beta". Die Freigabe (wer sieht es)
@@ -266,7 +266,7 @@ function memberProfile(body, errors) {
   const age = ageFromBirthdate(body.birthdate);
   if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
   else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
-  if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Judopass).";
+  if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Mitgliedsausweis).";
   return { age };
 }
 function memberFields(body, allowedWeights) {
@@ -329,7 +329,7 @@ export function createApi({ dataDir, dev = true, dataFile = "" }) {
 
   function nextPassNumber() {
     db.passCounter = (db.passCounter || 0) + 1;
-    return "BSG-" + String(db.passCounter).padStart(4, "0");
+    return "MV-" + String(db.passCounter).padStart(4, "0");
   }
 
   /* ----- Seed: Rollen + Admin (idempotent, versioniert wie im Mock) ----- */

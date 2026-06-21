@@ -5,7 +5,7 @@
    sodass anschließende Navigationen eingeloggt rendern.
    ===================================================================== */
 
-export const ADMIN_EMAIL = "admin@bsg-benninghausen.de";
+export const ADMIN_EMAIL = "admin@example.com";
 
 /* Bestehenden Nutzer per API einloggen (devCode nur in BSG_DEV=1). */
 export async function loginViaApi(page, email) {

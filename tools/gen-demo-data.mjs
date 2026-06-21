@@ -69,32 +69,32 @@ function avatarDataUrl(bg) {
 const AV = PALETTE.map(avatarDataUrl);
 
 /* ---------- Stammdaten ---------- */
-const ADDR1 = { street: "Im Brühl 12", zip: "59556", city: "Lippstadt" };
-const ADDR2 = { street: "Schulstraße 7", zip: "59556", city: "Lippstadt" };
-const ADDR3 = { street: "Am Sportplatz 3", zip: "59556", city: "Lippstadt" };
+const ADDR1 = { street: "Musterstraße 12", zip: "12345", city: "Musterstadt" };
+const ADDR2 = { street: "Beispielweg 7", zip: "12345", city: "Musterstadt" };
+const ADDR3 = { street: "Am Sportplatz 3", zip: "12345", city: "Musterstadt" };
 const IBAN = "DE89 3704 0044 0532 0130 00"; // gültige Demo-IBAN (Mod-97)
 const TS = (d) => d + "T08:00:00.000Z";
 
 const users = [
   // Vorstand (Rollen geben Rechte)
-  { id: "usr-demo-vorsitz1", name: "Markus Vorbeck", email: "markus.vorbeck@example.com", address: ADDR1, iban: IBAN, photo: AV[0], roles: ["vorsitz1"], createdAt: TS("2023-01-15") },
-  { id: "usr-demo-vorsitz2", name: "Sabine Klein", email: "sabine.klein@example.com", address: null, iban: null, photo: AV[1], roles: ["vorsitz2"], createdAt: TS("2023-01-15") },
-  { id: "usr-demo-kasse", name: "Thomas Kassner", email: "thomas.kassner@example.com", address: ADDR2, iban: IBAN, photo: AV[2], roles: ["kassenwart"], createdAt: TS("2023-01-15") },
+  { id: "usr-demo-vorsitz1", name: "Markus Muster", email: "markus.muster@example.com", address: ADDR1, iban: IBAN, photo: AV[0], roles: ["vorsitz1"], createdAt: TS("2023-01-15") },
+  { id: "usr-demo-vorsitz2", name: "Sabine Muster", email: "sabine.muster@example.com", address: null, iban: null, photo: AV[1], roles: ["vorsitz2"], createdAt: TS("2023-01-15") },
+  { id: "usr-demo-kasse", name: "Thomas Muster", email: "thomas.muster@example.com", address: ADDR2, iban: IBAN, photo: AV[2], roles: ["kassenwart"], createdAt: TS("2023-01-15") },
   // Schriftführerin: öffentliches Amt OHNE Rechte (Rolle "member")
-  { id: "usr-demo-schrift", name: "Petra Lauf", email: "petra.lauf@example.com", address: null, iban: null, photo: AV[3], roles: ["member"], createdAt: TS("2023-02-01") },
+  { id: "usr-demo-schrift", name: "Petra Muster", email: "petra.muster@example.com", address: null, iban: null, photo: AV[3], roles: ["member"], createdAt: TS("2023-02-01") },
 
   // Trainerteam
-  { id: "usr-demo-trainer1", name: "Jens Wurf", email: "jens.wurf@example.com", address: null, iban: null, photo: AV[4], roles: ["trainer"], createdAt: TS("2023-03-10") },
-  { id: "usr-demo-trainer2", name: "Lena Halt", email: "lena.halt@example.com", address: null, iban: null, photo: AV[5], roles: ["trainer"], createdAt: TS("2023-03-10") },
+  { id: "usr-demo-trainer1", name: "Jens Muster", email: "jens.muster@example.com", address: null, iban: null, photo: AV[4], roles: ["trainer"], createdAt: TS("2023-03-10") },
+  { id: "usr-demo-trainer2", name: "Lena Muster", email: "lena.muster@example.com", address: null, iban: null, photo: AV[5], roles: ["trainer"], createdAt: TS("2023-03-10") },
   // Co-Trainer: öffentliches Amt OHNE Rechte (Rolle "member")
-  { id: "usr-demo-cotrainer", name: "Mike Boden", email: "mike.boden@example.com", address: null, iban: null, photo: AV[0], roles: ["member"], createdAt: TS("2023-09-01") },
+  { id: "usr-demo-cotrainer", name: "Mike Muster", email: "mike.muster@example.com", address: null, iban: null, photo: AV[0], roles: ["member"], createdAt: TS("2023-09-01") },
 
   // Pressewartin: Rechte OHNE öffentliches Amt (keine Position)
-  { id: "usr-demo-presse", name: "Carla Feder", email: "carla.feder@example.com", address: null, iban: null, photo: AV[1], roles: ["pressewart"], createdAt: TS("2023-05-20") },
+  { id: "usr-demo-presse", name: "Carla Muster", email: "carla.muster@example.com", address: null, iban: null, photo: AV[1], roles: ["pressewart"], createdAt: TS("2023-05-20") },
 
   // Mitglieds-Haushalte
-  { id: "usr-demo-haus1", name: "Anja Sonnenberg", email: "anja.sonnenberg@example.com", address: ADDR1, iban: IBAN, photo: AV[2], roles: ["member"], createdAt: TS("2024-08-01") },
-  { id: "usr-demo-haus2", name: "Bernd Falk", email: "bernd.falk@example.com", address: ADDR3, iban: IBAN, photo: AV[3], roles: ["member"], createdAt: TS("2024-08-15") },
+  { id: "usr-demo-haus1", name: "Anja Muster", email: "anja.muster@example.com", address: ADDR1, iban: IBAN, photo: AV[2], roles: ["member"], createdAt: TS("2024-08-01") },
+  { id: "usr-demo-haus2", name: "Bernd Beispiel", email: "bernd.beispiel@example.com", address: ADDR3, iban: IBAN, photo: AV[3], roles: ["member"], createdAt: TS("2024-08-15") },
 ];
 
 const positions = [
@@ -113,11 +113,11 @@ const positions = [
 /* Mitgliedschaften – Folgefelder vorberechnet (Jahrgangsprinzip, Stand 2026).
    ageCategory/fee aus membership-types.json; weightClass gültig laut weight-classes.json. */
 const memberships = [
-  { id: "mem-demo-1", userId: "usr-demo-haus1", firstName: "Anja", lastName: "Sonnenberg", birthdate: "1986-03-14", photo: AV[3], weightClass: "-63 kg", belt: "Braungurt", gender: "weiblich", nationality: "Deutsch", ageCategory: "erwachsene", categoryLabel: "Erwachsene", individualFee: 12, passNumber: "BSG-0001", status: "aktiv", startedAt: TS("2024-08-01") },
-  { id: "mem-demo-2", userId: "usr-demo-haus1", firstName: "Leon", lastName: "Sonnenberg", birthdate: "2016-07-02", photo: AV[4], weightClass: "-34 kg", belt: "Gelbgurt", gender: "männlich", nationality: "Deutsch", ageCategory: "kind", categoryLabel: "Kind", individualFee: 7, passNumber: "BSG-0002", status: "aktiv", startedAt: TS("2024-08-01") },
-  { id: "mem-demo-3", userId: "usr-demo-haus2", firstName: "Bernd", lastName: "Falk", birthdate: "1979-11-23", photo: AV[5], weightClass: "-81 kg", belt: "1. Dan (Schwarzgurt)", gender: "männlich", nationality: "Deutsch", ageCategory: "erwachsene", categoryLabel: "Erwachsene", individualFee: 12, passNumber: "BSG-0003", status: "aktiv", startedAt: TS("2024-08-15") },
-  { id: "mem-demo-4", userId: "usr-demo-haus2", firstName: "Mia", lastName: "Falk", birthdate: "2012-05-09", photo: AV[0], weightClass: "-48 kg", belt: "Orangegurt", gender: "weiblich", nationality: "Deutsch", ageCategory: "jugend", categoryLabel: "Jugend", individualFee: 9, passNumber: "BSG-0004", status: "aktiv", startedAt: TS("2024-08-15") },
-  { id: "mem-demo-5", userId: "usr-demo-haus2", firstName: "Noah", lastName: "Falk", birthdate: "2018-09-30", photo: AV[1], weightClass: "-27 kg", belt: "Weiß-Gelb", gender: "männlich", nationality: "Deutsch", ageCategory: "kind", categoryLabel: "Kind", individualFee: 7, passNumber: "BSG-0005", status: "aktiv", startedAt: TS("2025-01-10") },
+  { id: "mem-demo-1", userId: "usr-demo-haus1", firstName: "Anja", lastName: "Muster", birthdate: "1986-03-14", photo: AV[3], weightClass: "-63 kg", belt: "Braungurt", gender: "weiblich", nationality: "Deutsch", ageCategory: "erwachsene", categoryLabel: "Erwachsene", individualFee: 12, passNumber: "MV-0001", status: "aktiv", startedAt: TS("2024-08-01") },
+  { id: "mem-demo-2", userId: "usr-demo-haus1", firstName: "Leon", lastName: "Muster", birthdate: "2016-07-02", photo: AV[4], weightClass: "-34 kg", belt: "Gelbgurt", gender: "männlich", nationality: "Deutsch", ageCategory: "kind", categoryLabel: "Kind", individualFee: 7, passNumber: "MV-0002", status: "aktiv", startedAt: TS("2024-08-01") },
+  { id: "mem-demo-3", userId: "usr-demo-haus2", firstName: "Bernd", lastName: "Beispiel", birthdate: "1979-11-23", photo: AV[5], weightClass: "-81 kg", belt: "1. Dan (Schwarzgurt)", gender: "männlich", nationality: "Deutsch", ageCategory: "erwachsene", categoryLabel: "Erwachsene", individualFee: 12, passNumber: "MV-0003", status: "aktiv", startedAt: TS("2024-08-15") },
+  { id: "mem-demo-4", userId: "usr-demo-haus2", firstName: "Mia", lastName: "Beispiel", birthdate: "2012-05-09", photo: AV[0], weightClass: "-48 kg", belt: "Orangegurt", gender: "weiblich", nationality: "Deutsch", ageCategory: "jugend", categoryLabel: "Jugend", individualFee: 9, passNumber: "MV-0004", status: "aktiv", startedAt: TS("2024-08-15") },
+  { id: "mem-demo-5", userId: "usr-demo-haus2", firstName: "Noah", lastName: "Beispiel", birthdate: "2018-09-30", photo: AV[1], weightClass: "-27 kg", belt: "Weiß-Gelb", gender: "männlich", nationality: "Deutsch", ageCategory: "kind", categoryLabel: "Kind", individualFee: 7, passNumber: "MV-0005", status: "aktiv", startedAt: TS("2025-01-10") },
 ];
 
 const out = {

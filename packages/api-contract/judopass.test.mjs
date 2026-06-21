@@ -14,7 +14,7 @@ export default async function run(api, ck) {
   ck("ungültiges Foto -> 422", s === 422 && d.errors.photo);
   [s, d] = await api.postJ("/api/memberships", { firstName: "Carla", lastName: "Kunde", birthdate: "1985-05-01", photo: PHOTO, weightClass: "-57 kg", belt: "Gelbgurt", gender: "weiblich", nationality: "Deutsch" });
   ck("mit Foto -> 201", s === 201 && d.ok);
-  ck("Passnummer Format BSG-NNNN", /^BSG-\d{4}$/.test(d.membership.passNumber));
+  ck("Passnummer Format MV-NNNN", /^MV-\d{4}$/.test(d.membership.passNumber));
   ck("Gewichtsklasse/Gürtel/Geschlecht/Nat.", d.membership.weightClass === "-57 kg" && d.membership.belt === "Gelbgurt" && d.membership.gender === "weiblich" && d.membership.nationality === "Deutsch");
   const memId = d.membership.id;
   const started = d.membership.startedAt;

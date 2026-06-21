@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mein Konto – BSG Benninghausen e.V.</title>
-  <meta name="description" content="Dein Dashboard bei der BSG Benninghausen e.V. – Mitgliedschaften, Adresse und Kontoverbindung verwalten.">
+  <title>Mein Konto – Musterverein e.V.</title>
+  <meta name="description" content="Dein Dashboard bei der Musterverein e.V. – Mitgliedschaften, Adresse und Kontoverbindung verwalten.">
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
-  <meta name="theme-color" content="#0d0d12">
+  <meta name="theme-color" content="#1c2230">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BSG Judo">
+  <meta name="apple-mobile-web-app-title" content="Musterverein">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <script src="assets/js/club-config.js?v=34"></script>
-  <link rel="stylesheet" href="assets/css/styles.css?v=34">
+  <script src="assets/js/club-config.js?v=35"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=35">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -28,7 +28,7 @@
     <nav class="nav wrap" aria-label="Hauptnavigation">
       <a href="home.html" class="brand">
         <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
-        <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
+        <span class="brand__name"><span data-club="brand_name">Musterverein</span><small data-club="brand_sub">Sport · Musterstadt</small></span>
       </a>
       <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
       <div class="nav__menu" id="nav-menu">
@@ -135,11 +135,11 @@
 
             <p id="membership-hint" class="muted-note" style="margin-top:16px" hidden></p>
 
-            <!-- Anmelde-/Bearbeiten-Formular: Person + Judopass-Daten -->
+            <!-- Anmelde-/Bearbeiten-Formular: Person + Mitgliedsdaten -->
             <form id="membership-form" class="sub-form" hidden novalidate>
               <input type="hidden" name="id">
               <h3 id="membership-form-title" style="font-size:1.1rem;margin-bottom:4px">Mitglied anmelden</h3>
-              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Der Beitrag ergibt sich <b>automatisch aus dem Alter</b>. Ein <b>Foto ist Pflicht</b> (für den Judopass).</p>
+              <p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Der Beitrag ergibt sich <b>automatisch aus dem Alter</b>. Ein <b>Foto ist Pflicht</b> (für den Mitgliedsausweis).</p>
               <div class="field-row">
                 <div class="field">
                   <label for="m-first">Vorname <span class="req">*</span></label>
@@ -169,7 +169,7 @@
                 </div>
               </div>
               <div class="field" data-photo-field>
-                <label for="m-photo">Foto <span class="req">*</span> <span style="font-weight:400;color:var(--text-soft)">(Pflicht für den Judopass)</span></label>
+                <label for="m-photo">Foto <span class="req">*</span> <span style="font-weight:400;color:var(--text-soft)">(Pflicht für den Mitgliedsausweis)</span></label>
                 <div class="photo-input">
                   <img id="m-photo-preview" class="photo-input__preview" alt="" hidden>
                   <div class="photo-input__ph" id="m-photo-ph" aria-hidden="true">
@@ -315,9 +315,9 @@
         <div class="footer-about">
           <a href="home.html" class="brand">
             <img class="brand__logo" src="assets/img/drache.png" alt="" width="42" height="42" data-club-logo>
-            <span class="brand__name"><span data-club="brand_name">BSG Benninghausen</span><small data-club="brand_sub">Judo · Benninghausen</small></span>
+            <span class="brand__name"><span data-club="brand_name">Musterverein</span><small data-club="brand_sub">Sport · Musterstadt</small></span>
           </a>
-          <p>Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
+          <p>Sport für Kinder, Jugendliche und Erwachsene in Musterstadt. Anfänger, Wiedereinsteiger und Sportbegeisterte sind herzlich willkommen.</p>
           <div class="socials">
             <a href="https://www.instagram.com/bsg_benninghausen/" aria-label="Instagram" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -344,23 +344,23 @@
         <div class="footer-col">
           <h4>Training</h4>
           <ul>
-            <li data-club="venue">Sporthalle Grundschule Benninghausen</li>
-            <li><span data-club="street">Im Brühl 29</span>, <span data-club="city">59556 Lippstadt</span></li>
+            <li data-club="venue">Vereinsheim Musterstadt</li>
+            <li><span data-club="street">Musterstraße 1</span>, <span data-club="city">12345 Musterstadt</span></li>
             <li>Mittwochs &amp; freitags</li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span data-year>2026</span> <span data-club="name">BSG Benninghausen e.V.</span> · <span data-club="sport">Judo</span> in <span data-club="locality">Benninghausen</span></span>
+        <span>© <span data-year>2026</span> <span data-club="name">Musterverein e.V.</span> · <span data-club="sport">Sport</span> in <span data-club="locality">Musterstadt</span></span>
         <span><a href="kontakt.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></span>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=34" defer></script>
-  <script src="assets/js/mock-api.js?v=34" defer></script>
-  <script src="assets/js/main.js?v=34" defer></script>
-  <script src="assets/js/konto.js?v=34" defer></script>
-  <script type="module" src="assets/js/features/loader.js?v=34"></script>
+  <script src="assets/js/api-config.js?v=35" defer></script>
+  <script src="assets/js/mock-api.js?v=35" defer></script>
+  <script src="assets/js/main.js?v=35" defer></script>
+  <script src="assets/js/konto.js?v=35" defer></script>
+  <script type="module" src="assets/js/features/loader.js?v=35"></script>
 </body>
 </html>

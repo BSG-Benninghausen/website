@@ -92,7 +92,7 @@ und JSON-Shapes** liefern wie der Mock (siehe `routes` in `assets/js/mock-api.js
 - **Auth per Cookie/Session.** `POST /api/auth/request-code` liefert in Test-/Dev-Umgebungen das
   Feld `devCode` zurück (der Client nutzt es für `POST /api/auth/login`). `POST /api/auth/register`
   legt den Benutzer an und meldet ihn an; `GET /api/auth/me` liefert `{ user, permissions, isAdmin }`.
-- **Seed-Admin** `admin@bsg-benninghausen.de` existiert; Seed-Rollen (`vorstand`, `pressewart`,
+- **Seed-Admin** `admin@example.com` existiert; Seed-Rollen (`vorstand`, `pressewart`,
   `kassenwart`, `trainer`, Board-Rollen) sind **reine Rechte-Rollen**. Die öffentliche
   Team-Anzeige kommt aus **Vereinsämtern** (`positions`, Recht `manage_team`); `GET /api/team`
   rechnet `positions × users`.

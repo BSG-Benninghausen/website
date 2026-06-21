@@ -1,5 +1,5 @@
 /* =====================================================================
-   MOCK-SERVER  ·  BSG Benninghausen
+   MOCK-SERVER  ·  Vereins-Baukasten (generisches White-Label-Frontend)
    ---------------------------------------------------------------------
    Diese Website ist rein statisch. Wo normalerweise ein Server nötig wäre
    (Formulare, News & Termine, Benutzerkonten, Mitgliedschaften), simuliert
@@ -68,9 +68,9 @@
   ];
   const ALL_PERMS = PERMISSIONS.map((p) => p.key);
   /* Seed-Admin-Adresse; per window.BSG_ADMIN_EMAIL (Deploy/Fork) überschreibbar.
-     Default bleibt BSG, damit bestehende Deployments und Contract-Tests greifen. */
+     Neutraler Default; ein Fork (z. B. BSG) setzt seine eigene Adresse. */
   const ADMIN_EMAIL =
-    (typeof window !== "undefined" && window.BSG_ADMIN_EMAIL) || "admin@bsg-benninghausen.de";
+    (typeof window !== "undefined" && window.BSG_ADMIN_EMAIL) || "admin@example.com";
 
   /* Feature-Katalog (Reifegrad). Quelle der Wahrheit für „welche Features kennt
      das Backend" – im Mock sind alle implementiert. Im echten (privaten) Backend
@@ -315,12 +315,12 @@
     return out;
   }
 
-  /* ----- Judopass-Felder: Foto, Passnummer, Profilfelder ----- */
+  /* ----- Mitgliedsausweis-Felder: Foto, Passnummer, Profilfelder ----- */
   const isPhoto = (v) => typeof v === "string" && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v) && v.length <= 700000;
   function nextPassNumber() {
     const n = (getStore(KEYS.passCounter, 0) || 0) + 1;
     setStore(KEYS.passCounter, n);
-    return "BSG-" + String(n).padStart(4, "0");
+    return "MV-" + String(n).padStart(4, "0");
   }
   const fromList = (list, v) => (list.includes(v) ? v : "");
   // gemeinsame Validierung & Übernahme der editierbaren Profilfelder
@@ -330,7 +330,7 @@
     const age = ageFromBirthdate(body.birthdate);
     if (age === null) errors.birthdate = "Bitte gültiges Geburtsdatum angeben.";
     else if (new Date(body.birthdate) > new Date()) errors.birthdate = "Geburtsdatum darf nicht in der Zukunft liegen.";
-    if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Judopass).";
+    if (!isPhoto(body.photo)) errors.photo = "Bitte ein Foto hochladen (Pflicht für den Mitgliedsausweis).";
     return { age };
   }
   function memberFields(body, allowedWeights) {

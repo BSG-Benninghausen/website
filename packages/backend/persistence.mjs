@@ -50,7 +50,7 @@ async function main() {
   ck("Registrierung ok (201)", reg.status === 201);
 
   // Als Seed-Admin die Club-Config ändern (landet in db.club)
-  const adminTok = await login(apiA, "admin@bsg-benninghausen.de");
+  const adminTok = await login(apiA, "admin@example.com");
   const upd = await call(apiA, "POST", "/api/club", { values: { brand_name: "Persisted FC" } }, adminTok);
   ck("Club-Änderung als Admin ok", upd.status === 200 && upd.body.values.brand_name === "Persisted FC");
 
@@ -76,7 +76,7 @@ async function main() {
     writeFileSync(bf, bad);
     let booted = null;
     try { booted = createApi({ dataDir: DATA_DIR, dev: true, dataFile: bf }); } catch (e) { /* booted bleibt null */ }
-    const ping = booted ? await login(booted, "admin@bsg-benninghausen.de") : "";
+    const ping = booted ? await login(booted, "admin@example.com") : "";
     ck(`defekter Snapshot ${JSON.stringify(bad)} -> fail-safe Seed (Admin-Login geht)`, !!ping);
   }
 

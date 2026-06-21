@@ -12,7 +12,7 @@ export default async function run(api, ck) {
   // Dynamisches PWA-Manifest aus der Club-Config (rohes Objekt, kein {ok:…}-Wrapper)
   [s, d] = await api.getJ("/api/manifest");
   ck("GET /api/manifest (200, rohes Objekt)", s === 200 && d.ok === undefined && typeof d.name === "string");
-  ck("Manifest spiegelt Vereinsnamen", d.name.includes("Benninghausen") && d.short_name.length > 0);
+  ck("Manifest spiegelt Vereinsnamen", d.name.includes("Musterverein") && d.short_name.length > 0);
   ck("Manifest hat Icons + theme_color", Array.isArray(d.icons) && d.icons.length === 3 && /^#[0-9a-fA-F]{3,8}$/.test(d.theme_color));
 
   // Ohne Login kein Schreibzugriff

@@ -51,7 +51,7 @@ Contract-Packages (`../api-contract/data/`; identisch zur vendored Kopie in `ass
 Board-Rollen (`vorsitz1`, …) als **reine Rechte-Rollen** – identisch zum Mock. Die öffentliche
 Team-Anzeige läuft über die **Vereinsämter** (`db.positions`, `GET /api/positions` unter
 `manage_team`); `GET /api/team` rechnet `positions × users`. Der Seed-Admin
-`admin@bsg-benninghausen.de` existiert immer.
+`admin@example.com` existiert immer.
 
 ### Sessions
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vereins-Baukasten – Open-Source Vereins-Website</title>
-  <meta name="description" content="Eine generische, white-label-fähige Vereins-Website (HTML/CSS/JS, zero-dep) mit vollständigem Mock-Backend. BSG Benninghausen ist das erste von mehreren Referenz-Beispielen.">
+  <meta name="description" content="Eine generische, white-label-fähige Vereins-Website (HTML/CSS/JS, zero-dep) mit vollständigem Mock-Backend. Musterverein ist das erste von mehreren Referenz-Beispielen.">
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <meta name="theme-color" content="#1c2230">
@@ -12,9 +12,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/theme.example.css?v=34">
-  <link rel="stylesheet" href="assets/css/styles.css?v=34">
-  <script src="assets/js/club-config.js?v=34"></script>
+  <link rel="stylesheet" href="assets/css/theme.example.css?v=35">
+  <link rel="stylesheet" href="assets/css/styles.css?v=35">
+  <script src="assets/js/club-config.js?v=35"></script>
 </head>
 <body class="portal">
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -94,11 +94,22 @@
             </a>
           </article>
 
+          <!-- realer Downstream-Fork: eigenes Repo, eigenes Deployment -->
+          <article class="card">
+            <div class="card__icon" style="background:#e3141b;color:#fff;font-family:var(--font-display);font-weight:700;font-size:1.4rem">B</div>
+            <span class="badge">Live · Fork</span>
+            <h3>BSG Benninghausen e.V.</h3>
+            <p class="muted">Judo · eigener Fork</p>
+            <p>Der erste echte Verein: ein eigenständiger Fork dieses Produkts mit eigenem Branding, Inhalten und Deployment.</p>
+            <a class="btn btn--outline btn--sm" href="https://bsg-benninghausen.github.io/website/" target="_blank" rel="noopener">Live ansehen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </article>
           <!-- geplante (noch zu implementierende) Beispiele -->
           <article class="card card--planned">
             <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
             <span class="badge badge--intern">Geplant</span>
-            <h3>Weitere Sportvereine</h3>
+            <h3>Weitere Vereine</h3>
             <p class="muted">Fußball · Turnen · Schwimmen</p>
             <p>Weitere Referenz-Vereine zeigen, wie sich Branding, Sparten und Inhalte rein über die Konfiguration ändern.</p>
             <span class="btn btn--outline btn--sm" aria-disabled="true">In Vorbereitung</span>
@@ -172,7 +183,7 @@
             <li>Neues Beispiel = ein Eintrag in <code>club-config.js</code> + <code>club.&lt;id&gt;.json</code>.</li>
           </ul>
           <div class="hero__cta">
-            <a href="home.html?club=bsg" class="btn btn--primary">BSG-Beispiel öffnen</a>
+            <a href="home.html" class="btn btn--primary">Musterverein öffnen</a>
             <a href="https://github.com/crypticalcode/vereins-baukasten" class="btn btn--ghost" target="_blank" rel="noopener">Repository</a>
           </div>
         </div>
@@ -195,12 +206,12 @@
     <div class="wrap">
       <div class="footer-bottom">
         <span>© <span data-year>2026</span> Vereins-Baukasten · Open-Source-Frontend mit Mock-Backend</span>
-        <span><a href="https://github.com/crypticalcode/vereins-baukasten" target="_blank" rel="noopener">GitHub</a> · <a href="home.html">BSG-Beispiel</a></span>
+        <span><a href="https://github.com/crypticalcode/vereins-baukasten" target="_blank" rel="noopener">GitHub</a> · <a href="home.html">Musterverein-Demo</a></span>
       </div>
     </div>
   </footer>
 
-  <script src="assets/js/portal.js?v=34" defer></script>
+  <script src="assets/js/portal.js?v=35" defer></script>
   <script>
     /* App-Shell auch vom Portal aus offline-fähig machen (PWA). */
     if ("serviceWorker" in navigator) {

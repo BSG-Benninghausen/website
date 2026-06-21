@@ -30,20 +30,6 @@
 
   var EXAMPLES = [
     {
-      id: "bsg",
-      name: "BSG Benninghausen e.V.",
-      sport: "Judo",
-      locality: "Benninghausen",
-      status: "live",
-      clubSeed: "club.json",
-      theme: "assets/css/theme.css",
-      accent: "#e3141b",
-      summary:
-        "Judo-Verein im Kreis Soest – der erste Referenzkunde, vollständig " +
-        "eingerichtet: Training, Termine, Team, Mitgliederbereich, Turnier-" +
-        "Anmeldungen und Auszahlungen.",
-    },
-    {
       id: "demo",
       name: "Musterverein",
       sport: "Mehrspartenverein",
@@ -53,11 +39,11 @@
       theme: "assets/css/theme.example.css",
       accent: "#2563eb",
       summary:
-        "Die neutrale White-Label-Vorlage – dasselbe Frontend, nur mit " +
-        "generischer Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
+        "Die neutrale White-Label-Vorlage – ein generisches Frontend mit " +
+        "Musterverein-Marke und neutralem Theme. Startpunkt für jeden neuen Verein.",
     },
   ];
-  var DEFAULT_ID = "bsg";
+  var DEFAULT_ID = "demo";
 
   function find(id) {
     for (var i = 0; i < EXAMPLES.length; i++) {
