@@ -46,7 +46,7 @@ Drei Wege – je weniger geteilte Zeilen du editierst, desto konfliktfreier blei
   Deploy-Zeit-Patch, z. B. im eigenen Deploy-Workflow (wie heute `api-config.js` gepatcht wird):
   ```bash
   # club-config.js so ausliefern, dass dein Verein der Default ist:
-  sed -i 's/var DEFAULT_ID = "bsg";/var DEFAULT_ID = "<id>";/' assets/js/club-config.js
+  sed -i 's/var DEFAULT_ID = "demo";/var DEFAULT_ID = "<id>";/' assets/js/club-config.js
   ```
   Reihenfolge der Auflösung: `?club=` → `localStorage bsg_example` → `window.BSG_CLUB_DEFAULT`
   → eingebautes `DEFAULT_ID`.
@@ -55,8 +55,8 @@ Drei Wege – je weniger geteilte Zeilen du editierst, desto konfliktfreier blei
 
 ## 4. Optional: Admin-Adresse & Cache-Namespace
 
-- **Seed-Admin-Adresse:** im Mock über `window.BSG_ADMIN_EMAIL`, im echten Backend (`server/`)
-  über die Env-Variable `ADMIN_EMAIL`. Default bleibt sonst der Upstream-Wert.
+- **Seed-Admin-Adresse:** im Mock über `window.BSG_ADMIN_EMAIL`, im echten Backend
+  (`packages/backend/`) über die Env-Variable `ADMIN_EMAIL`. Default bleibt sonst der Upstream-Wert.
 - **Service-Worker-Cache-Namespace:** `CACHE_NS` in `service-worker.js` (Default `app`) auf einen
   eigenen Prefix setzen, falls mehrere Deployments denselben Origin teilen.
 
@@ -64,9 +64,10 @@ Drei Wege – je weniger geteilte Zeilen du editierst, desto konfliktfreier blei
 
 - **GitHub Pages:** `deploy-pages.yml` läuft im Fork automatisch beim Push auf `main` → eigene
   Pages-Seite (Mock-Modus, ohne echtes Backend). Pages im Fork-Repo aktivieren.
-- **Eigenes Backend (optional):** `server/` ist das generische Real-Backend. Für einen echten
-  Mandanten den Deploy (z. B. Reverse-Proxy + systemd) im Fork halten und `api-config.js` per
-  Deploy-Patch auf `mode: "real"` stellen (Vorlage: BSG-Setup unter `deploy/` im BSG-Fork).
+- **Eigenes Backend (optional):** `packages/backend/` ist das generische Real-Backend (Start &
+  Env-Variablen: `packages/backend/README.md`). Für einen echten Mandanten den Deploy (z. B.
+  Reverse-Proxy + systemd) im Fork halten und `api-config.js` per Deploy-Patch auf `mode: "real"`
+  stellen. Hintergrund zur Backend-/Deploy-Trennung: `docs/backend-repo-separation-plan.md`.
 
 ## 6. Aktuell bleiben & beitragen
 

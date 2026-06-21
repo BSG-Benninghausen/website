@@ -17,11 +17,11 @@ python3 -m http.server 8000        # http://localhost:8000
 node --check assets/js/<datei>.js
 
 # Contract-Tests (Mock + echtes Backend) – aus dem Repo-Root
-node tests/run.mjs                                   # Mock
-TEST_BASE=http://localhost:3000 node tests/run.mjs   # gegen server/
+node packages/api-contract/run.mjs                                   # Mock
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # gegen packages/backend/
 
 # Cache-Busting-Konsistenz prüfen
-node tests/guard-versions.mjs
+node tools/guard-versions.mjs
 
 # Browser-E2E (isolierte devDeps unter tests/e2e/)
 cd tests/e2e && npm install && npx playwright test
@@ -33,10 +33,10 @@ cd tests/e2e && npm install && npx playwright test
   **Squash-Merge** nach `main`. GitHub Pages deployt automatisch von `main`.
 - **Cache-Busting ist Pflicht.** Jede lokale CSS/JS-Einbindung trägt `?v=N`. Wenn du JS/CSS
   änderst, erhöhe `N` auf **allen** `*.html` gemeinsam und passe `VERSION` in `service-worker.js`
-  an (`node tests/guard-versions.mjs` prüft das). Beispiel:
+  an (`node tools/guard-versions.mjs` prüft das). Beispiel:
   `grep -rl "v=N" *.html | xargs sed -i 's/?v=N/?v=N+1/g'`.
 - **CI grün halten.** `ci.yml` läuft Contract-Tests (Mock + Real) und E2E. Wenn du eine Route
-  änderst, ergänze/aktualisiere eine Suite in `tests/`.
+  änderst, ergänze/aktualisiere eine Suite in `packages/api-contract/`.
 - **Branding ist Konfiguration, kein Code.** Neue Vereins-/Marken-Inhalte gehören in
   `assets/data/club.<id>.json` + `assets/css/theme.<id>.css` + einen Registry-Eintrag in
   `assets/js/club-config.js` – nicht hartcodiert ins Markup.

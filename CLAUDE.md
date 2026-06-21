@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A **purely static**, white-label **Vereins-Baukasten** (generic German club website; German-language
 UI). The repo is the generic product; an individual club runs its own site as a **fork** with its
-branding as configuration (see `docs/fork-onboarding.md`). Reference customer *BSG Benninghausen*
-runs as its own fork (`bsg-benninghausen.github.io/website`); the default example here is the neutral
-*Musterverein*. No build step, no framework, no dependencies — just HTML, CSS, and vanilla JS. All "server"
+branding as configuration (see `docs/fork-onboarding.md`). The default example here is the neutral
+*Musterverein* (its club homepage is `home.html`); reference customer *BSG Benninghausen* runs as its
+own fork (`bsg-benninghausen.github.io/website`). No build step, no framework, no dependencies — just
+HTML, CSS, and vanilla JS. All "server"
 behavior is **mocked in the browser**: `assets/js/mock-api.js` patches `window.fetch`, answers
 every `/api/*` request locally, and persists data in `localStorage`. The dispatcher is also a
 **mock⇄real router**: `assets/js/api-config.js` (loaded before `mock-api.js`) sets
@@ -31,33 +32,34 @@ python3 -m http.server 8000      # then open http://localhost:8000
 node --check assets/js/<file>.js
 
 # Contract tests (run from repo root) — exits non-zero on failure
-node tests/run.mjs                       # mock mode (default)
-node tests/run.mjs tournaments payouts   # filter by filename substring
-TEST_BASE=http://localhost:3000 node tests/run.mjs   # against a real backend
+node packages/api-contract/run.mjs                     # mock mode (default)
+node packages/api-contract/run.mjs tournaments payouts # filter by filename substring
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # against a real backend
 
 # Browser-E2E (Playwright) — isolated devDeps under tests/e2e/ (site stays zero-dep)
 cd tests/e2e && npm install && npx playwright install chromium   # one-time (Linux: add --with-deps for system libs, as CI does)
-npx playwright test                      # Playwright boots server/ itself, runs Chromium
+npx playwright test                      # Playwright boots packages/backend/ itself, runs Chromium
 ```
 
-**Contract-test suite (`tests/`).** Same assertions validate either the in-process mock OR a real
-backend (selected by `TEST_BASE`) — this is what keeps the mock contract and a future backend in
-sync. `tests/harness.mjs` exposes `createClient({mode,base})` with API-only helpers (`login`,
-`newUser`, `me`, `asAdmin`, `setHousehold`, `email`); mock mode loads `mock-api.js` into an
-**isolated sandbox** (per-suite fresh `window`/`localStorage`, seed JSON from disk), real mode does
-HTTP with a cookie jar. Each `tests/*.test.mjs` is one domain suite (`export const name`,
-`export default async (api, ck) => …`; `export const mockOnly = true` for dispatcher-only suites
-like `api-switch`). Tests never touch `localStorage` directly and use per-run unique emails so they
-can run against a persistent backend. When you add/change a route, add or update a suite. See
-`tests/README.md` for the backend contract a real implementation must satisfy.
+**Contract-test suite (`packages/api-contract/`).** Same assertions validate either the in-process
+mock OR a real backend (selected by `TEST_BASE`) — this is what keeps the mock contract and a future
+backend in sync. `packages/api-contract/harness.mjs` exposes `createClient({mode,base})` with
+API-only helpers (`login`, `newUser`, `me`, `asAdmin`, `setHousehold`, `email`); mock mode loads
+`mock-api.js` into an **isolated sandbox** (per-suite fresh `window`/`localStorage`, seed JSON from
+disk), real mode does HTTP with a cookie jar. Each `packages/api-contract/*.test.mjs` is one domain
+suite (`export const name`, `export default async (api, ck) => …`; `export const mockOnly = true` for
+dispatcher-only suites like `api-switch`). Tests never touch `localStorage` directly and use per-run
+unique emails so they can run against a persistent backend. When you add/change a route, add or update
+a suite. See `packages/api-contract/README.md` for the backend contract a real implementation must
+satisfy.
 
 ## Critical conventions
 
 - **Cache-busting is mandatory.** Every local CSS/JS include is tagged `?v=N` (e.g.
-  `mock-api.js?v=18`). When you change *any* JS or CSS, bump `N` on **all** `*.html` at once:
+  `mock-api.js?v=37`). When you change *any* JS or CSS, bump `N` on **all** `*.html` at once:
   `grep -rl "v=N" *.html | xargs sed -i 's/?v=N/?v=N+1/g'`. Forgetting this means users get stale code.
-- **Don't push to `main`.** Work on a feature branch off `origin/main`, open a (draft) PR, then
-  squash-merge to `main`. GitHub Pages auto-deploys from `main` via `.github/workflows/deploy-pages.yml`
+- **Don't push to `main`.** Work on a feature branch off `origin/main`, open a PR **ready for review
+  (not draft)**, then squash-merge to `main`. GitHub Pages auto-deploys from `main` via `.github/workflows/deploy-pages.yml`
   (only `main` and the legacy `claude/bsg-website-redesign-dio9co` branch trigger deploys). Tests run
   in CI via `.github/workflows/ci.yml` on every PR and push to `main` (contract job: mock + real;
   e2e job: Playwright/Chromium) — keep both green.
@@ -87,8 +89,8 @@ This single file is the backend. Key pieces:
 - To add a permission: add to `PERMISSIONS`; grant it to relevant `EXAMPLE_ROLES` + a seed migration;
   gate the backend routes with `hasPerm(user, key)`; reveal nav/UI in the frontend (see below). Rights
   are intentionally **fine-grained, one per content area** (`manage_news`, `manage_events`,
-  `manage_training`, `manage_site`, `manage_team`, `manage_payouts`, `manage_features`, plus
-  `view_*`/`manage_roles/users`).
+  `manage_training`, `manage_site`, `manage_club`, `manage_team`, `manage_memberships`, `manage_payouts`,
+  `manage_features`, `book_features`, plus `view_members`/`view_finance`/`manage_roles`/`manage_users`).
 - **Roles are pure permission objects** (`{id, label, permissions[], system}`) — they grant rights
   and never appear publicly. The public **Team page is computed from a separate `positions` store**
   (`{userId, group, label, order}`, `group ∈ vorstand/trainer`), curated under Admin → Vereinsämter
@@ -110,8 +112,9 @@ This single file is the backend. Key pieces:
   collect, onFill, onReset})` helper (CRUD list+form with hooks) for any new editable content type.
 
 ### Product portal & reference examples
-- **`index.html` is a generic product portal**, not the club site. The BSG club homepage lives at
-  **`home.html`**; all other club pages stay at the root and link to `home.html` for "Start". The
+- **`index.html` is a generic product portal**, not the club site. The example club homepage
+  (Musterverein) lives at **`home.html`**; all other club pages stay at the root and link to
+  `home.html` for "Start". The
   portal is fully static (no `mock-api.js`/`main.js`), renders example cards via `portal.js`, and
   registers the service worker itself.
 - **`assets/js/club-config.js`** (loaded **synchronously in `<head>`**, before `styles.css` and
@@ -130,8 +133,9 @@ This single file is the backend. Key pieces:
 A capability layer hides features that have no real backend (so production never suggests
 non-existent functionality) and marks new ones as Beta. **Two orthogonal axes** per feature:
 a **maturity** `status` (`beta`/`stable`) declared in the `FEATURES` catalog (mirrored in
-`mock-api.js` and `server/api.mjs` — the catalog itself is the contract; a real backend that hasn't
-caught up simply omits the key, hiding it in `real` mode), and a **release scope**
+`mock-api.js` and `packages/backend/api.mjs` — the catalog itself is the contract; a real backend that
+hasn't caught up simply omits the key, hiding it in `real` mode; current entries: `payouts`/`tournaments`
+stable, `beitragsrechner` beta), and a **release scope**
 (`"public"|"off"|{roles:[…]}`) set at runtime by a superadmin (`manage_features`) and stored in
 `bsg_feature_flags`. `GET /api/capabilities` is **user-specific**: returns only features the current
 user may see (`public` → all; `{roles}` → user holds the role *or* has `manage_features`; `off` →

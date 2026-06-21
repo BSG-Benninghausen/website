@@ -21,7 +21,7 @@ Theme**, kein weiterer Code. Details: [`docs/productization-saas-plan.md`](docs/
 | Seite | Datei | Inhalt |
 | --- | --- | --- |
 | Produkt-Portal | `index.html` | Generische Startseite: Produkt-Pitch + Referenz-Beispiele |
-| Vereins-Start (BSG) | `home.html` | Hero, Über uns, Angebot, Trainings-Teaser, News-Teaser, CTA |
+| Vereins-Start (Musterverein) | `home.html` | Hero, Über uns, Angebot, Trainings-Teaser, News-Teaser, CTA |
 | Trainingszeiten | `trainingszeiten.html` | Trainingsgruppen, Zeiten, Ort |
 | Team | `team.html` | Vorstand & Trainerteam |
 | Aktuelles | `aktuelles.html` | News-Liste (aus Mock-API) |
@@ -34,18 +34,20 @@ Theme**, kein weiterer Code. Details: [`docs/productization-saas-plan.md`](docs/
 ## Projektstruktur
 
 ```
+*.html                       Alle Seiten (Portal + Vereinsseiten), zero-dep
+service-worker.js            PWA: Offline-Cache (VERSION mit ?v=N synchron halten)
 assets/
-├── css/styles.css      Design-System & Styles (CSS Custom Properties)
-├── js/
-│   ├── mock-api.js     "Server": fängt /api/*-Anfragen ab (siehe unten)
-│   ├── main.js         Navigation, Reveal-Animationen, Helfer (BSG.*)
-│   ├── news.js         lädt & rendert News
-│   ├── kalender.js     lädt & rendert Termine
-│   └── forms.js        Anmelde- & Kontaktformular
-├── data/
-│   ├── news.json       Inhalte für "Aktuelles"
-│   └── events.json     Inhalte für "Termine"
-└── img/                Logo, Favicon, Hintergrundmuster (SVG)
+├── css/                     Design-System, Styles, Beispiel-Themes (theme.<id>.css)
+├── js/                      mock-api.js ("Server"), main.js (BSG.*), api-config.js,
+│                            club-config.js (Beispiel-Registry), Seitenskripte, features/
+├── data/                    Seed-JSONs (news, events, club, site, membership-types, …)
+└── img/                     Logo, Favicon, Muster (SVG)
+packages/
+├── api-contract/            Contract-Tests, Harness, Seeds + Backend-Vertrag (README.md)
+└── backend/                 Echtes Node-Backend (api.mjs, index.mjs, store.mjs, README.md)
+tests/e2e/                   Playwright-Suite (isolierte devDeps)
+tools/                       Wartungs-Skripte (guard-versions, vendor-seeds, mergeback-Tools)
+docs/                        Architektur-/Onboarding-/Roadmap-Dokumente
 ```
 
 ## Lokale Vorschau
@@ -130,8 +132,8 @@ Bereitgestellte Endpunkte:
   (bitte an die gültigen Verbandsregeln angleichen).
 - **localStorage-Keys:** `bsg_users`, `bsg_memberships`, `bsg_session`, `bsg_login_codes`,
   `bsg_roles`, `bsg_news`, `bsg_events`, `bsg_registrations`, `bsg_training`,
-  `bsg_site`, `bsg_club`, `bsg_payouts`, `bsg_positions`, `bsg_feature_flags`, `bsg_seed_version`,
-  `bsg_pass_counter`.
+  `bsg_site`, `bsg_club`, `bsg_payouts`, `bsg_positions`, `bsg_feature_flags`,
+  `bsg_feature_bookings`, `bsg_seed_version`, `bsg_pass_counter`.
 
 ### Rollen, Berechtigungen & Admin
 
@@ -220,22 +222,22 @@ Frontend-Code ändert sich nichts; der `mock-api.js`-Tag bleibt (er ist Mock **u
 
 ### Contract-Tests
 
-Im Ordner `tests/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die dieselben
-Prüfungen wahlweise gegen den Mock oder ein echtes Backend laufen lässt:
+Im Ordner `packages/api-contract/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die
+dieselben Prüfungen wahlweise gegen den Mock oder ein echtes Backend laufen lässt:
 
 ```bash
-node tests/run.mjs                                   # Mock (Default)
-TEST_BASE=http://localhost:3000 node tests/run.mjs   # echtes Backend
+node packages/api-contract/run.mjs                                   # Mock (Default)
+TEST_BASE=http://localhost:3000 node packages/api-contract/run.mjs   # echtes Backend
 ```
 
 So bleiben Mock und Backend vertraglich in Sync. Details und die Backend-Anforderungen stehen
-in `tests/README.md`.
+in `packages/api-contract/README.md`.
 
 ### UI-/E2E-Tests (Playwright)
 
 Die Contract-Tests decken nur `/api/*` ab. Die UI-/DOM-/PWA-Schicht (Login-Flow,
 Permission-Nav-Reveal, CRUD-Editoren, Service-Worker/Offline) prüft eine **Playwright-Suite**
-unter `tests/e2e/` gegen das echte Backend (Playwright startet `server/index.mjs` selbst,
+unter `tests/e2e/` gegen das echte Backend (Playwright startet `packages/backend/index.mjs` selbst,
 `BSG_DEV=1`, `real`-Modus). Die Dev-Abhängigkeit ist **bewusst nach `tests/e2e/` isoliert** –
 Repo-Root und ausgelieferte Website bleiben zero-dep.
 
@@ -243,23 +245,22 @@ Repo-Root und ausgelieferte Website bleiben zero-dep.
 cd tests/e2e
 npm ci                                   # Playwright installieren (nur hier)
 npx playwright install --with-deps chromium
-npm test                                 # Suite ausführen (startet server/ selbst)
+npm test                                 # Suite ausführen (startet das Backend selbst)
 ```
 
-### CI/CD-Stufen
-
-| Stufe | Auslöser | Ziel | API-Modus |
-|-------|----------|------|-----------|
-| **Draft** | Push auf `main` | GitHub Pages (`deploy-pages.yml`) | `mock` |
-| **Beta** | Tag `v*.*.*-beta.*` | Hetzner `beta.<domain>` (`deploy-beta.yml`) | `real` |
-| **Release** | GitHub-Release | Hetzner `<domain>` (`deploy-prod.yml`) | `real` |
+### CI/CD
 
 `ci.yml` (`Tests`) läuft auf jedem PR und auf `main` mit zwei Jobs: **`contract`** (Syntax-Check,
-Versions-Guard `tests/guard-versions.mjs`, Contract-Tests gegen **Mock und echtes Backend**) und
+Versions-Guard `tools/guard-versions.mjs`, Contract-Tests gegen **Mock und echtes Backend**) und
 **`e2e`** (Playwright-Browser-Tests). Die Real-Tests sind das Promotion-Gate: ein Feature ohne
-Backend fällt durch. Beta/Release deployen per SSH/rsync auf den Node-Server (`server/index.mjs`,
-liefert Static + `/api/*` same-origin). Einrichtung, Secrets und Vorbedingungen: siehe
-`deploy/README.md`.
+Backend fällt durch. `deploy-pages.yml` deployt bei Push auf `main` automatisch nach **GitHub
+Pages** (`mock`-Modus). Weitere Workflows: `publish-contract.yml` (Contract-Package), sowie die
+Mergeback-Automation `mergeback-propose.yml`/`mergeback-gate.yml`/`contract-notify.yml`
+(siehe [`docs/mergeback-pipeline.md`](docs/mergeback-pipeline.md)).
+
+> Das produktive **Real-Backend-Deployment** (eigener Node-Server, `real`-Modus same-origin) gehört
+> laut Roadmap ins künftige Backend-Repo und ist in diesem Frontend-Repo nicht enthalten – siehe
+> [`docs/backend-repo-separation-plan.md`](docs/backend-repo-separation-plan.md).
 
 ## Inhalte pflegen
 
