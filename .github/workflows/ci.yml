@@ -38,13 +38,16 @@ jobs:
           done
 
       - name: Mergeback-Tools · Self-Test (classify-diff / detect-contract-change)
-        run: node --test tools/classify-diff.test.mjs tools/detect-contract-change.test.mjs
+        run: node --test tools/classify-diff.test.mjs tools/detect-contract-change.test.mjs tools/prerender-branding.test.mjs
 
       - name: Versions-Guard (Cache-Busting)
         run: node tools/guard-versions.mjs
 
       - name: Seeds vendored == kanonisch (assets/data == @crypticalcode/api-contract/data)
         run: node tools/vendor-seeds.mjs --check
+
+      - name: Branding gestempelt == club.bsg.json (Precompile-Konsistenz)
+        run: node tools/prerender-branding.mjs --check
 
       - name: Contract-Package paketierbar (files/exports)
         run: npm pack --dry-run -w packages/api-contract
