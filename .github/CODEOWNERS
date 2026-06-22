@@ -1,0 +1,8 @@
+# Standard-Reviewer für alle Änderungen. Greift, sobald in den Branch-Protection-
+# bzw. Ruleset-Regeln "Require review from Code Owners" aktiviert ist.
+* @crypticalcode
+
+# Die Mergeback-/CI-Automatik ist sicherheitskritisch – hier besonders genau prüfen.
+/.github/workflows/ @crypticalcode
+/tools/ @crypticalcode
+/packages/api-contract/ @crypticalcode

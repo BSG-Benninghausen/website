@@ -1,0 +1,12 @@
+{
+  // Mild konfiguriert – die umfangreichen docs/ sollen nicht an Stilregeln scheitern.
+  "config": {
+    "default": true,
+    "MD013": false, // line length
+    "MD033": false, // inline HTML
+    "MD041": false, // first line heading
+    "MD024": { "siblings_only": true } // doppelte Überschriften nur unter gleichem Parent
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", "**/node_modules/**", "astro-poc/dist/**"]
+}
