@@ -3,10 +3,12 @@
 
   "generic_globs": [
     "assets/js/*.js",
+    "assets/js/**/*.js",
     "assets/css/styles.css",
     "*.html",
     "service-worker.js",
     "*.webmanifest",
+    "astro-poc/**",
     "tests/**",
     "packages/**",
     "tools/**",
@@ -20,12 +22,14 @@
 
   "config_globs": [
     "assets/data/**",
+    "packages/api-contract/data/club.*.json",
     "assets/css/theme.*.css",
     "assets/img/**",
+    "astro-poc/club-pages/**",
     ".github/workflows/**"
   ],
 
-  "_config_note": "Everything under assets/data/ is excluded from upstream proposals: club identity/content seeds (club*.json, news/events/site/trainingszeiten.json) AND vendored domain seeds (age-classes, weight-classes, membership-types, demo-data). The CANONICAL domain seeds live in packages/api-contract/data/ (matched by packages/** -> generic), so seed improvements are proposed there, never via the vendored assets/data/ copy. theme.*.css and assets/img/** are the branding layer (incl. the neutral theme.example.css template); structural CSS lives in assets/css/styles.css (generic). .github/workflows/** is also config-classified (excluded from proposals): the Mergeback-Bot GitHub App lacks the 'workflows' permission and may not push workflow files, so workflow changes are handled by humans; the rest of .github/** stays generic.",
+  "_config_note": "Everything under assets/data/ is excluded from upstream proposals: club identity/content seeds (club*.json, news/events/site/trainingszeiten.json) AND vendored domain seeds (age-classes, weight-classes, membership-types, demo-data). The CANONICAL domain seeds live in packages/api-contract/data/ (matched by packages/** -> generic), so seed improvements are proposed there, never via the vendored assets/data/ copy. theme.*.css and assets/img/** are the branding layer (incl. the neutral theme.example.css template); structural CSS lives in assets/css/styles.css (generic). .github/workflows/** is also config-classified (excluded from proposals): the Mergeback-Bot GitHub App lacks the 'workflows' permission and may not push workflow files, so workflow changes are handled by humans; the rest of .github/** stays generic. packages/api-contract/data/club.*.json is config too: the CONTRACT data dir is generic (packages/**), but the per-club identity seeds inside it (club.<id>.json) are branding and must never be proposed upstream — config wins over the packages/** generic glob, so editing a fork's vendored club.<id>.json there is cleanly skipped, not flagged as entangled. The neutral club.example.json/club.json templates are likewise config (harmless: they are branding-neutral baselines). astro-poc/club-pages/** is config: the club-pages injection mechanism in astro.config.mjs is generic (astro-poc/** -> generic and flows to forks), but the per-club pages inside club-pages/<id>/ (e.g. a fork's shop) are fork-owned content and must never be proposed upstream.",
 
   "mixed_files": {
     "assets/js/club-config.js": {

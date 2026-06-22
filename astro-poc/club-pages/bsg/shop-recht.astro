@@ -1,0 +1,39 @@
+---
+import Base from "../../src/layouts/Base.astro";
+---
+<Base pageTitle="Shop · Recht" noindex={true}>
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true" />
+    <span class="page-hero__dragon" aria-hidden="true"></span>
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · <a href="shop.html">Shop</a> · Recht</p>
+      <span class="eyebrow eyebrow--invert">Shop-Betreiber</span>
+      <h1>Impressum, AGB &amp; Widerruf</h1>
+      <p>Der Shop wird eigenverantwortlich von einer Privatperson betrieben und steht rechtlich nicht in Verbindung mit dem Verein.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap" style="max-width:760px">
+      <div class="card" style="margin-bottom:24px">
+        <h2 style="font-size:1.2rem;margin-bottom:10px">Betreiber / Impressum</h2>
+        <p><strong data-shop-operator>Julian Becker</strong></p>
+        <p class="shop-legal-text" data-shop-operator-address>—</p>
+        <p class="shop-legal-text" data-shop-legal="impressum">—</p>
+      </div>
+      <div class="card" style="margin-bottom:24px">
+        <h2 style="font-size:1.2rem;margin-bottom:10px">Allgemeine Geschäftsbedingungen</h2>
+        <p class="shop-legal-text" data-shop-legal="agb">—</p>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:10px">Widerrufsbelehrung</h2>
+        <p class="shop-legal-text" data-shop-legal="widerruf">—</p>
+      </div>
+      <p class="muted-note" style="margin-top:20px">Das <a href="kontakt.html">Impressum des Vereins</a> findest du separat – es betrifft den Vereinsbetrieb, nicht den Shop.</p>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="assets/js/shop.js"></script>
+  </Fragment>
+</Base>
