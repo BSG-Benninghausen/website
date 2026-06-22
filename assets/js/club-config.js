@@ -28,6 +28,19 @@
      beim Laden; dieses Skript läuft davor). */
   window.BSG_ADMIN_EMAIL = "admin@bsg-benninghausen.de";
 
+  /* Mock⇄Real-Deploy-Default (api-config.js liest window.BSG_API; dieses Skript läuft
+     synchron im <head> VOR dem defer-geladenen api-config.js, greift also als Default).
+     Route-für-Route-Promotion zum echten Backend; erster Schritt: die ganze /api/auth-
+     Gruppe. Lokale Entwicklung (localhost/127.0.0.1/file:) bleibt Mock, damit man nicht
+     versehentlich Produktion trifft – per ?api=…/?apibase=… jederzeit übersteuerbar. */
+  (function () {
+    var h = (location.hostname || "").toLowerCase();
+    var isLocalDev = location.protocol === "file:" || h === "localhost" || h === "127.0.0.1" || h === "";
+    window.BSG_API = isLocalDev
+      ? { mode: "mock", base: "", live: [] }
+      : { mode: "hybrid", base: "https://api.orgbase.de", live: ["/api/auth"] };
+  })();
+
   /* Theme nur auf den eigentlichen Vereinsseiten injizieren (<html data-club-site>).
      FOUC-frei: dieses Skript läuft synchron im <head> vor styles.css. Die
      Cache-Bust-Version wird aus dem eigenen <script>-Tag gelesen, damit der
