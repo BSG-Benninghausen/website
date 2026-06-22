@@ -1,0 +1,17 @@
+# typos ist englisch-zentriert; die deutsche UI/Doku-Prosa würde sonst massiv
+# Fehlalarme erzeugen. Daher Prosa/Daten ausschließen und nur Code-Identifier prüfen.
+[files]
+extend-exclude = [
+  "assets/data/**",
+  "docs/**",
+  "*.html",
+  "*.md",
+  "**/*.md",
+  "**/package-lock.json",
+  "astro-poc/dist/**",
+]
+
+[default.extend-words]
+# Projektbegriffe / bewusste Schreibweisen
+ist = "ist"
+oder = "oder"

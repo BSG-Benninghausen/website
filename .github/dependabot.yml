@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # GitHub-Actions-Versionen (actions/checkout, setup-node, die Lint-/Agent-Actions …)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Isolierte Tooling-DevDeps – das Produkt selbst bleibt zero-dep.
+  - package-ecosystem: npm
+    directory: "/astro-poc"
+    schedule:
+      interval: weekly
+    groups:
+      astro:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: "/tests/e2e"
+    schedule:
+      interval: weekly
+    groups:
+      e2e:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: "/packages/api-contract"
+    schedule:
+      interval: weekly
+    groups:
+      contract:
+        patterns: ["*"]

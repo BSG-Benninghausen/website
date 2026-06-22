@@ -1,0 +1,96 @@
+name: Lint
+
+# Statische Qualitäts- und Sicherheitschecks, ergänzend zu ci.yml (Tests).
+#   • workflows  – actionlint + zizmor: linten die GitHub-Actions-YAMLs selbst.
+#                  zizmor prüft genau die pull_request_target-/Token-/Bot-Muster
+#                  (die Klasse des allowed_bots-Bugs). BLOCKIEREND.
+#   • code/style – ESLint, Stylelint, markdownlint, typos, Link-Check.
+#                  Zunächst ADVISORY (continue-on-error), damit die bestehende grüne
+#                  CI nicht bricht; nach einem Cleanup-Pass auf required umstellen.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  workflows:
+    name: Workflow-Lint (actionlint + zizmor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          reporter: github-pr-check
+          fail_level: error
+
+      - name: zizmor (Actions-Security-Audit)
+        uses: zizmorcore/zizmor-action@v0.1.2
+        with:
+          # Kein SARIF-Upload (Code-Scanning braucht GHAS bei privaten Repos);
+          # Findings sollen den Job direkt rot machen.
+          advanced-security: false
+          persona: regular
+
+  eslint:
+    name: ESLint (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: ESLint über die Site-Logik
+        run: npx --yes eslint@^9 "assets/js/**/*.js" "packages/**/*.mjs" "tools/**/*.mjs"
+
+  stylelint:
+    name: Stylelint (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Stylelint über die CSS-Dateien
+        run: npx --yes stylelint@^16 "assets/css/**/*.css"
+
+  markdown:
+    name: markdownlint (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: markdownlint
+        run: npx --yes markdownlint-cli2@^0.14 "**/*.md" "!**/node_modules/**"
+
+  spelling:
+    name: Rechtschreibung – typos (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: typos
+        uses: crate-ci/typos@v1.24.6
+
+  links:
+    name: Link-Check – lychee (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --max-concurrency 4 "**/*.md" "**/*.html"
+          fail: true
