@@ -845,6 +845,8 @@
 
   /* ----- Route-Handler ----- */
   const routes = {
+    /* ---------- Health-Check (öffentlich, kein Auth) ---------- */
+    "GET /api/health": async () => json({ ok: true, service: "vereins-baukasten", status: "ok" }),
     /* ---------- News & Termine ---------- */
     "GET /api/news": async () => {
       const news = (await ensureNews()).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
