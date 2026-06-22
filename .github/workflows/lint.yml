@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  checks: write   # reviewdog (reporter: github-check) veröffentlicht den actionlint-Check
 
 jobs:
   actionlint:
@@ -27,7 +28,9 @@ jobs:
       - name: actionlint
         uses: reviewdog/action-actionlint@v1
         with:
-          reporter: github-pr-check
+          # github-check (statt github-pr-check) funktioniert auch bei push nach main,
+          # wo es keinen PR-Kontext gibt; der Job bleibt blockierend (fail_level: error).
+          reporter: github-check
           fail_level: error
 
   zizmor:

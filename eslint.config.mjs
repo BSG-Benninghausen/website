@@ -18,7 +18,8 @@ const browserGlobals = {
 const nodeGlobals = {
   process: "readonly", console: "readonly", URL: "readonly", fetch: "readonly",
   Headers: "readonly", setTimeout: "readonly", globalThis: "readonly", Buffer: "readonly",
-  __dirname: "readonly", require: "readonly", module: "writable",
+  // Kein __dirname/require/module: in ESM (*.mjs) nicht vorhanden – als Globals würde
+  // no-undef versehentliche CommonJS-Verwendungen (Laufzeitfehler) verschlucken.
 };
 
 export default [
