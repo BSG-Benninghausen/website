@@ -5,8 +5,9 @@ export default async function run(api, ck) {
   await api.logout();
   let [s, d] = await api.getJ("/api/club");
   ck("GET /api/club öffentlich (200)", s === 200 && d.ok === true);
-  ck("liefert fields-Schema", Array.isArray(d.fields) && d.fields.length === 16 && d.fields.some((f) => f.key === "brand_name") && d.fields.some((f) => f.key === "logo"));
+  ck("liefert fields-Schema", Array.isArray(d.fields) && d.fields.length === 19 && d.fields.some((f) => f.key === "brand_name") && d.fields.some((f) => f.key === "logo"));
   ck("neue Felder tagline + theme_color vorhanden", d.fields.some((f) => f.key === "tagline") && d.fields.some((f) => f.key === "theme_color"));
+  ck("Impressum-Felder phone + register vorhanden", d.fields.some((f) => f.key === "phone") && d.fields.some((f) => f.key === "register_court") && d.fields.some((f) => f.key === "register_number"));
   ck("Seed-Werte vorhanden (Name + Sport)", d.values.name.includes("e.V.") && d.values.sport.length > 0 && d.values.brand_name.length > 0);
 
   // Dynamisches PWA-Manifest aus der Club-Config (rohes Objekt, kein {ok:…}-Wrapper)

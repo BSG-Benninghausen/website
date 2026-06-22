@@ -99,7 +99,7 @@ Bereitgestellte Endpunkte:
 | `GET /api/shop/mandate` · `POST /api/shop/mandate` | SEPA-Lastschriftmandat des eigenen Kontos lesen/erteilen (nur aktive Mitglieder) |
 | `GET /api/shop/orders` · `POST /api/shop/orders` | Eigene Bestellungen lesen · bestellen (nur aktive Mitglieder, SEPA-Lastschrift) |
 | `GET /api/shop/admin/orders` · `POST /api/shop/orders/status` | Alle Bestellungen + Status pflegen (`manage_shop`) |
-| `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Impressum, Logo, Tagline, Markenfarbe) |
+| `GET /api/club` · `POST /api/club` | Vereinsdaten/Branding lesen (öffentlich) · speichern (`manage_club`) – White-Label-Config (Name, Sport, Adresse, Kontakt, Telefon, Vereinsregister/VR-Nummer, Logo, Tagline, Markenfarbe) |
 | `GET /api/manifest` | PWA-Manifest aus der Club-Config (rohes Objekt, öffentlich). Das echte Backend liefert `/manifest.webmanifest` pro Domain darüber aus; `<title>`/`theme-color`/App-Titel setzt `main.js` client-seitig aus `/api/club` |
 | `GET /api/tournaments` | Kommende Turniere/Meisterschaften inkl. passender eigener Mitglieder |
 | `POST /api/tournaments/register` · `/unregister` | Mitglied zu einem Turnier an-/abmelden |
@@ -288,11 +288,20 @@ Mergeback-Automation `mergeback-propose.yml`/`mergeback-gate.yml`/`contract-noti
 - **Termine:** `assets/data/events.json` bearbeiten (nur Termine ab heute werden gezeigt).
 - **Texte/Trainingszeiten:** über die Redaktion bzw. die jeweiligen Seed-JSONs.
 - **Team:** über **Admin → Vereinsämter** (`manage_team`).
+- **Impressum & Datenschutz – Vorstand/Verantwortliche:** werden **automatisch** aus den
+  Vereinsämtern abgeleitet (`GET /api/team`, dieselbe Quelle wie die Team-Seite). Bei einem
+  Vorstandswechsel genügt die Pflege in **Admin → Vereinsämter** – „Vertreten durch den
+  Vorstand" (nur Vorsitzende), die/der inhaltlich Verantwortliche (§ 18 MStV) und der/die
+  Vertreter/in im Datenschutz aktualisieren sich mit (`assets/js/impressum.js`; statischer
+  Fallback bleibt ohne JS/API gültig).
+- **Vereinsdaten (Impressum-Pflichtfelder):** Anschrift, Telefon, Vereinsregister & VR-Nummer
+  über **Admin → Vereinsdaten** (`manage_club`, `/api/club`) → erscheinen via `[data-club]`.
 
 ## Noch zu ergänzen (vor dem Live-Gang)
 
-- **Impressum** (`kontakt.html`) und **Datenschutz** (`datenschutz.html`): die mit
-  `[BITTE ERGÄNZEN]` markierten Felder mit den offiziellen Vereinsdaten füllen.
+- **Impressum** (`kontakt.html`) und **Datenschutz** (`datenschutz.html`): die verbleibenden
+  `[BITTE ERGÄNZEN]`-Felder über **Admin → Vereinsdaten** mit den offiziellen Vereinsdaten füllen
+  (Telefon, Amtsgericht, VR-Nummer); Vorstand/Verantwortliche kommen aus den Vereinsämtern.
 - **Echte Fotos** statt der Platzhalter (Hero, „Über uns", Trainingsort) einsetzen.
 - Optional: Google Fonts lokal einbinden (Datenschutz).
 
