@@ -36,8 +36,15 @@ const cta = club.cta || null;
 /* Optionale API-Anbindung an ein echtes Backend (config-gesteuert via club.api).
    Ohne club.api.base bleibt alles im Mock (z. B. der Musterverein-Demo-Build);
    ist eine Base gesetzt, läuft die Produktion im Hybrid-Modus (live-Routes ans
-   echte Backend), lokal/Dev weiter im Mock. */
-const apiBase = (club.api && club.api.base) || "";
+   echte Backend), lokal/Dev weiter im Mock.
+   Build-Env übersteuert den Deploy-Default (z. B. für einen same-origin-Prod-
+   Deploy): BSG_API_MODE=real schaltet ALLE /api/* aufs echte Backend, BSG_API_BASE
+   setzt die Backend-URL ("" = same-origin /api). Ungesetzt = bisheriges Verhalten,
+   der Pages-Build bleibt damit unverändert. */
+const apiMode = (process.env.BSG_API_MODE || "").trim();
+const apiBase = process.env.BSG_API_BASE !== undefined
+  ? process.env.BSG_API_BASE
+  : ((club.api && club.api.base) || "");
 const apiLive = (club.api && club.api.authLive) || [];
 
 /* Social-Icons (inline-SVG-Pfade je Typ) – generisch, ohne club-spezifisches Markup. */
@@ -79,11 +86,15 @@ const iconFor = (type) => SOCIAL_ICONS[type] || SOCIAL_ICONS.link;
 window.BSG_CLUB={id:${JSON.stringify(club.id)},name:${JSON.stringify(club.name)},clubSeed:${JSON.stringify(club.clubSeed)},ns:${JSON.stringify(club.ns)}};
 window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
 (function(){
+  var MODE=${JSON.stringify(apiMode)};
   var BASE=${JSON.stringify(apiBase)};
   var LIVE=${JSON.stringify(apiLive)};
   var h=(location.hostname||"").toLowerCase();
   var dev=location.protocol==="file:"||h==="localhost"||h==="127.0.0.1"||h==="";
-  window.BSG_API=(dev||!BASE)?{mode:"mock",base:"",live:[]}:{mode:"hybrid",base:BASE,live:LIVE};
+  if(dev){window.BSG_API={mode:"mock",base:"",live:[]};}
+  else if(MODE==="real"){window.BSG_API={mode:"real",base:BASE,live:[]};}
+  else if(MODE==="hybrid"||BASE){window.BSG_API={mode:"hybrid",base:BASE,live:LIVE};}
+  else{window.BSG_API={mode:"mock",base:"",live:[]};}
 })();
 `}></script>
   <link rel="stylesheet" href={club.theme_css} />

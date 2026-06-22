@@ -1,0 +1,71 @@
+name: Deploy zu Hetzner (bsg.orgbase.de)
+
+# Baut die Astro-Seite (astro-poc/) im REAL-Modus (same-origin /api) und spiegelt
+# das statische dist/ per rsync auf den Hetzner-Server, wo der vorhandene Caddy sie
+# unter https://bsg.orgbase.de ausliefert und /api/* an den Backend-Container proxyt.
+#
+# Voraussetzungen (Repo-Secrets / -Variable, siehe docs des Backend-Repos):
+#   vars.HETZNER_DEPLOY = "true"   -> aktiviert diesen Job
+#   secrets.HETZNER_SSH_HOST       -> Server-IP/Hostname
+#   secrets.HETZNER_SSH_USER       -> Deploy-User
+#   secrets.HETZNER_SSH_KEY        -> privater SSH-Deploy-Key
+#   secrets.HETZNER_SSH_PORT       -> optional (Default 22)
+# Zielverzeichnis auf dem Server: /var/www/bsg-website (vom Caddy als root gesetzt).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-hetzner
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Nur deployen, wenn der Server-Deploy aktiviert ist (Forks/Demo ohne Secrets bleiben grün).
+    if: vars.HETZNER_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22   # Astro 6 verlangt Node >= 22.12.0
+
+      - name: Astro bauen (BSG, real same-origin)
+        env:
+          BSG_CLUB_ID: ${{ vars.BSG_CLUB_ID || 'bsg' }}
+          BSG_API_MODE: real
+          BSG_API_BASE: ""     # leer = same-origin /api (Caddy proxyt /api/* ans Backend)
+        run: |
+          cd astro-poc
+          npm ci
+          npm run build
+
+      - name: SSH-Key laden
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: Known-hosts setzen
+        env:
+          SSH_HOST: ${{ secrets.HETZNER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HETZNER_SSH_PORT || '22' }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: dist auf den Server spiegeln (rsync --delete)
+        env:
+          SSH_HOST: ${{ secrets.HETZNER_SSH_HOST }}
+          SSH_USER: ${{ secrets.HETZNER_SSH_USER }}
+          SSH_PORT: ${{ secrets.HETZNER_SSH_PORT || '22' }}
+        run: |
+          rsync -az --delete -e "ssh -p $SSH_PORT" \
+            astro-poc/dist/ "$SSH_USER@$SSH_HOST:/var/www/bsg-website/"
