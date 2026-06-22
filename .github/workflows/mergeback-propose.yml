@@ -142,6 +142,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # github_token setzen -> OIDC->App-Token-Tausch überspringen (sonst "Invalid OIDC token").
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: '--allowedTools "Read,Edit,Write,Bash(node tools/classify-diff.mjs --verify *),Bash(git diff*)" --max-turns 12'
           prompt: |
             Du bereitest einen Upstream-PR ins GENERISCHE Produkt-Repo vor. Quelle der
