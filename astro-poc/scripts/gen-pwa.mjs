@@ -9,17 +9,19 @@
    Aufruf (Defaults in Klammern):
      node scripts/gen-pwa.mjs [clubJson=src/data/club.json] [outDir=public]
    ===================================================================== */
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { loadClub, activeClubId } from "../src/active-club.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
-const clubPath = resolve(root, process.argv[2] || "src/data/club.json");
-const outDir = resolve(root, process.argv[3] || "public");
+const outDir = resolve(root, process.argv[2] || "public");
 
-const club = JSON.parse(readFileSync(clubPath, "utf8"));
+/* Single Source of Truth: derselbe Resolver wie Base.astro. WELCHER Verein
+   gebaut wird, kommt aus BSG_CLUB_ID (Default musterverein) → club.<id>.json. */
+const club = loadClub();
 
 // Cache-Bust der App-Shell: bei jedem Release erhöhen (Astro hasht im PoC noch
 // nicht). 🔜 Mit Asset-Hashing entfällt das.

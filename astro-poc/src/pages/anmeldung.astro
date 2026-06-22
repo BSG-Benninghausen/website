@@ -1,11 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
-import club from "../data/club.json";
+import { loadClub } from "../active-club.mjs";
+const club = loadClub();
 ---
 <Base pageTitle="Probetraining & Anmeldung">
   <section class="page-hero">
     <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
-    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <span class="page-hero__dragon" aria-hidden="true"></span>
     <div class="wrap page-hero__inner">
       <p class="crumbs"><a href="index.html">Start</a> · Probetraining</p>
       <span class="eyebrow eyebrow--invert">Kostenlos &amp; unverbindlich</span>
@@ -26,7 +27,7 @@ import club from "../data/club.json";
           </li>
           <li>
             <span class="ico"><b style="font-family:var(--font-display)">2</b></span>
-            <div><b>Vorbeikommen</b><span>In bequemer Sportkleidung zum Training. Einen Judo-Anzug brauchst du anfangs noch nicht.</span></div>
+            <div><b>Vorbeikommen</b><span>In bequemer Sportkleidung zum Training. Spezielle Ausrüstung brauchst du anfangs noch nicht.</span></div>
           </li>
           <li>
             <span class="ico"><b style="font-family:var(--font-display)">3</b></span>
@@ -65,7 +66,7 @@ import club from "../data/club.json";
               <select id="group" name="group" required>
                 <option value="">Bitte wählen…</option>
                 <option>Kinder (ab 5 Jahre)</option>
-                <option>Aktive (ab Gelb-Gurt / ca. 8 J.)</option>
+                <option>Aktive (ca. ab 8 J.)</option>
                 <option>Erwachsene (Sport &amp; Fitness)</option>
                 <option>Noch unsicher – beratet mich</option>
               </select>

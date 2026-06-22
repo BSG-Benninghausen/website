@@ -4,7 +4,7 @@ import Base from "../layouts/Base.astro";
 <Base pageTitle="Redaktion">
   <section class="page-hero">
     <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
-    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <span class="page-hero__dragon" aria-hidden="true"></span>
     <div class="wrap page-hero__inner">
       <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Redaktion</p>
       <span class="eyebrow eyebrow--invert">Redaktion</span>
@@ -112,7 +112,7 @@ import Base from "../layouts/Base.astro";
             </div>
             <div class="field">
               <label for="e-location">Ort</label>
-              <input id="e-location" name="location" type="text" placeholder="z. B. Sporthalle Benninghausen">
+              <input id="e-location" name="location" type="text" placeholder="z. B. Sporthalle Musterstadt">
             </div>
             <div class="field-row">
               <div class="field">
@@ -134,7 +134,7 @@ import Base from "../layouts/Base.astro";
             <div class="field-row" id="event-organizer-field" hidden>
               <div class="field">
                 <label for="e-org-name">Veranstalter</label>
-                <input id="e-org-name" name="organizerName" type="text" placeholder="z. B. JC Lippstadt">
+                <input id="e-org-name" name="organizerName" type="text" placeholder="z. B. SV Musterstadt">
               </div>
               <div class="field">
                 <label for="e-org-iban">Veranstalter-IBAN <span class="muted-note">(für die Überweisung der Teilnahmegebühren)</span></label>

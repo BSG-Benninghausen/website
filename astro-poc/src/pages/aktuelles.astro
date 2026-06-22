@@ -1,11 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
-import club from "../data/club.json";
+import { loadClub } from "../active-club.mjs";
+const club = loadClub();
 ---
 <Base pageTitle="Aktuelles">
   <section class="page-hero">
     <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
-    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <span class="page-hero__dragon" aria-hidden="true"></span>
     <div class="wrap page-hero__inner">
       <p class="crumbs"><a href="index.html">Start</a> · Aktuelles</p>
       <span class="eyebrow eyebrow--invert">News &amp; Berichte</span>

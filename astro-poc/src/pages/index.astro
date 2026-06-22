@@ -1,5 +1,19 @@
 ---
 import Base from "../layouts/Base.astro";
+import { loadClub } from "../active-club.mjs";
+const club = loadClub();
+const home = club.home || {};
+const stats = home.stats || [];
+const offer = home.offer || [];
+const cta = club.cta || { href: "anmeldung.html", label: "Probetraining" };
+
+/* Generische, neutrale Icons für die Angebots-Karten – rein dekorativ. */
+const CARD_ICONS = [
+  '<path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/>',
+  '<path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/>',
+  '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/>',
+  '<path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/>',
+];
 ---
 <Base>
   <!-- HERO -->
@@ -7,69 +21,56 @@ import Base from "../layouts/Base.astro";
     <img class="hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
     <span class="hero__glow hero__glow--a" aria-hidden="true"></span>
     <span class="hero__glow hero__glow--b" aria-hidden="true"></span>
-    <img class="hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <span class="hero__dragon" aria-hidden="true"></span>
     <div class="wrap hero__inner">
       <div>
-        <span class="eyebrow eyebrow--invert" data-site="hero_eyebrow">Sport in Benninghausen</span>
+        <span class="eyebrow eyebrow--invert" data-site="hero_eyebrow">Sport in Musterstadt</span>
         <h1><span data-site="hero_title">Stark im Team.</span> <span class="hl" data-site="hero_title_hl">Stark im Leben.</span></h1>
-        <p class="hero__lead" data-site="hero_subtitle">Judo für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
+        <p class="hero__lead" data-site="hero_subtitle">Sport für Kinder, Jugendliche und Erwachsene – für Anfänger, Wiedereinsteiger und Sportbegeisterte. Komm vorbei und probier es kostenlos aus.</p>
         <div class="hero__cta">
-          <a href="anmeldung.html" class="btn btn--gold btn--lg">
-            Kostenloses Probetraining
+          <a href={cta.href} class="btn btn--gold btn--lg">
+            {cta.label}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
           <a href="trainingszeiten.html" class="btn btn--ghost btn--lg">Trainingszeiten</a>
         </div>
-        <div class="hero__stats">
-          <div><strong>3</strong><span>Trainingsgruppen</span></div>
-          <div><strong>5+</strong><span>Aktive</span></div>
-          <div><strong>ab 5</strong><span>Jahren dabei</span></div>
-        </div>
+        {stats.length > 0 && (
+          <div class="hero__stats">
+            {stats.map((s) => <div><strong>{s.value}</strong><span>{s.label}</span></div>)}
+          </div>
+        )}
       </div>
       <aside class="hero__card" aria-label="Nächstes Training">
         <h3 data-site="hero_card_title">Nächstes Training</h3>
-        <p class="muted" data-site="hero_card_note">Mittwochs &amp; freitags · Sporthalle Benninghausen</p>
+        <p class="muted" data-site="hero_card_note">Nach Trainingsplan · {club.venue}</p>
         <ul class="train-mini" data-training-mini>
-          <li><div><b>Kinder</b><br><span>ab 5 Jahre</span></div><time>17:00–18:00</time></li>
-          <li><div><b>Aktive</b><br><span>ab Gelb-Gurt / ca. 8 J.</span></div><time>18:00–19:30</time></li>
-          <li><div><b>Erwachsene</b><br><span>Sport &amp; Fitness</span></div><time>18:15–19:45</time></li>
+          <li><div><b>Training</b><br><span>siehe Trainingszeiten</span></div><time>–</time></li>
         </ul>
       </aside>
     </div>
   </section>
 
-  <!-- ANGEBOT -->
-  <section class="section section--sand">
-    <div class="wrap">
-      <div class="section-head center">
-        <span class="eyebrow">Das lernst du bei uns</span>
-        <h2>Judo von Grund auf</h2>
-        <p>Technik, Kondition und Kopf – Judo trainiert den ganzen Menschen.</p>
+  <!-- ANGEBOT (config-gesteuert aus club.home.offer) -->
+  {offer.length > 0 && (
+    <section class="section section--sand">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="eyebrow">Das bieten wir</span>
+          <h2>{home.offer_heading || "Sport von Grund auf"}</h2>
+          {home.offer_sub && <p>{home.offer_sub}</p>}
+        </div>
+        <div class="grid grid--4">
+          {offer.map((card, i) => (
+            <article class="card reveal">
+              <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" set:html={CARD_ICONS[i % CARD_ICONS.length]}></svg></div>
+              <h3>{card.title}</h3>
+              <p>{card.text}</p>
+            </article>
+          ))}
+        </div>
       </div>
-      <div class="grid grid--4">
-        <article class="card reveal">
-          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v9m0 0 4-4m-4 4-4-4M5 21h14"/></svg></div>
-          <h3>Falltechnik</h3>
-          <p>Sicher fallen lernen (Ukemi) – die wichtigste Grundlage für Judo und Alltag.</p>
-        </article>
-        <article class="card reveal">
-          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7l8-4 8 4-8 4-8-4zm0 0v10l8 4 8-4V7"/></svg></div>
-          <h3>Wurftechniken</h3>
-          <p>Nage-waza: kontrolliert werfen mit Timing, Balance und Körperspannung.</p>
-        </article>
-        <article class="card reveal">
-          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg></div>
-          <h3>Bodentechniken</h3>
-          <p>Ne-waza: Halte-, Hebel- und Würgegriffe – mit Köpfchen statt Kraft.</p>
-        </article>
-        <article class="card reveal">
-          <div class="card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/></svg></div>
-          <h3>Selbstverteidigung</h3>
-          <p>Sich behaupten können – das stärkt Selbstbewusstsein und Sicherheit.</p>
-        </article>
-      </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- AKTUELLES TEASER (dynamisch via news.js) -->
   <section class="section section--mist">
@@ -78,7 +79,7 @@ import Base from "../layouts/Base.astro";
         <div style="max-width:560px">
           <span class="eyebrow">Aktuelles</span>
           <h2>Neues aus dem Verein</h2>
-          <p>Turniererfolge, Prüfungen und Vereinsleben – das tut sich im Verein.</p>
+          <p>Erfolge, Termine und Vereinsleben – das tut sich bei uns.</p>
         </div>
         <a href="aktuelles.html" class="btn btn--outline">Alle Beiträge</a>
       </div>
