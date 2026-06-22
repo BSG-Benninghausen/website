@@ -134,7 +134,9 @@ jobs:
               fs.writeFileSync(f,s); }
           '
           # Frische: Cache-Bust bumpen, wenn ein Produkt-Asset betroffen ist.
-          if grep -qE '^(assets/js/|assets/css/styles\.css)' /tmp/include.txt; then node tools/bump-cachebust.mjs; fi
+          # Seit der Astro-Migration übernimmt der Build das Cache-Busting; das Tool
+          # existiert dort nicht mehr -> nur ausführen, wenn vorhanden (back-compat).
+          if grep -qE '^(assets/js/|assets/css/styles\.css)' /tmp/include.txt && [ -f tools/bump-cachebust.mjs ]; then node tools/bump-cachebust.mjs; fi
           git add -A
 
       - name: Claude – Neutralität & Fitness (semantisch)
