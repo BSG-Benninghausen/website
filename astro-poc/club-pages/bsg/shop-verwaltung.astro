@@ -1,0 +1,155 @@
+---
+import Base from "../../src/layouts/Base.astro";
+---
+<Base pageTitle="Shop-Verwaltung" noindex={true}>
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true" />
+    <span class="page-hero__dragon" aria-hidden="true"></span>
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · <a href="konto.html">Mein Konto</a> · Shop-Verwaltung</p>
+      <span class="eyebrow eyebrow--invert">Betreiber</span>
+      <h1>Shop verwalten</h1>
+      <p>Produkte, Bestellungen, Förder-Status und Betreiber-/Rechtsdaten. Dieser Bereich ist dem Shop-Betreiber vorbehalten.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p id="shop-loading" class="center" style="color:var(--text-soft)">Lade Shop-Verwaltung …</p>
+
+      <div id="shop" hidden>
+        <div id="shop-status" class="form-status" role="status" aria-live="polite"></div>
+
+        <!-- Produkte -->
+        <div class="card" style="margin-bottom:24px">
+          <span class="eyebrow">Sortiment</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 16px">Produkte</h2>
+          <div id="prod-list" class="adm-roles"></div>
+
+          <form id="prod-form" class="sub-form" novalidate>
+            <input type="hidden" name="id" />
+            <h3 id="prod-form-title" style="font-size:1.1rem;margin-bottom:14px">Neues Produkt</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="p-name">Name <span class="req">*</span></label>
+                <input id="p-name" name="name" type="text" />
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="p-cat">Kategorie</label>
+                <select id="p-cat" name="category">
+                  <option value="gi">Anzug (Gi)</option>
+                  <option value="guertel">Gürtel</option>
+                  <option value="merch" selected>Merch</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="p-desc">Beschreibung</label>
+              <textarea id="p-desc" name="description" rows="2"></textarea>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="p-extern">Preis extern (€) <span class="req">*</span></label>
+                <input id="p-extern" name="extern" type="number" min="0" step="0.01" inputmode="decimal" />
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="p-mitglied">Preis Mitglied (€) <span class="req">*</span></label>
+                <input id="p-mitglied" name="mitglied" type="number" min="0" step="0.01" inputmode="decimal" />
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="p-gesponsert">Förderpreis (€) <span style="font-weight:400;color:var(--text-soft)">(optional)</span></label>
+                <input id="p-gesponsert" name="gesponsert" type="number" min="0" step="0.01" inputmode="decimal" />
+                <p class="field__error"></p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="p-order">Reihenfolge</label>
+                <input id="p-order" name="order" type="number" step="1" value="0" />
+              </div>
+              <div class="field" style="align-self:end">
+                <label class="check-row"><input type="checkbox" name="active" checked /><span>Im Shop sichtbar (aktiv)</span></label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="p-image">Bild <span style="font-weight:400;color:var(--text-soft)">(optional)</span></label>
+              <div class="photo-input">
+                <img id="p-image-preview" class="photo-input__preview photo-input__preview--wide" alt="" hidden />
+                <div class="photo-input__ph photo-input__ph--wide" id="p-image-ph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-4 4-2-2-4 4"/></svg>
+                </div>
+                <div>
+                  <input id="p-image" name="image" type="file" accept="image/*" />
+                  <p style="color:var(--text-soft);font-size:.82rem;margin-top:6px">JPG/PNG, wird automatisch verkleinert.</p>
+                  <button type="button" id="p-image-clear" class="btn btn--outline btn--sm" style="margin-top:8px" hidden>Bild entfernen</button>
+                </div>
+              </div>
+              <p class="field__error"></p>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <button type="submit" class="btn btn--primary"><span class="spinner" aria-hidden="true"></span>Speichern</button>
+              <button type="button" id="prod-reset" class="btn btn--outline" hidden>Abbrechen</button>
+            </div>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <!-- Bestellungen -->
+        <div class="card" style="margin-bottom:24px">
+          <span class="eyebrow">Bestellungen</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 16px">Eingegangene Bestellungen</h2>
+          <p class="muted-note" style="margin-bottom:12px">Einzug per SEPA-Lastschrift über deine Betreiber-Daten. Status hier pflegen.</p>
+          <div id="order-list" class="adm-roles"></div>
+        </div>
+
+        <!-- Förder-Status -->
+        <div class="card" style="margin-bottom:24px">
+          <span class="eyebrow">Förderung</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 16px">Gesponserte Einzelperson</h2>
+          <p class="muted-note" style="margin-bottom:12px">Markiere ein Konto als gesponsert – diese Person sieht dann den Förderpreis. Auswahl per E-Mail des Kontos.</p>
+          <form id="spon-form" class="sub-form" novalidate>
+            <div class="field-row">
+              <div class="field">
+                <label for="sp-email">E-Mail des Kontos <span class="req">*</span></label>
+                <input id="sp-email" name="email" type="email" />
+                <p class="field__error"></p>
+              </div>
+              <div class="field">
+                <label for="sp-val">Förder-Status</label>
+                <select id="sp-val" name="sponsored">
+                  <option value="true">gesponsert (aktivieren)</option>
+                  <option value="false">nicht gesponsert (entfernen)</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn--primary">Übernehmen</button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <!-- Einstellungen / Betreiber -->
+        <div class="card">
+          <span class="eyebrow">Einstellungen</span>
+          <h2 style="font-size:1.3rem;margin:6px 0 16px">Shop &amp; Betreiber</h2>
+          <p class="notice" style="margin-bottom:16px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            Diese Angaben (Name, Anschrift, IBAN, Gläubiger-ID, Impressum/AGB/Widerruf) sind die des <strong>Betreibers</strong> – getrennt vom Verein. Die IBAN ist der SEPA-Gläubiger für Lastschriften.
+          </p>
+          <form id="config-form" class="sub-form" novalidate>
+            <div id="config-fields"></div>
+            <button type="submit" class="btn btn--primary"><span class="spinner" aria-hidden="true"></span>Einstellungen speichern</button>
+            <div class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="assets/js/shop.js"></script>
+    <script is:inline src="assets/js/shop-admin.js"></script>
+  </Fragment>
+</Base>

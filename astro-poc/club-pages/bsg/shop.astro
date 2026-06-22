@@ -1,0 +1,82 @@
+---
+import Base from "../../src/layouts/Base.astro";
+---
+<Base pageTitle="Shop">
+  <section class="page-hero">
+    <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true" />
+    <span class="page-hero__dragon" aria-hidden="true"></span>
+    <div class="wrap page-hero__inner">
+      <p class="crumbs"><a href="index.html">Start</a> · Shop</p>
+      <span class="eyebrow eyebrow--invert">Ausrüstung &amp; Merch</span>
+      <h1 data-shop-title>Judo-Shop</h1>
+      <p data-shop-subtitle>Anzüge, Gürtel &amp; Vereins-Merch.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="notice" data-shop-disabled hidden style="margin-bottom:24px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <p>Der Shop ist derzeit nicht verfügbar. Bitte schau später noch einmal vorbei.</p>
+      </div>
+
+      <div class="notice notice--mock" style="margin-bottom:24px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13 5.4 5M7 13l-2.3 4.3A1 1 0 0 0 5.6 19H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-9 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>
+        <p>Dieser Shop wird eigenverantwortlich von <span data-shop-operator>Julian Becker</span> (Privatperson) betrieben und steht rechtlich nicht in Verbindung mit dem Verein. <a href="shop-recht.html">Impressum, AGB &amp; Widerruf des Shops</a></p>
+      </div>
+
+      <div class="shop-layout">
+        <div class="shop-layout__main">
+          <h2 style="font-size:1.3rem;margin-bottom:16px">Produkte</h2>
+          <div data-shop-catalog>
+            <p class="muted-note">Lade Produkte …</p>
+          </div>
+        </div>
+
+        <aside class="shop-layout__side">
+          <div class="card shop-cart-card">
+            <h2 style="font-size:1.2rem;margin-bottom:14px">Warenkorb</h2>
+            <div data-shop-cart><p class="muted-note">Dein Warenkorb ist leer.</p></div>
+            <div class="shop-summary" data-shop-summary hidden></div>
+
+            <!-- Checkout: nur für eingeloggte, aktive Mitglieder (SEPA-Lastschrift) -->
+            <div class="shop-checkout" data-shop-checkout hidden>
+              <hr class="shop-rule" />
+              <h3 style="font-size:1.05rem;margin:6px 0 10px">Kasse · SEPA-Lastschrift</h3>
+              <div data-shop-iban-wrap>
+                <p class="muted-note">Einzug von deinem hinterlegten Konto:<br /><code data-shop-iban>—</code></p>
+              </div>
+              <p class="muted-note" data-shop-iban-missing hidden>Bitte hinterlege zuerst deine IBAN unter <a href="konto.html">Mein Konto</a>.</p>
+              <form data-shop-checkout-form novalidate>
+                <div class="field">
+                  <label for="shop-note">Anmerkung <span style="font-weight:400;color:var(--text-soft)">(optional, z. B. Größe/Farbe)</span></label>
+                  <textarea id="shop-note" name="note" rows="2"></textarea>
+                </div>
+                <label class="check-row">
+                  <input type="checkbox" name="consent" />
+                  <span>Ich ermächtige den Betreiber, den fälligen Betrag mittels SEPA-Lastschrift von meinem Konto einzuziehen, und bestelle kostenpflichtig.</span>
+                </label>
+                <button type="submit" class="btn btn--primary" data-shop-submit style="margin-top:12px">Kostenpflichtig bestellen</button>
+                <div class="form-status" data-shop-status role="status" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <!-- Nicht-Mitglieder / Gäste: per Anfrage (mailto, graceful degradation) -->
+            <div class="shop-inquiry" data-shop-inquiry hidden>
+              <hr class="shop-rule" />
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section class="shop-orders" data-shop-orders-section hidden style="margin-top:36px">
+        <h2 style="font-size:1.3rem;margin-bottom:14px">Meine Bestellungen</h2>
+        <div data-shop-orders></div>
+      </section>
+    </div>
+  </section>
+
+  <Fragment slot="scripts">
+    <script is:inline src="assets/js/shop.js"></script>
+  </Fragment>
+</Base>

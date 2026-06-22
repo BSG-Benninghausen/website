@@ -16,6 +16,9 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+// E2E testet die gebaute Astro-Ausgabe (dist/), nicht mehr die abgelösten Legacy-*.html.
+// Vorher bauen: `cd astro-poc && BSG_CLUB_ID=bsg npm run build` (CI tut das im e2e-Job).
+const distDir = fileURLToPath(new URL("../../astro-poc/dist/", import.meta.url));
 const PORT = process.env.E2E_PORT || "4173";          // eigener Port, kollidiert nicht mit Port 3000 der Contract-Tests
 const baseURL = `http://localhost:${PORT}`;
 
@@ -54,7 +57,7 @@ export default defineConfig({
     cwd: repoRoot,
     url: baseURL,
     // BSG_STATIC_DIR lässt das Backend die Website (Frontend-Root) same-origin ausliefern.
-    env: { PORT: String(PORT), BSG_DEV: "1", BSG_STATIC: "1", BSG_STATIC_DIR: repoRoot },
+    env: { PORT: String(PORT), BSG_DEV: "1", BSG_STATIC: "1", BSG_STATIC_DIR: distDir },
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
   },

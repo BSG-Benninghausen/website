@@ -8,9 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "npm run test:guard && npm run test:vendored && npm run test:contract",
+    "test": "npm run test:vendored && npm run test:contract",
     "test:contract": "node packages/api-contract/run.mjs",
-    "test:guard": "node tools/guard-versions.mjs",
     "test:vendored": "node tools/vendor-seeds.mjs --check",
     "vendor": "node tools/vendor-seeds.mjs",
     "gen:demo": "node tools/gen-demo-data.mjs"

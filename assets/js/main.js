@@ -28,7 +28,7 @@
     });
     menu.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-    window.addEventListener("resize", () => { if (window.innerWidth > 1080) close(); });
+    window.addEventListener("resize", () => { if (window.innerWidth > 900) close(); });
   }
 
   /* ----- Konto-Dropdown ----- */
@@ -57,11 +57,11 @@
   });
 
   /* ----- Aktiven Navigationspunkt markieren -----
-     Vereins-Startseite ist index.html (Single-Tenant-Fork, kein Produkt-Portal). */
+     Vereins-Startseite ist index.html (Astro-Build; eine Seite pro Verein). */
   const here = location.pathname.split("/").pop() || "index.html";
   document.querySelectorAll(".nav__links a, .nav__dropdown a").forEach((a) => {
     const target = a.getAttribute("href");
-    if (target === here || (here === "index.html" && target === "index.html")) {
+    if (target === here) {
       a.classList.add("is-active");
       a.setAttribute("aria-current", "page");
     }
@@ -70,25 +70,6 @@
   /* ----- Footer-Jahr ----- */
   document.querySelectorAll("[data-year]").forEach((el) => {
     el.textContent = new Date().getFullYear();
-  });
-
-  /* ----- Mock-Kennzeichnung: Features ohne echtes Backend markieren ([data-mock-badge]) -----
-     Hängt ein kleines „Mock"-Badge an die Sektions-Überschrift, solange deren Route
-     nicht ans echte Backend geht. BSGApi.isLive() entscheidet je Route: im mock-Modus
-     trifft das alle, im hybrid-Modus nur die noch gemockten, im real-Modus keine. */
-  document.querySelectorAll("[data-mock-badge]").forEach((el) => {
-    const route = el.getAttribute("data-mock-badge");
-    const live = (window.BSGApi && typeof window.BSGApi.isLive === "function")
-      ? window.BSGApi.isLive(route)
-      : false; // ohne BSGApi als Mock behandeln (sicher fürs Standalone-Demo)
-    const existing = el.querySelector(":scope > .mock-badge");
-    if (live) { if (existing) existing.remove(); return; }
-    if (existing) return; // idempotent
-    const span = document.createElement("span");
-    span.className = "badge badge--mock feature-badge mock-badge";
-    span.textContent = "Mock";
-    span.title = "Simulierte Daten – diese Funktion hat (noch) keinen echten Backend-Zugriff.";
-    el.appendChild(span);
   });
 
   /* ----- Scroll-Reveal ----- */
@@ -115,7 +96,7 @@
     if (!s) { // ausgeloggt: Default-HTML (Login sichtbar, Menü/Verwaltung verborgen)
       loginLinks.forEach((a) => { a.hidden = false; });
       if (accMenu) accMenu.hidden = true;
-      setHidden("[data-members-link],[data-redaktion-link],[data-admin-link],[data-shop-admin-link]", true);
+      setHidden("[data-members-link],[data-redaktion-link],[data-admin-link]", true);
       return;
     }
     loginLinks.forEach((a) => { a.hidden = true; });
@@ -144,11 +125,9 @@
       }
     }
     const has = (p) => s.isAdmin || (s.perms && s.perms.includes(p));
-    setHidden("[data-members-link]", !(has("view_members") || has("manage_users")));
-    setHidden("[data-redaktion-link]", !(has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts") || has("manage_sponsors") || has("manage_fees")));
+    setHidden("[data-members-link]", !has("view_members"));
+    setHidden("[data-redaktion-link]", !(has("manage_news") || has("manage_events") || has("manage_training") || has("manage_site") || has("manage_payouts")));
     setHidden("[data-admin-link]", !(has("manage_roles") || has("manage_users") || has("manage_team") || has("manage_features") || has("book_features")));
-    // Webshop-Verwaltung: eigenes, isoliertes Recht (Betreiber = Privatperson, NICHT der Vorstand).
-    setHidden("[data-shop-admin-link]", !has("manage_shop"));
   }
 
   const navHasAccount = document.querySelector("[data-account-link], [data-account-menu], [data-admin-link], [data-redaktion-link], [data-members-link]");
