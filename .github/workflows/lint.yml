@@ -17,12 +17,14 @@ on:
 
 permissions:
   contents: read
-  checks: write   # reviewdog (reporter: github-check) veröffentlicht den actionlint-Check
 
 jobs:
   actionlint:
     name: Workflow-Lint (actionlint)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write   # nur dieser Job nutzt den reviewdog-Reporter github-check
     steps:
       - uses: actions/checkout@v4
       - name: actionlint
