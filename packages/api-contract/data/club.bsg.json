@@ -1,4 +1,11 @@
 {
+  "id": "bsg",
+  "ns": "bsg",
+  "clubSeed": "club.bsg.json",
+  "admin_email": "admin@bsg-benninghausen.de",
+  "theme_css": "assets/css/theme.bsg.css",
+  "passPrefix": "BSG-",
+
   "brand_name": "BSG Benninghausen",
   "name": "BSG Benninghausen e.V.",
   "short_name": "BSG Judo",
@@ -18,5 +25,61 @@
   "description": "Judo für Kinder, Jugendliche und Erwachsene in Benninghausen. Anfänger, Wiedereinsteiger und Sportbegeisterte willkommen – kostenloses Probetraining bei der BSG Benninghausen e.V.",
   "logo": "assets/img/bsg-logo.png",
   "theme_color": "#0d0d12",
-  "passPrefix": "BSG-"
+  "background_color": "#0d0d12",
+
+  "header_accent_bar": true,
+  "cta": { "label": "Probetraining", "href": "anmeldung.html" },
+  "nav": [
+    { "href": "index.html", "label": "Start" },
+    { "href": "trainingszeiten.html", "label": "Training" },
+    { "href": "team.html", "label": "Team" },
+    { "href": "aktuelles.html", "label": "Aktuelles" },
+    { "href": "kalender.html", "label": "Termine" },
+    { "href": "kontakt.html", "label": "Kontakt" }
+  ],
+  "socials": [
+    { "type": "instagram", "url": "https://www.instagram.com/bsg_benninghausen/" }
+  ],
+  "footer_columns": [
+    {
+      "title": "Verein",
+      "items": [
+        { "href": "index.html", "label": "Start" },
+        { "href": "team.html", "label": "Team & Vorstand" },
+        { "href": "aktuelles.html", "label": "Aktuelles" },
+        { "href": "kalender.html", "label": "Termine" }
+      ]
+    },
+    {
+      "title": "Mitmachen",
+      "items": [
+        { "href": "trainingszeiten.html", "label": "Trainingszeiten" },
+        { "href": "anmeldung.html", "label": "Probetraining" },
+        { "href": "kontakt.html", "label": "Kontakt" }
+      ]
+    }
+  ],
+  "training_days": "Mittwochs & freitags",
+
+  "represented_by": [
+    { "name": "Lukas Zientek", "role": "1. Vorsitzender" },
+    { "name": "Christopher Masjosthusmann", "role": "2. Vorsitzender" }
+  ],
+  "responsible_content": { "name": "Sarah Zientek", "role": "Pressewartin" },
+
+  "home": {
+    "stats": [
+      { "value": "3", "label": "Trainingsgruppen" },
+      { "value": "5+", "label": "Aktive" },
+      { "value": "ab 5", "label": "Jahren dabei" }
+    ],
+    "offer_heading": "Judo von Grund auf",
+    "offer_sub": "Technik, Kondition und Kopf – Judo trainiert den ganzen Menschen.",
+    "offer": [
+      { "title": "Falltechnik", "text": "Sicher fallen lernen (Ukemi) – die wichtigste Grundlage für Judo und Alltag." },
+      { "title": "Wurftechniken", "text": "Nage-waza: kontrolliert werfen mit Timing, Balance und Körperspannung." },
+      { "title": "Bodentechniken", "text": "Ne-waza: Halte-, Hebel- und Würgegriffe – mit Köpfchen statt Kraft." },
+      { "title": "Selbstverteidigung", "text": "Sich behaupten können – das stärkt Selbstbewusstsein und Sicherheit." }
+    ]
+  }
 }
