@@ -2,7 +2,8 @@
    redaktion.js – Redaktions-Editor (dynamischer Content)
    Bereiche je nach Recht: News (manage_news), Termine (manage_events),
    Trainingszeiten (manage_training), Startseiten-Texte (manage_site),
-   Auszahlungen (manage_payouts). Jede Sektion nur bei vorhandenem Recht.
+   Auszahlungen (manage_payouts), Mitgliedsbeiträge (manage_fees).
+   Jede Sektion nur bei vorhandenem Recht.
    (Team/Vorstand wird automatisch aus Rollen erzeugt – siehe Admin.)
    ===================================================================== */
 (function () {
@@ -147,8 +148,9 @@
     const canSite = can("manage_site");
     const canPayouts = can("manage_payouts");
     const canSponsors = can("manage_sponsors");
+    const canFees = can("manage_fees");
     CAN_PAYOUTS = canPayouts;
-    if (!canNews && !canEvents && !canTraining && !canSite && !canPayouts && !canSponsors) { location.href = "konto.html"; return; }
+    if (!canNews && !canEvents && !canTraining && !canSite && !canPayouts && !canSponsors && !canFees) { location.href = "konto.html"; return; }
 
     $("#red-loading").hidden = true; $("#red").hidden = false;
 
@@ -209,6 +211,10 @@
 
     if (canSite) {
       await setupSiteEditor();
+    }
+
+    if (canFees) {
+      await setupFeesEditor();
     }
 
     if (canSponsors) {
@@ -283,6 +289,38 @@
       else status(form, "err", d.message || "Fehler.");
     });
     $("#site-section").hidden = false;
+  }
+
+  /* Mitgliedsbeiträge: dynamisches Formular aus /api/membership-types.
+     Editierbar sind die Euro-Beträge je Altersband + die Familien-Pauschale;
+     die Bandstruktur (Label/Altersbereich) wird nur als Kontext angezeigt. */
+  async function setupFeesEditor() {
+    const form = $("#fees-form"); const wrap = $("#fees-fields");
+    let data;
+    try { data = await (await fetch("/api/membership-types")).json(); } catch (e) { return; }
+    if (!data || !data.ok) return;
+    const bands = Array.isArray(data.ageBands) ? data.ageBands : [];
+    const eur = (v) => Math.round((Number(v) || 0) * 100) / 100;
+    const rangeOf = (b) => (Number(b.maxAge) >= 199 ? "ab " + b.minAge : b.minAge + "–" + b.maxAge) + " J.";
+    const feeRow = (label, id, val) =>
+      '<div class="field"><label for="fee-' + id + '">' + label + ' <span class="muted-note">(€ / Monat)</span></label>' +
+      '<input id="fee-' + id + '" name="' + id + '" type="number" min="0" step="0.01" inputmode="decimal" value="' + eur(val) + '"></div>';
+    wrap.innerHTML =
+      bands.map((b) => feeRow(BSG.escape(b.label) + " · " + rangeOf(b), "band-" + b.id, b.feeMonthly)).join("") +
+      feeRow("Familien-Pauschale", "family", data.familyFlatMonthly);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        ageBands: bands.map((b) => ({ id: b.id, feeMonthly: Number(form.elements["band-" + b.id].value) })),
+        familyFlatMonthly: Number(form.elements.family.value),
+      };
+      const btn = form.querySelector("[type=submit]"); btn.setAttribute("aria-busy", "true");
+      const { res, data: d } = await postJSON("/api/membership-types", payload);
+      btn.removeAttribute("aria-busy");
+      if (res.ok && d.ok) { status(form, "ok", d.message); toast("ok", d.message); }
+      else status(form, "err", (d && d.message) || "Fehler.");
+    });
+    $("#fees-section").hidden = false;
   }
 
   function payoutPanel(e) {

@@ -6,7 +6,7 @@ export default async function run(api, ck) {
   /* ----- Berechtigung & Rolle (Rechtstrennung) ----- */
   await api.asAdmin();
   let [s, d] = await api.getJ("/api/permissions");
-  ck("16 Berechtigungen inkl. manage_shop", d.items.length === 16 && d.items.some((p) => p.key === "manage_shop"));
+  ck("17 Berechtigungen inkl. manage_shop", d.items.length === 17 && d.items.some((p) => p.key === "manage_shop"));
   [s, d] = await api.getJ("/api/roles");
   const vorstand = d.items.find((r) => r.id === "vorstand");
   const shopRole = d.items.find((r) => r.id === "shop");

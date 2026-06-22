@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <script src="assets/js/club-config.js?v=43"></script>
-  <link rel="stylesheet" href="assets/css/styles.css?v=43">
+  <script src="assets/js/club-config.js?v=44"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=44">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -293,6 +293,20 @@
             </form>
           </div>
 
+          <!-- Mitgliedsbeiträge -->
+          <div id="fees-section" class="card" style="margin-top:24px" hidden>
+            <span class="eyebrow">Finanzen</span>
+            <h2 style="font-size:1.3rem;margin:6px 0 6px">Mitgliedsbeiträge</h2>
+            <p class="muted-note" style="margin-bottom:16px">Monatsbeiträge je Altersband und die Familien-Pauschale. Der Beitrag eines Mitglieds ergibt sich automatisch aus dem Alter; ist die Familien-Pauschale günstiger als die Summe der Einzelbeiträge, wird sie angesetzt. Änderungen gelten für neu berechnete Beiträge.</p>
+            <form id="fees-form" class="sub-form" novalidate>
+              <div id="fees-fields"></div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <button type="submit" class="btn btn--primary"><span class="spinner" aria-hidden="true"></span>Beiträge speichern</button>
+              </div>
+              <div class="form-status" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+
           <!-- Sponsoren -->
           <div id="sponsors-section" class="card" style="margin-top:24px" hidden>
             <span class="eyebrow">Partner</span>
@@ -439,11 +453,11 @@
     </div>
   </footer>
 
-  <script src="assets/js/api-config.js?v=43" defer></script>
-  <script src="assets/js/mock-api.js?v=43" defer></script>
-  <script src="assets/js/main.js?v=43" defer></script>
-  <script src="assets/js/sponsors.js?v=43" defer></script>
-  <script src="assets/js/shop.js?v=43" defer></script>
-  <script src="assets/js/redaktion.js?v=43" defer></script>
+  <script src="assets/js/api-config.js?v=44" defer></script>
+  <script src="assets/js/mock-api.js?v=44" defer></script>
+  <script src="assets/js/main.js?v=44" defer></script>
+  <script src="assets/js/sponsors.js?v=44" defer></script>
+  <script src="assets/js/shop.js?v=44" defer></script>
+  <script src="assets/js/redaktion.js?v=44" defer></script>
 </body>
 </html>
