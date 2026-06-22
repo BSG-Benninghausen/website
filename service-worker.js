@@ -14,7 +14,7 @@
    ===================================================================== */
 "use strict";
 
-const VERSION = "v42";
+const VERSION = "v43";
 /* Cache-Namespace: der Fork behält den BSG-Prefix, damit Caches getrennter
    Deployments nicht kollidieren. */
 const CACHE_NS = "bsg";
@@ -63,6 +63,7 @@ const PRECACHE_URLS = [
   "assets/js/shop-admin.js?v=" + VERSION.slice(1),
   "assets/js/trainingszeiten.js?v=" + VERSION.slice(1),
   "assets/js/team.js?v=" + VERSION.slice(1),
+  "assets/js/impressum.js?v=" + VERSION.slice(1),
   "assets/js/kalender.js?v=" + VERSION.slice(1),
   "assets/js/konto.js?v=" + VERSION.slice(1),
   "assets/js/mitglieder.js?v=" + VERSION.slice(1),

@@ -12,6 +12,9 @@
   "venue": "Vereinsheim Musterstadt",
   "street": "Musterstraße 1",
   "city": "12345 Musterstadt",
+  "phone": "",
+  "register_court": "",
+  "register_number": "",
   "description": "Vereinssport für Kinder, Jugendliche und Erwachsene in Musterstadt. Komm vorbei und probier ein kostenloses Training aus.",
   "logo": "assets/img/drache.png",
   "theme_color": "#2563eb"
