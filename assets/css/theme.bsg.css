@@ -51,3 +51,16 @@
 
   --ease: cubic-bezier(.16, .84, .44, 1);
 }
+
+/* Dekoratives Drachen-Ornament — Design-Schicht. Das geteilte Markup enthält nur
+   einen leeren <span class="hero__dragon"/"page-hero__dragon">; das Bild kommt
+   hier aus dem Theme (ein anderer Verein lässt diese Regeln einfach weg). Größe/
+   Position/Filter setzt styles.css; hier nur Box + Hintergrundbild. */
+.hero__dragon,
+.page-hero__dragon {
+  display: block;
+  background: center / contain no-repeat url("../img/drache-light.png");
+}
+.hero__dragon { height: min(30vw, 280px); }
+.page-hero__dragon { height: min(20vw, 170px); }
+@media (max-width: 700px) { .hero__dragon { height: 46vw; } }

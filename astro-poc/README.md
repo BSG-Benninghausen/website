@@ -1,47 +1,35 @@
-# Astro-PoC – Evaluierung
+# Astro-Gerüst (generisch, branding-neutral)
 
-Proof-of-Concept: Wie sähe die BSG-Seite mit **Astro** statt 17× kopiertem HTML aus?
-Bewusst **getrennt** vom Live-Repo (eigenes Unterprojekt) – die bestehende Seite bleibt unberührt.
+Das geteilte, generische Frontend des Vereins-Baukastens, gebaut mit **Astro** aus **einer**
+Layout-Komponente (`src/layouts/Base.astro`) statt aus 17× kopiertem HTML. Eine Navi-/Footer-Änderung
+= **eine** Datei. Dieses Gerüst enthält **kein** Club-Branding — es ist Teil des geteilten Produkts und
+fließt `fork → main → forks`.
 
-## Was der PoC zeigt
+## Wie das Branding reinkommt
 
-- **Eine** Layout-Komponente (`src/layouts/Base.astro`) ersetzt die ~100 Zeilen
-  `head` + `nav` + `footer`, die heute in **jeder** der 17 `*.html` dupliziert sind.
-  Eine Navi-/Footer-Änderung = **eine** Datei statt `sed` über alle Seiten.
-- **Branding zur Build-Zeit** aus `src/data/club.json` (= Kopie von
-  `assets/data/club.bsg.json`): Titel, `theme-color`, Markenname, Logo, Adresse,
-  Impressum, Instagram. Ersetzt den Regex-Stempel (`prerender-branding.mjs`),
-  `club-config.js` **und** das Laufzeit-Branding in `main.js` – FOUC-frei, ohne JS korrekt.
-- **Dynamische Inhalte bleiben dynamisch**: dieselben Vanilla-JS-Skripte
-  (`mock-api.js`, `main.js`, `news.js`, `sponsors.js`, `forms.js` …) laufen
-  unverändert weiter (News, Termine, Sponsoren, Login, Formulare, editierbare `data-site`-Texte).
-- **`build: { format: "file" }`** → Ausgabe `index.html`, `kontakt.html` (gleiche URL-Form
-  wie heute), damit die `.html`-Links und das JS unverändert passen.
+- **Aktiver Verein:** `src/active-club.mjs` liest `BSG_CLUB_ID` (GitHub-Repo-Variable; Default
+  `musterverein`) und lädt daraus `../assets/data/club.<id>.json` — **Single Source of Truth** (dieselbe
+  Datei seedet der Mock über `clubSeed`). Kein zweiter Branding-Ort, kein Regex-Stempel.
+- **`Base.astro`** rendert daraus FOUC-frei `window.BSG_CLUB`, Theme-Link, Titel und Marke und ist
+  **config-gesteuert** (Navi/Footer/Socials/CTA/Akzent-Balken aus `club.<id>.json`).
+- **Inhaltsseiten** binden club-spezifische Blöcke aus der Config (`home`, `represented_by`, …) bzw.
+  über editierbare `data-site`-Texte und die unveränderten Vanilla-JS-Skripte.
+
+Vollständige Beschreibung der Grenze: **`docs/layout-branding-separation.md`** (Repo-Root).
 
 ## Ausführen
 
 ```bash
-cd astro-poc
 npm install
-npm run dev      # http://localhost:4321  (kopiert vorher ../assets nach public/assets)
-# oder:
-npm run build && npm run preview
+npm run dev                     # http://localhost:4321 (kopiert vorher ../assets nach public/assets)
+npm run build                   # baut Musterverein nach dist/ (+ PWA via scripts/gen-pwa.mjs)
+BSG_CLUB_ID=bsg npm run build   # baut den Verein "bsg"
 ```
 
-`npm run sync-assets` (läuft automatisch vor dev/build) kopiert `../assets` nach
-`public/assets/` – die Assets bleiben also Single Source of Truth im Hauptrepo.
+`npm run sync-assets` (prebuild) hält `../assets` als Single Source of Truth; `scripts/gen-pwa.mjs`
+erzeugt `manifest.webmanifest` + `service-worker.js` aus der aktiven Club-Config.
 
-## Bewusst (noch) nicht im PoC
+## Build-Form
 
-- Nur **2 Seiten** (`index`, `kontakt`) – als Vergleich; die restlichen 15 wären
-  in einer echten Migration analog dünne `.astro`-Seiten.
-- Asset-Hashing/Bundling (Astro kann `?v=N`/`bump-cachebust`/`guard-versions`
-  ersetzen) ist hier nicht aktiviert – die Skripte werden 1:1 aus `public/` geladen.
-- `main.js` setzt die aktive Navi noch über `*.html`-Pfade; bei echtem Clean-URL-
-  Umstieg minimal anzupassen (hier via `format:"file"` umgangen).
-- Service Worker / PWA-Manifest sind nicht verdrahtet.
-
-## Fazit-Frage für die Entscheidung
-
-Lohnt der Build/Dependency-Overhead gegen den Wegfall der Duplikation + des
-manuellen Cache-Bustings? Für eine wachsende Single-Tenant-Seite: tendenziell ja.
+`astro.config.mjs` nutzt `build: { format: "file" }` → Ausgabe `index.html`, `kontakt.html` (gleiche
+URL-Form wie zuvor), damit die `.html`-Links und das JS unverändert passen.

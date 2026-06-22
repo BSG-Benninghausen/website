@@ -4,7 +4,7 @@ import Base from "../layouts/Base.astro";
 <Base pageTitle="Mein Konto">
   <section class="page-hero">
     <img class="page-hero__pattern" src="assets/img/hero-pattern.svg" alt="" aria-hidden="true">
-    <img class="page-hero__dragon" src="assets/img/drache-light.png" alt="" aria-hidden="true">
+    <span class="page-hero__dragon" aria-hidden="true"></span>
     <div class="wrap page-hero__inner">
       <p class="crumbs"><a href="index.html">Start</a> · Mein Konto</p>
       <span class="eyebrow eyebrow--invert">Dashboard</span>
@@ -110,7 +110,7 @@ import Base from "../layouts/Base.astro";
             </div>
             <div class="field-row">
               <div class="field">
-                <label for="m-belt">Gürtel / Graduierung</label>
+                <label for="m-belt">Graduierung</label>
                 <select id="m-belt" name="belt">
                   <option value="">Keine Angabe</option>
                   <option>Weißgurt</option>

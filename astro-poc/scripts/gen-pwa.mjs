@@ -1,25 +1,27 @@
 /* =====================================================================
-   gen-pwa.mjs – erzeugt manifest.webmanifest + service-worker.js aus
-   club.json. Läuft als prebuild-Schritt (nach sync-assets) und schreibt
-   beide Dateien nach public/. Dadurch ist die PWA-Schicht NICHT mehr fest
-   auf einen Verein verdrahtet: ein anderer Verein tauscht nur club.json
-   (+ theme.<id>.css + Seeds), Manifest und Service-Worker fallen generisch
-   richtig heraus.
+   gen-pwa.mjs – erzeugt manifest.webmanifest + service-worker.js für den
+   AKTIVEN Verein. Lädt die Club-Config über denselben Resolver wie Base.astro
+   (active-club.mjs -> BSG_CLUB_ID -> assets/data/club.<id>.json), läuft als
+   prebuild-Schritt (nach sync-assets) und schreibt beide Dateien nach public/.
+   So ist die PWA-Schicht NICHT auf einen Verein verdrahtet: ein anderer Verein
+   tauscht nur club.<id>.json (+ theme.<id>.css + Seeds) und setzt BSG_CLUB_ID.
 
    Aufruf (Defaults in Klammern):
-     node scripts/gen-pwa.mjs [clubJson=src/data/club.json] [outDir=public]
+     node scripts/gen-pwa.mjs [outDir=public]
    ===================================================================== */
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { loadClub } from "../src/active-club.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
-const clubPath = resolve(root, process.argv[2] || "src/data/club.json");
-const outDir = resolve(root, process.argv[3] || "public");
+const outDir = resolve(root, process.argv[2] || "public");
 
-const club = JSON.parse(readFileSync(clubPath, "utf8"));
+/* Single Source of Truth: derselbe Resolver wie Base.astro. WELCHER Verein
+   gebaut wird, kommt aus BSG_CLUB_ID (Default musterverein) → club.<id>.json. */
+const club = loadClub();
 
 // Cache-Bust der App-Shell: bei jedem Release erhöhen (Astro hasht im PoC noch
 // nicht). 🔜 Mit Asset-Hashing entfällt das.

@@ -1,15 +1,20 @@
 ---
 /* =====================================================================
-   Base.astro – EINE Layout-Komponente für alle Seiten.
-   Ersetzt die ~100 Zeilen head+nav+footer, die heute in JEDER der 17
-   *.html dupliziert sind. Das Marken-/Layout-Branding kommt zur BUILD-ZEIT
-   aus club.json (Single Source of Truth) – kein Regex-Stempel, kein
-   Laufzeit-/api/club-Branding, FOUC-frei und ohne JS korrekt.
+   Base.astro – EINE branding-neutrale Layout-Komponente für alle Seiten.
+   Ersetzt die ~100 Zeilen head+nav+footer, die früher in JEDER *.html
+   dupliziert waren. Alles Vereins-/Layout-Spezifische kommt zur BUILD-ZEIT
+   aus der aktiven Club-Config (assets/data/club.<id>.json, aufgelöst über
+   active-club.mjs / BSG_CLUB_ID) – kein hartcodiertes Branding im geteilten
+   Markup. Eine andere Marke = nur club.<id>.json (+ Theme + Seeds + Bilder)
+   tauschen und BSG_CLUB_ID setzen, ohne diese Datei anzufassen.
 
-   Schnell ändernde Inhalte (editierbare Texte via data-site, News, Termine,
-   Sponsoren) bleiben dynamisch: dieselben Vanilla-JS-Skripte werden geladen.
+   Level-2 „config-gesteuertes Layout": Navigation, Footer-Spalten, Socials,
+   CTA und der dekorative Akzent-Balken werden aus Daten gerendert. Schnell
+   wechselnde Inhalte (data-site-Texte, News, Termine) bleiben dynamisch über
+   dieselben Vanilla-JS-Skripte.
    ===================================================================== */
-import club from "../data/club.json";
+import { loadClub } from "../active-club.mjs";
+const club = loadClub();
 
 interface Props {
   pageTitle?: string;
@@ -19,17 +24,33 @@ interface Props {
 const { pageTitle = "", description = club.description, noindex = false } = Astro.props;
 const title = pageTitle ? `${pageTitle} – ${club.name}` : `${club.name} – ${club.tagline}`;
 const logo = club.logo;
+const favicon = club.favicon || "assets/img/favicon.png";
+const appleIcon = club.apple_touch_icon || "assets/img/apple-touch-icon.png";
 const year = new Date().getFullYear();
 
-// Die Hauptnavigation als Daten – statt 17× kopiertem Markup.
-const navLinks = [
-  ["index.html", "Start"],
-  ["trainingszeiten.html", "Training"],
-  ["team.html", "Team"],
-  ["aktuelles.html", "Aktuelles"],
-  ["kalender.html", "Termine"],
-  ["kontakt.html", "Kontakt"],
-];
+const nav = club.nav || [];
+const footerColumns = club.footer_columns || [];
+const socials = club.socials || [];
+const cta = club.cta || null;
+
+/* Optionale API-Anbindung an ein echtes Backend (config-gesteuert via club.api).
+   Ohne club.api.base bleibt alles im Mock (z. B. der Musterverein-Demo-Build);
+   ist eine Base gesetzt, läuft die Produktion im Hybrid-Modus (live-Routes ans
+   echte Backend), lokal/Dev weiter im Mock. */
+const apiBase = (club.api && club.api.base) || "";
+const apiLive = (club.api && club.api.authLive) || [];
+
+/* Social-Icons (inline-SVG-Pfade je Typ) – generisch, ohne club-spezifisches Markup. */
+const SOCIAL_ICONS = {
+  instagram:
+    '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>',
+  facebook:
+    '<path d="M14 9h3V5h-3a4 4 0 0 0-4 4v2H7v4h3v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1z"/>',
+  youtube:
+    '<rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/>',
+};
+const iconFor = (type) => SOCIAL_ICONS[type] || SOCIAL_ICONS.link;
 ---
 <!DOCTYPE html>
 <html lang="de" data-club-site>
@@ -39,8 +60,8 @@ const navLinks = [
   <title>{title}</title>
   <meta name="description" content={description} />
   {noindex && <meta name="robots" content="noindex" />}
-  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
-  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href={favicon} />
+  <link rel="apple-touch-icon" href={appleIcon} />
   <meta name="theme-color" content={club.theme_color} />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -50,18 +71,19 @@ const navLinks = [
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
-  <!-- Single-Tenant: BSG_CLUB aus club.json setzen (mock-api.js liest es) – ersetzt
-       club-config.js. Alles Club-Spezifische (id/ns/Seed/Admin/Theme) kommt aus
-       club.json, damit ein anderer Verein nur diese eine Datei (+ Theme + Seeds) tauscht. -->
+  <!-- window.BSG_CLUB + window.BSG_API zur Build-Zeit aus der aktiven Club-Config
+       (mock-api.js / api-config.js lesen sie). Ersetzt das Laufzeit-club-config.js
+       für den Single-Tenant-Build; ns/Seed/Admin/Theme/api stammen aus
+       assets/data/club.<id>.json – Single Source of Truth. -->
   <script is:inline set:html={`
 window.BSG_CLUB={id:${JSON.stringify(club.id)},name:${JSON.stringify(club.name)},clubSeed:${JSON.stringify(club.clubSeed)},ns:${JSON.stringify(club.ns)}};
 window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
 (function(){
-  var BASE=${JSON.stringify((club.api && club.api.base) || "")};
-  var LIVE=${JSON.stringify((club.api && club.api.authLive) || ["/api/auth"])};
+  var BASE=${JSON.stringify(apiBase)};
+  var LIVE=${JSON.stringify(apiLive)};
   var h=(location.hostname||"").toLowerCase();
   var dev=location.protocol==="file:"||h==="localhost"||h==="127.0.0.1"||h==="";
-  window.BSG_API=dev?{mode:"mock",base:"",live:[]}:{mode:"hybrid",base:BASE,live:LIVE};
+  window.BSG_API=(dev||!BASE)?{mode:"mock",base:"",live:[]}:{mode:"hybrid",base:BASE,live:LIVE};
 })();
 `}></script>
   <link rel="stylesheet" href={club.theme_css} />
@@ -71,7 +93,9 @@ window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
   <header class="site-header">
-    <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    {club.header_accent_bar && (
+      <div class="belt-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    )}
     <nav class="nav wrap" aria-label="Hauptnavigation">
       <a href="index.html" class="brand" aria-label="Zur Startseite">
         <img class="brand__logo" src={logo} alt="" width="42" height="42" />
@@ -80,7 +104,7 @@ window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
       <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Menü öffnen"><span></span></button>
       <div class="nav__menu" id="nav-menu">
         <ul class="nav__links">
-          {navLinks.map(([href, label]) => <li><a href={href}>{label}</a></li>)}
+          {nav.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
         </ul>
 
         <div class="nav__account">
@@ -104,7 +128,7 @@ window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
             </ul>
           </div>
         </div>
-        <div class="nav__cta"><a href="anmeldung.html" class="btn btn--primary">Probetraining</a></div>
+        {cta && <div class="nav__cta"><a href={cta.href} class="btn btn--primary">{cta.label}</a></div>}
       </div>
     </nav>
   </header>
@@ -121,34 +145,27 @@ window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
           </a>
           <p>{club.description}</p>
           <div class="socials">
-            <a href={club.instagram_url} aria-label="Instagram" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            </a>
+            {socials.map((s) => (
+              <a href={s.url} aria-label={s.type} target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" set:html={iconFor(s.type)}></svg>
+              </a>
+            ))}
           </div>
         </div>
-        <div class="footer-col">
-          <h4>Verein</h4>
-          <ul>
-            <li><a href="index.html">Start</a></li>
-            <li><a href="team.html">Team &amp; Vorstand</a></li>
-            <li><a href="aktuelles.html">Aktuelles</a></li>
-            <li><a href="kalender.html">Termine</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Mitmachen</h4>
-          <ul>
-            <li><a href="trainingszeiten.html">Trainingszeiten</a></li>
-            <li><a href="anmeldung.html">Probetraining</a></li>
-            <li><a href="kontakt.html">Kontakt</a></li>
-          </ul>
-        </div>
+        {footerColumns.map((col) => (
+          <div class="footer-col">
+            <h4>{col.title}</h4>
+            <ul>
+              {col.items.map((it) => <li><a href={it.href}>{it.label}</a></li>)}
+            </ul>
+          </div>
+        ))}
         <div class="footer-col">
           <h4>Training</h4>
           <ul>
             <li>{club.venue}</li>
             <li>{club.street}, {club.city}</li>
-            <li>Mittwochs &amp; freitags</li>
+            {club.training_days && <li>{club.training_days}</li>}
           </ul>
         </div>
       </div>

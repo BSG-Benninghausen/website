@@ -1,22 +1,24 @@
 name: Deploy zu GitHub Pages
 
 # Baut die Astro-Seite (astro-poc/) und veröffentlicht das statische dist/ auf
-# GitHub Pages (API-Modus "mock"). Läuft beim Push auf main. Branding kommt zur
-# Build-Zeit aus assets/data/club.bsg.json; die Seiten-Assets/JS liegen weiter
-# unter assets/ (Single Source of Truth) und werden in den Build kopiert.
+# GitHub Pages (API-Modus "mock"). Läuft beim Push auf main.
+#
+# Das Astro-Gerüst (astro-poc/) ist geteilt/branding-neutral und kommt per
+# `git merge upstream/main` aus dem Hauptrepo. WELCHER Verein gebaut wird, kommt
+# aus der Repo-Variable `vars.BSG_CLUB_ID` (hier Fallback "bsg"): active-club.mjs
+# liest daraus assets/data/club.<id>.json (Single Source of Truth). Branding/Seeds
+# liegen unter assets/ und werden per `npm run sync-assets` in den Build kopiert.
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
-# Rechte, die der Deploy benötigt
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Nur ein Deployment gleichzeitig
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -41,7 +43,9 @@ jobs:
         with:
           enablement: true
 
-      - name: Astro bauen (Branding aus club.bsg.json, Assets aus ../assets)
+      - name: Astro bauen (aktiver Verein aus vars.BSG_CLUB_ID, Fallback bsg)
+        env:
+          BSG_CLUB_ID: ${{ vars.BSG_CLUB_ID || 'bsg' }}
         run: |
           cd astro-poc
           npm ci
