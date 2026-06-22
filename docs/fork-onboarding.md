@@ -62,10 +62,30 @@ Cache-Bust: `VERSION` in `gen-pwa.mjs` bei jedem Release erhöhen.
 
 - **GitHub Pages:** `deploy-pages.yml` läuft im Fork automatisch beim Push auf `main` → eigene
   Pages-Seite (Mock-Modus, ohne echtes Backend). Pages im Fork-Repo aktivieren.
-- **Eigenes Backend (optional):** `packages/backend/` ist das generische Real-Backend (Start &
-  Env-Variablen: `packages/backend/README.md`). Für einen echten Mandanten den Deploy (z. B.
-  Reverse-Proxy + systemd) im Fork halten und `api-config.js` per Deploy-Patch auf `mode: "real"`
-  stellen. Hintergrund zur Backend-/Deploy-Trennung: `docs/backend-repo-separation-plan.md`.
+- **Eigenes Backend (Route für Route):** Das generische Real-Backend lebt in seinem eigenen Repo
+  (`crypticalcode/vereins-baukasten-backend`, gepinnt in `backend-ref.json`); Deploy auf einen Server
+  siehe dort `docs/deploy-hetzner.md`. Der **Deploy-Default** der Fork wird **nicht** in der
+  geteilten `api-config.js` gepatcht, sondern in **club-eigenen** Dateien gesetzt (konfliktfrei beim
+  Upstream-Pull), die `window.BSG_API` **vor** `api-config.js` setzen:
+  - **Root-HTML-Pfad:** `assets/js/club-config.js` (synchrones `<head>`-Skript).
+  - **Astro-Pfad:** Block `api: { base, authLive }` in `astro-poc/src/data/club.json`, ausgewertet im
+    `<head>`-Inline-Skript von `astro-poc/src/layouts/Base.astro`.
+
+  Reife Endpunkte werden **einzeln** scharf geschaltet, indem ihr Muster in `live` aufgenommen wird
+  (Pfad-Präfix `"/api/auth"` deckt alle Methoden der Gruppe ab). Beide Pfade sind **umgebungsbewusst**:
+  `localhost`/`127.0.0.1`/`file:` bleiben Mock (per `?api=…` übersteuerbar), echte Hosts gehen
+  `hybrid`. Aktueller Stand: `live:["/api/auth"]` (ganze Login-/Auth-Gruppe echt).
+
+  **Cross-Origin (Pages → API-Domain):** Login klappt nur per **Bearer-Token + CORS** – der Forwarder
+  in `mock-api.js` setzt `Authorization`/`X-Club` und merkt sich `bsg_token`; das Backend gibt die
+  Frontend-Origin via `BSG_CORS_ORIGINS` frei. Nach JS-/Config-Änderungen Cache-Bust bumpen
+  (`node tools/bump-cachebust.mjs` + `VERSION` in `astro-poc/scripts/gen-pwa.mjs`) und gegen ein
+  lokales Backend testen: `?api=hybrid&apibase=http://localhost:3000`.
+
+  **Zwischenstand „Auth echt, Rest Mock":** Nach Login ist die Nav korrekt, aber noch gemockte
+  geschützte Routen (`/api/account`, `/api/memberships`, Redaktion/Admin) liefern 401 (leere
+  Mock-Session). Nächster Schritt: diese Konto-Routen ebenfalls in `live` aufnehmen. Hintergrund zur
+  Backend-/Deploy-Trennung: `docs/backend-repo-separation-plan.md`.
 
 ## 6. Aktuell bleiben & beitragen
 

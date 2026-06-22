@@ -237,6 +237,31 @@ Zur Laufzeit: `BSGApi.setMode('real'|'hybrid'|'mock')`, `BSGApi.setLive([...])`.
 weiter gegen den Mock, während reife Endpunkte einzeln „scharf geschaltet" werden. Am übrigen
 Frontend-Code ändert sich nichts; der `mock-api.js`-Tag bleibt (er ist Mock **und** Router).
 
+#### Dieser Fork: schrittweise auf das echte Backend
+
+Die BSG-Seite bezieht ihre Daten **Route für Route** vom echten Backend
+(`https://api.orgbase.de`). Der Deploy-Default steht in den **club-eigenen** Dateien
+(`assets/js/club-config.js` für die Root-HTML-Vorschau, `astro-poc/src/data/club.json` +
+`astro-poc/src/layouts/Base.astro` für den Pages-Build) und ist **umgebungsbewusst**:
+
+- **Pages / echter Vereins-Host:** `mode:"hybrid"`, `base:"https://api.orgbase.de"`,
+  `live:["/api/auth"]` – aktuell ist die **gesamte Auth-Gruppe** echt.
+- **Lokale Entwicklung** (`localhost`/`127.0.0.1`/`file:`): bleibt Mock, damit man nicht
+  versehentlich Produktion trifft. Übersteuerbar per `?api=hybrid&apibase=http://localhost:3000`
+  (oder `?api=mock`).
+
+Weil Cross-Origin (Pages → `api.orgbase.de`) gilt: das Backend authentifiziert per **Bearer-Token**
+(der Forwarder in `mock-api.js` setzt `Authorization`/`X-Club` und merkt sich `bsg_token`), und das
+Backend gibt die Origin via `BSG_CORS_ORIGINS` frei. Backend-Deploy: `docs/deploy-hetzner.md` im
+Backend-Repo.
+
+> **Zwischenstand „Auth echt, Rest Mock".** Nach dem Login ist die Navigation korrekt (`/api/auth/me`
+> ist live), aber noch gemockte **geschützte** Routen (`/api/account`, `/api/memberships`, Redaktion/
+> Admin) liefern 401, weil die Mock-Session leer bleibt (der Login lief gegen das echte Backend).
+> Öffentliche Seiten sind unberührt. **Nächster Promotion-Schritt:** `/api/account`,
+> `/api/memberships`, `/api/membership-types` in `live` aufnehmen, damit `Login → Mein Konto`
+> durchgängig ist (siehe `docs/fork-onboarding.md`).
+
 ### Contract-Tests
 
 Im Ordner `packages/api-contract/` liegt eine abhängigkeitsfreie **Contract-Test-Suite**, die dieselben

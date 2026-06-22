@@ -5,6 +5,7 @@
   "admin_email": "admin@bsg-benninghausen.de",
   "theme_css": "assets/css/theme.bsg.css",
   "passPrefix": "BSG-",
+  "api": { "base": "https://api.orgbase.de", "authLive": ["/api/auth"] },
 
   "brand_name": "BSG Benninghausen",
   "name": "BSG Benninghausen e.V.",

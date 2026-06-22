@@ -31,8 +31,10 @@ export const DEFAULT_ID = "musterverein";
 
 export function activeClubId() {
   const raw = process.env.BSG_CLUB_ID || process.env.PUBLIC_BSG_CLUB_ID || "";
-  const id = raw.trim();
-  return /^[a-z0-9_-]+$/i.test(id) ? id : DEFAULT_ID;
+  // Seed-/Theme-Dateien sind klein geschrieben (club.bsg.json) -> id normalisieren,
+  // damit BSG_CLUB_ID=BSG nicht auf kaputte Pfade (club.BSG.json) führt.
+  const id = raw.trim().toLowerCase();
+  return /^[a-z0-9_-]+$/.test(id) ? id : DEFAULT_ID;
 }
 
 function readJson(file) {
@@ -40,7 +42,10 @@ function readJson(file) {
 }
 
 /* Lädt die Club-Config für die aktive (oder explizit übergebene) id, mit
-   generischem Fallback und konventionellen Defaults für die Build-/PWA-Felder. */
+   generischem Fallback und konventionellen Defaults für die Build-/PWA-Felder.
+   base wird ZUERST gespreizt, danach gewinnen die abgeleiteten Felder – so bleibt
+   der Resolver die Quelle der Wahrheit für id/ns/clubSeed/theme_css, auch wenn die
+   JSON diese Felder leer lässt oder weglässt. */
 export function loadClub(id = activeClubId()) {
   let base;
   try {
@@ -49,6 +54,7 @@ export function loadClub(id = activeClubId()) {
     base = readJson("club.json"); // generischer Fallback
   }
   return {
+    ...base,
     id,
     ns: base.ns || id,
     clubSeed: base.clubSeed || `club.${id}.json`,
@@ -56,6 +62,5 @@ export function loadClub(id = activeClubId()) {
     admin_email: base.admin_email || `admin@${id}.example`,
     short_name: base.short_name || base.brand_name || base.name,
     background_color: base.background_color || base.theme_color || "#0d0d12",
-    ...base,
   };
 }

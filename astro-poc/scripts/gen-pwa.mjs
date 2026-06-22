@@ -1,18 +1,18 @@
 /* =====================================================================
-   gen-pwa.mjs – erzeugt manifest.webmanifest + service-worker.js aus
-   club.json. Läuft als prebuild-Schritt (nach sync-assets) und schreibt
-   beide Dateien nach public/. Dadurch ist die PWA-Schicht NICHT mehr fest
-   auf einen Verein verdrahtet: ein anderer Verein tauscht nur club.json
-   (+ theme.<id>.css + Seeds), Manifest und Service-Worker fallen generisch
-   richtig heraus.
+   gen-pwa.mjs – erzeugt manifest.webmanifest + service-worker.js für den
+   AKTIVEN Verein. Lädt die Club-Config über denselben Resolver wie Base.astro
+   (active-club.mjs -> BSG_CLUB_ID -> assets/data/club.<id>.json), läuft als
+   prebuild-Schritt (nach sync-assets) und schreibt beide Dateien nach public/.
+   So ist die PWA-Schicht NICHT auf einen Verein verdrahtet: ein anderer Verein
+   tauscht nur club.<id>.json (+ theme.<id>.css + Seeds) und setzt BSG_CLUB_ID.
 
    Aufruf (Defaults in Klammern):
-     node scripts/gen-pwa.mjs [clubJson=src/data/club.json] [outDir=public]
+     node scripts/gen-pwa.mjs [outDir=public]
    ===================================================================== */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
-import { loadClub, activeClubId } from "../src/active-club.mjs";
+import { loadClub } from "../src/active-club.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
@@ -25,7 +25,7 @@ const club = loadClub();
 
 // Cache-Bust der App-Shell: bei jedem Release erhöhen (Astro hasht im PoC noch
 // nicht). 🔜 Mit Asset-Hashing entfällt das.
-const VERSION = "astro-v9";
+const VERSION = "astro-v10";
 
 const ns = club.ns || club.id || "app";
 const themeCss = club.theme_css || "assets/css/theme.css";
