@@ -10,6 +10,8 @@ name: Deploy zu Hetzner (bsg.orgbase.de)
 #   secrets.HETZNER_SSH_USER       -> Deploy-User
 #   secrets.HETZNER_SSH_KEY        -> privater SSH-Deploy-Key
 #   secrets.HETZNER_SSH_PORT       -> optional (Default 22)
+#   secrets.HETZNER_SSH_KNOWN_HOSTS-> optional, empfohlen: verifizierter Host-Key
+#                                     (kein TOFU). Ungesetzt -> Fallback ssh-keyscan.
 # Zielverzeichnis auf dem Server: /var/www/bsg-website (vom Caddy als root gesetzt).
 on:
   push:
@@ -57,9 +59,19 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.HETZNER_SSH_HOST }}
           SSH_PORT: ${{ secrets.HETZNER_SSH_PORT || '22' }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HETZNER_SSH_KNOWN_HOSTS }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -n "${SSH_KNOWN_HOSTS}" ]; then
+            # Bevorzugt: hinterlegter, verifizierter Host-Key (kein TOFU).
+            printf '%s\n' "${SSH_KNOWN_HOSTS}" >> ~/.ssh/known_hosts
+          else
+            # Fallback: Host-Key beim Deploy scannen (TOFU). Harter Fehler, wenn leer.
+            keys="$(ssh-keyscan -p "${SSH_PORT}" -H "${SSH_HOST}")"
+            [ -n "${keys}" ] || { echo "::error::ssh-keyscan lieferte keinen Host-Key für ${SSH_HOST}:${SSH_PORT}"; exit 1; }
+            printf '%s\n' "${keys}" >> ~/.ssh/known_hosts
+          fi
 
       - name: dist auf den Server spiegeln (rsync --delete)
         env:

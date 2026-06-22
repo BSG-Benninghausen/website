@@ -42,9 +42,12 @@ const cta = club.cta || null;
    setzt die Backend-URL ("" = same-origin /api). Ungesetzt = bisheriges Verhalten,
    der Pages-Build bleibt damit unverändert. */
 const apiMode = (process.env.BSG_API_MODE || "").trim();
-const apiBase = process.env.BSG_API_BASE !== undefined
+const apiBaseRaw = process.env.BSG_API_BASE !== undefined
   ? process.env.BSG_API_BASE
   : ((club.api && club.api.base) || "");
+// Whitespace + abschließende Slashes entfernen, damit base + "/api/…" nicht zu
+// " /api/…" oder "…//api/…" wird (z. B. bei kopierten Secrets/Env-Werten).
+const apiBase = apiBaseRaw.trim().replace(/\/+$/, "");
 const apiLive = (club.api && club.api.authLive) || [];
 
 /* Social-Icons (inline-SVG-Pfade je Typ) – generisch, ohne club-spezifisches Markup. */
