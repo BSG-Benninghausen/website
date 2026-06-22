@@ -47,6 +47,14 @@ Flow (🔜 = target; automation not yet wired):
 Today steps 2–3 are **manual**: open a (draft) PR to main, keep contract tests green, and promote
 routes by editing `api-config.js`.
 
+## Planning & backlog
+
+The feature backlog lives in **GitHub Issues** + the Project **"Vereins-Baukasten Roadmap"** (owner
+`crypticalcode`, spanning main + forks). Before building a feature, find or open its issue and link it;
+file new ideas as issues too (labels `enhancement` / `vereinsrecht` / `idea`). Larger efforts = an
+**epic** with **sub-issues**. Generic features → issues in the **main repo** (auto-added to the board);
+club-specific work → a **fork PR** (forks have Issues disabled, so track it as an `infra` issue in main).
+
 ## Invariants (don't break these)
 
 - **Graceful degradation.** Every feature must stay useful **without** the API — the
