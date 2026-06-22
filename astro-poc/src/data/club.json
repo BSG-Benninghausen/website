@@ -21,5 +21,6 @@
   "logo": "assets/img/bsg-logo.png",
   "theme_color": "#0d0d12",
   "background_color": "#0d0d12",
-  "passPrefix": "BSG-"
+  "passPrefix": "BSG-",
+  "api": { "base": "https://api.orgbase.de", "authLive": ["/api/auth"] }
 }

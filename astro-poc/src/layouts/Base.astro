@@ -53,7 +53,17 @@ const navLinks = [
   <!-- Single-Tenant: BSG_CLUB aus club.json setzen (mock-api.js liest es) – ersetzt
        club-config.js. Alles Club-Spezifische (id/ns/Seed/Admin/Theme) kommt aus
        club.json, damit ein anderer Verein nur diese eine Datei (+ Theme + Seeds) tauscht. -->
-  <script is:inline set:html={`window.BSG_CLUB={id:${JSON.stringify(club.id)},name:${JSON.stringify(club.name)},clubSeed:${JSON.stringify(club.clubSeed)},ns:${JSON.stringify(club.ns)}};window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};`}></script>
+  <script is:inline set:html={`
+window.BSG_CLUB={id:${JSON.stringify(club.id)},name:${JSON.stringify(club.name)},clubSeed:${JSON.stringify(club.clubSeed)},ns:${JSON.stringify(club.ns)}};
+window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
+(function(){
+  var BASE=${JSON.stringify((club.api && club.api.base) || "")};
+  var LIVE=${JSON.stringify((club.api && club.api.authLive) || ["/api/auth"])};
+  var h=(location.hostname||"").toLowerCase();
+  var dev=location.protocol==="file:"||h==="localhost"||h==="127.0.0.1"||h==="";
+  window.BSG_API=dev?{mode:"mock",base:"",live:[]}:{mode:"hybrid",base:BASE,live:LIVE};
+})();
+`}></script>
   <link rel="stylesheet" href={club.theme_css} />
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>

@@ -528,12 +528,25 @@
     return { id: u.id, name: u.name, email: u.email, address: u.address || null, iban: u.iban || null, photo: u.photo || "", roles: u.roles || ["member"], active: u.active !== false, createdAt: u.createdAt };
   }
   const getSession = () => getStore(KEYS.session, null);
-  const setSession = (userId) => setStore(KEYS.session, { token: genId("tok"), userId });
+  function setSession(userId) {
+    const token = genId("tok");
+    setStore(KEYS.session, { token, userId });
+    return token;
+  }
   const clearSession = () => delStore(KEYS.session);
+  // Bearer-Token (Cross-Origin/Multi-Site): pro Request aus dem Authorization-Header
+  // gesetzt (siehe Dispatcher). Ist er gesetzt, zählt nur die Session mit passendem
+  // Token – so modelliert der Mock dieselbe Token-Auth wie das echte Backend.
+  let _reqToken = null;
   function currentUser() {
     const s = getSession();
+    if (_reqToken) return (s && s.token === _reqToken) ? getUserById(s.userId) : null;
     return s ? getUserById(s.userId) : null;
   }
+  // Token-Speicher fürs echte Backend (real/hybrid): in localStorage.
+  const getToken = () => getStore("bsg_token", null);
+  const setToken = (t) => setStore("bsg_token", t);
+  const clearToken = () => delStore("bsg_token");
 
   /* ----- Rollen & Berechtigungen ----- */
   const getRoles = () => getStore(KEYS.roles, []);
@@ -1399,8 +1412,8 @@
       }
       const user = { id: genId("usr"), name: norm(body.name), email: lc(body.email), address: null, iban: null, roles: ["member"], createdAt: new Date().toISOString() };
       const users = getUsers(); users.push(user); setUsers(users);
-      setSession(user.id);
-      return json({ ok: true, user: publicUser(user), message: "Willkommen, " + user.name.split(" ")[0] + "! Dein Konto wurde erstellt." }, 201);
+      const token = setSession(user.id);
+      return json({ ok: true, user: publicUser(user), token, message: "Willkommen, " + user.name.split(" ")[0] + "! Dein Konto wurde erstellt." }, 201);
     },
 
     "POST /api/auth/request-code": async (body) => {
@@ -1424,8 +1437,8 @@
       }
       delete codes[user.email]; setStore(KEYS.codes, codes);
       if (user.active === false) return json({ ok: false, message: "Dieses Konto ist deaktiviert. Bitte wende dich an den Vorstand." }, 403);
-      setSession(user.id);
-      return json({ ok: true, user: publicUser(user), message: "Willkommen zurück, " + user.name.split(" ")[0] + "!" });
+      const token = setSession(user.id);
+      return json({ ok: true, user: publicUser(user), token, message: "Willkommen zurück, " + user.name.split(" ")[0] + "!" });
     },
 
     "POST /api/auth/logout": async () => {
@@ -1880,6 +1893,16 @@
     });
   }
 
+  // Bearer-Token aus dem Authorization-Header lesen (Header-Objekt oder Headers-Instanz).
+  function bearerFrom(init) {
+    try {
+      const h = (init && init.headers) || {};
+      const v = (typeof h.get === "function") ? h.get("Authorization") : (h.Authorization || h.authorization);
+      const m = /^Bearer\s+(\S+)$/.exec(v || "");
+      return m ? m[1] : null;
+    } catch (e) { return null; }
+  }
+
   /* ----- fetch abfangen: je Route Mock ODER echtes Backend ----- */
   window.fetch = async function (input, init = {}) {
     const url = typeof input === "string" ? input : input.url;
@@ -1892,11 +1915,21 @@
     if (!path.startsWith("/api/")) return realFetch(input, init);
 
     const cfg = apiCfg();
-    // Echtes Backend (real / passende hybrid-Route): unverändert weiterreichen.
+    // Echtes Backend (real / passende hybrid-Route): mit Token + Mandant weiterreichen.
     if (routeIsLive(cfg, method + " " + path, path)) {
       const target = (cfg.base || "") + path + search;
-      const fwd = Object.assign({}, init, { credentials: init.credentials || "include" });
-      return realFetch(target, fwd);
+      const headers = Object.assign({}, init.headers || {});
+      const tok = getToken();
+      if (tok) headers["Authorization"] = "Bearer " + tok;   // Bearer statt Cookie (cross-origin-tauglich)
+      headers["X-Club"] = STORE_NS;                            // Mandant (Default "bsg")
+      const fwd = Object.assign({}, init, { headers, credentials: init.credentials || "include" });
+      const res = await realFetch(target, fwd);
+      // Token-Lebenszyklus zentral: bei Auth-Antworten erfassen, bei Logout/401 verwerfen.
+      if (/\/api\/auth\/(login|register)$/.test(path)) {
+        try { const d = await res.clone().json(); if (d && d.token) setToken(d.token); } catch (e) { /* ignore */ }
+      } else if (path === "/api/auth/logout") { clearToken(); }
+      else if (res.status === 401) { clearToken(); }
+      return res;
     }
 
     // Mock-Pfad (Default): lokale Route-Handler mit simulierter Latenz.
@@ -1908,8 +1941,11 @@
     let body = {};
     if (init.body) { try { body = JSON.parse(init.body); } catch (e) { body = {}; } }
 
+    // Bearer-Token aus dem Authorization-Header (Parität mit dem echten Backend).
+    _reqToken = bearerFrom(init);
     try { return await handler(body); }
     catch (err) { return json({ ok: false, message: "Mock-Serverfehler: " + err.message }, 500); }
+    finally { _reqToken = null; }
   };
 
   /* ----- Laufzeit-Schalter (Konsole/Dev): BSGApi.setMode('real'|'hybrid'|'mock') ----- */
