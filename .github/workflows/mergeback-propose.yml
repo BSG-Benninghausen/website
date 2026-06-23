@@ -134,7 +134,9 @@ jobs:
               fs.writeFileSync(f,s); }
           '
           # Frische: Cache-Bust bumpen, wenn ein Produkt-Asset betroffen ist.
-          if grep -qE '^(assets/js/|assets/css/styles\.css)' /tmp/include.txt; then node tools/bump-cachebust.mjs; fi
+          # Seit der Astro-Migration übernimmt der Build das Cache-Busting; das Tool
+          # existiert dort nicht mehr -> nur ausführen, wenn vorhanden (back-compat).
+          if grep -qE '^(assets/js/|assets/css/styles\.css)' /tmp/include.txt && [ -f tools/bump-cachebust.mjs ]; then node tools/bump-cachebust.mjs; fi
           git add -A
 
       - name: Claude – Neutralität & Fitness (semantisch)
@@ -162,7 +164,12 @@ jobs:
         if: steps.classify.outputs.verdict == 'propose'
         run: |
           set -euo pipefail
-          git add -A
+          # Die claude-code-action restauriert Schutzdateien (CLAUDE.md, .claude, .mcp.json …)
+          # aus origin/main des Forks ("PR head is untrusted") — im Fork ist das die GEBRANDETE
+          # Version (z. B. CLAUDE.md mit Vereinsnamen). Daher NUR die beabsichtigten generischen
+          # Include-Dateien stagen (nicht git add -A), sonst leakt Fork-Identität in den Mergeback.
+          git reset -q
+          while IFS= read -r f; do [ -n "$f" ] && git add -- "$f"; done < /tmp/include.txt
           git diff --cached upstream/main > /tmp/final.patch
           node tools/classify-diff.mjs --verify /tmp/final.patch
           git commit -m "Mergeback: ${{ github.event.pull_request.title }}" || echo "nichts zu committen"
