@@ -122,8 +122,7 @@ Teil des Tooling-PRs:
 
 ## Rollout-Reihenfolge (Auto-Merge zuletzt)
 
-1. Tooling + Self-Tests (dieser PR). 2. Identitäts-Leak in `main` neutralisieren. 3. Proposer
-**kommentar-only** am Wegwerf-Fork testen. 4. Cross-Repo-PR (App) → manueller Merge. 5. Gate
-**review-only** (Check ohne `--auto`). 6. Branch Protection. 7. **Auto-Merge an** (Schwelle erst
-≥ 95, später ≥ 90). 8. `contract-notify` + `publish-contract --dry-run`. 9. Phase-3-Split.
-10. `contract-implement` (Draft-PRs). 11. Docs finalisieren.
+Tooling, Identitäts-Neutralisierung, Proposer/Gate und Phase-3-Split sind ausgerollt. Die
+**restlichen** Schritte (Auto-Merge-Schwelle ≥ 95 → ≥ 90, `contract-notify`/`publish-contract`
+scharfschalten, `contract-implement` + `bump-backend-ref` produktiv, Docs finalisieren) werden in der
+Roadmap des Hauptrepos geführt.

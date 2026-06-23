@@ -92,9 +92,9 @@ Cache-Bust: `VERSION` in `gen-pwa.mjs` bei jedem Release erhöhen.
 - **Updates ziehen:** `git fetch upstream && git merge upstream/main` (oder Rebase). Weil deine
   Vereins-Dateien Upstream **nicht** gehören, bleiben Pulls konfliktfrei; nur deine wenigen
   Default-/Theme-Anpassungen können selten kollidieren.
-- **Beitragen:** Bugs/Wünsche als **Issue** im Haupt-Repo; Fixes/Features als **PR aus dem Fork**
-  gegen `main` (vereins-neutral, ohne deine club-spezifischen Inhalte). Siehe
-  [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+- **Beitragen:** Bugs/Wünsche als **Issue** im Haupt-Repo (Backlog = [`ROADMAP.md`](../ROADMAP.md)
+  + Project »Vereins-Baukasten Roadmap«); Fixes/Features als **PR aus dem Fork** gegen `main`
+  (vereins-neutral, ohne deine club-spezifischen Inhalte). Siehe [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 - **Automatischer Mergeback (optional):** Setze die Repo-Variable `MERGEBACK_ENABLED=true` und die
   Secrets `ANTHROPIC_API_KEY` + die GitHub-App-Credentials, dann übernimmt ein Bot den Upstream-PR
   für dich: er extrahiert aus deinen Fork-PRs den generischen, vereins-neutralen Anteil und schlägt

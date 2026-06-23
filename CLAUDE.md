@@ -47,6 +47,10 @@ Flow (🔜 = target; automation not yet wired):
 Today steps 2–3 are **manual**: open a (draft) PR to main, keep contract tests green, and promote
 routes by editing `api-config.js`.
 
+**Backlog/Planung:** offene Vorhaben werden als **GitHub Issues + Project »Vereins-Baukasten Roadmap«**
+im Hauptrepo geführt (Index: [`ROADMAP.md`](ROADMAP.md)) — nicht als lokale Plan-Datei. Forks haben
+Issues deaktiviert: vereins-neutrale Punkte landen upstream, fork-spezifische als Fork-PR.
+
 ## Invariants (don't break these)
 
 - **Graceful degradation.** Every feature must stay useful **without** the API — the
@@ -84,6 +88,7 @@ Browser-E2E (Playwright under `tests/e2e/`), test filters, and the full workflow
 - **`CONTRIBUTING.md`** — contributing fixes/features back upstream from a fork.
 - **`docs/productization-saas-plan.md`** — white-label config, multi-tenant, feature
   provisioning/booking, SaaS phases.
+- **`ROADMAP.md`** — Backlog-Index (GitHub Issues + Project »Vereins-Baukasten Roadmap« im Hauptrepo).
 - **`docs/backend-repo-separation-plan.md`** — splitting the backend into its own repo + the shared
   contract package.
 - **`backend-ref.json`** — pins the external backend repo (`crypticalcode/vereins-baukasten-backend`) for

@@ -46,9 +46,8 @@ Branding ist nicht mehr im Markup hartcodiert, sondern **Laufzeit-Konfiguration*
 zur Laufzeit aus `/api/club` gesetzt (client-seitig, wirkt in Static **und** Real; pro Seite über
 `data-page-title`). Das **`manifest.webmanifest`** rendert das echte Backend pro Domain
 (`packages/backend/index.mjs` → `GET /api/manifest` aus der Club-Config); im Static-Deploy bleibt die
-committete Default-Datei. **Noch offen:** crawler-korrekte `<title>`/Description ohne JS (Backend-
-HTML-Templating, sinnvoll erst mit Multi-Mandant, P4) und **per-Verein-Icon-/Favicon-Dateien**
-(Binär-Asset-Hosting).
+committete Default-Datei. (Offen: crawler-korrekte `<title>`/Description ohne JS + per-Verein-Icon-/
+Favicon-Dateien — siehe Roadmap im Hauptrepo.)
 
 ---
 
@@ -92,15 +91,9 @@ durabel (`BSG_DATA_FILE` → `packages/backend/store.mjs`, atomares Write-throug
 `sessions` flüchtig). Ohne die Env-Var bleibt alles in-memory wie zuvor → Tests/CI/E2E unverändert.
 Die `db`/`dataFile`-Kapselung ist die **Naht** für echte Mandantenfähigkeit (ein `dataFile` je Mandant).
 
-Das `packages/backend/` ist weiterhin **single-tenant** (ein Store, ein Seed-Admin). Für volle SaaS-Mandanten
-fehlt noch:
-
-- **Mandanten-Auflösung** per `Host`-Header (Domain → Mandant) bzw. dediziertem Deploy je Verein.
-- **Mandanten-getrennter Store** (`Map<tenantId, createApi({dataFile})>`); pro Mandant:
-  Nutzer/Rollen/Mitglieder, `club`-Config, `featureFlags` (Freigabe) **und** Provisioning (Buchung).
-- **Branding-Assets pro Mandant** (Logo/Favicon/manifest/title; siehe §2 „offen").
-- **Onboarding-Flow:** neuer Mandant = Seed (Admin-Konto, Default-`club`/Theme, gebuchte Features
-  aus Tarif). Self-Service-Registrierung optional.
+Das `packages/backend/` ist weiterhin **single-tenant** (ein Store, ein Seed-Admin). Was für volle
+SaaS-Mandantenfähigkeit noch fehlt (Host-basierte Mandanten-Auflösung, mandanten-getrennter Store,
+Branding-Assets je Mandant, Onboarding-Flow), wird in der Roadmap des Hauptrepos geführt.
 
 Der Same-Origin-Vorteil (kein CORS, `SameSite=Lax`-Cookies) bleibt erhalten, wenn pro Verein ein
 eigener Origin bedient wird — andernfalls greift die Cross-Origin-Härtung aus
@@ -148,14 +141,6 @@ hier wählt der Besucher das Beispiel per Query.
 
 ## 6. Phasen-Roadmap
 
-| Phase | Inhalt | Status |
-|---|---|---|
-| **P1 White-Label-Extraktion** | `club.json` + `GET/POST /api/club`, `[data-club]`, `theme.css`, Recht `manage_club`, generische Defaults, Contract-Test | **umgesetzt (diese Iteration)** |
-| **P2 Branding pro Domain** | Dynamisches `manifest.webmanifest` (Backend, `/api/manifest`) + client-seitiges `<title>`/`theme-color`/App-Titel aus `/api/club`; Felder `tagline`/`theme_color` | **umgesetzt** (offen: Crawler-SEO-Templating, per-Verein-Icon-Dateien) |
-| **P3 Feature-Buchung mocken** | Provisioning-Store (`bsg_feature_bookings`) + Recht `book_features` + `GET /api/bookings`/`POST /api/features/book` + Admin-UI „Funktionen buchen"; `capabilities` filtert gebucht×freigegeben | **umgesetzt** (offen: Abo/Billing-Gating, P4) |
-| **P3b Produkt-Portal & Referenz-Beispiele** | Generisches `index.html`-Portal; BSG → `home.html`; `club-config.js` (Registry+Resolver, `?club=<id>`), Store-Namespace + Club-Seed pro Beispiel (§5a) | **umgesetzt** |
-| **P4 Mehrmandanten-Backend** | **Teil 1 umgesetzt:** JSON-Snapshot-Persistenz (`BSG_DATA_FILE`, `packages/backend/store.mjs`), mandantenfähig gekapselt. **Offen (Teil 2):** Host-basierte Mandantenauflösung, pro-Mandant-Stores, Onboarding, Billing | teilweise |
-| **P5 Repo-Split** | nach `backend-repo-separation-plan.md` (Contract-Package, Backend in eigenes Repo) | offen |
-
-> **Empfehlung:** P2/P3 als nächste, in sich abgeschlossene Schritte (rein additiv, gegen den
-> bestehenden Vertrag). P4/P5 erst, wenn ein zweiter realer Mandant der konkrete Treiber ist.
+Phasen **P1–P3b** sind umgesetzt (oben in §1–§5a beschrieben), **P5 (Repo-Split)** ebenfalls (Backend
+in eigenem Repo + Contract-Package). Der **offene** Rest wird zentral in der Roadmap des Hauptrepos
+geführt, nicht mehr als Status-Tabelle hier — Index: [`ROADMAP.md`](../ROADMAP.md).

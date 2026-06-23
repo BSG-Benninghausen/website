@@ -15,6 +15,9 @@ White-Label-Portal mit mehreren Referenz-Beispielen lebt im Upstream
 (`crypticalcode/vereins-baukasten`); zum Produktmodell siehe
 [`docs/productization-saas-plan.md`](docs/productization-saas-plan.md).
 
+**Roadmap & Backlog** (offene Vorhaben) werden zentral im Upstream geführt — GitHub Issues + Project
+»Vereins-Baukasten Roadmap«; Index: [`ROADMAP.md`](ROADMAP.md).
+
 ## Inhalt & Seiten
 
 | Seite | Datei | Inhalt |

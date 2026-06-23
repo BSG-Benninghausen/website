@@ -4,9 +4,9 @@ Status: **Phase 0–3 umgesetzt** (Vertrag gekapselt, Workspace-Grenze gezogen, 
 veröffentlichbar, **Backend in eigenes Repo ausgegliedert** + Monorepo-Cleanup). Das Backend lebt
 jetzt in `crypticalcode/vereins-baukasten-backend`, im Monorepo gepinnt über
 [`backend-ref.json`](../backend-ref.json) und erzeugt/aktualisiert via
-[`tools/backend-split/`](../tools/backend-split/). Offen: der Vertrags-Split (Phase 3b: Contract als
-gepinnte Package-Dependency statt vendored) und die volle CI/CD-Verdrahtung (Phase 4, u. a.
-Deploy A/B, Secret `BACKEND_REPO_TOKEN` für die E2E gegen das private Backend-Repo).
+[`tools/backend-split/`](../tools/backend-split/). Phase 3b (Contract als gepinntes Package statt
+vendored) ist umgesetzt; offen bleibt nur die restliche CI/CD-Verdrahtung (Phase 4: Deploy A/B,
+Secret `BACKEND_REPO_TOKEN` für die E2E) — geführt in der Roadmap des Hauptrepos.
 Begleitdokument zur Produktvision: [`productization-saas-plan.md`](./productization-saas-plan.md).
 
 Tragendes Prinzip: **ein gemeinsamer Vertrag, an dem Mock und echtes Backend mit identischen Tests
@@ -166,15 +166,12 @@ brauchen `SameSite=None; Secure` statt `Lax` (**neuer Code**, plus CSRF-Überleg
 
 ---
 
-## 7. Phasen-Roadmap (inkrementell, jederzeit anhaltbar)
+## 7. Phasen-Roadmap
 
-| Phase | Inhalt | Git-Trennung? | Status |
-|-------|--------|---------------|--------|
-| **0. Harness entkoppeln** | `BSG_MOCK_SRC`/`BSG_DATA_DIR`-Parametrisierung; `run.mjs` setzt Defaults | nein | ✅ |
-| **1. Workspace-Grenze** | npm-Workspaces: `packages/api-contract/` + `packages/backend/`, Root = Frontend; Seeds zentral + vendored. **Empfohlener Halte-/Endpunkt ohne Treiber.** | nein | ✅ |
-| **2. Package veröffentlichen** | `@crypticalcode/api-contract` nach GitHub Packages (Publish-on-Tag); Konsum per Name nur Dev/Test; Renovate eingerichtet | nein | ✅ |
-| **3. Backend splitten** | Snapshot via `tools/backend-split/extract.sh --no-history` → eigenes Repo; Seeds vendored/install-frei; Deploy Option A; Monorepo-Cleanup (§4): `packages/backend/` entfernt, `backend-ref.json` gepinnt | **ja** | ✅ |
-| **4. CI/CD verdrahten** | FE-CI: Mock + Guards; Backend-Repo-CI: Real + Persistenz; E2E im FE-Repo gegen das gepinnte Backend (Secret `BACKEND_REPO_TOKEN`, sonst grün übersprungen). Offen: Deploy A/B, Phase 3b (Contract-Split) | ja | teilweise |
+Phasen **0–3 + 3b** (Contract-Package) sind umgesetzt — Backend in eigenem Repo, Vertrag als
+gepinntes Package, FE-CI (Mock + Guards) und Backend-CI (Real + Persistenz) getrennt. Offen ist nur
+die restliche **CI/CD-Verdrahtung (Phase 4: Deploy A/B)**; geführt in der Roadmap des Hauptrepos
+([`ROADMAP.md`](../ROADMAP.md)).
 
 ---
 
