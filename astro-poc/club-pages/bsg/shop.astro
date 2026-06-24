@@ -53,6 +53,10 @@ import Base from "../../src/layouts/Base.astro";
                   <textarea id="shop-note" name="note" rows="2"></textarea>
                 </div>
                 <label class="check-row">
+                  <input type="checkbox" name="bankConsent" />
+                  <span>Ich bin einverstanden, dass meine beim Verein hinterlegte Kontoverbindung (IBAN) für die Bezahlung in diesem Shop per SEPA-Lastschrift durch den Betreiber verwendet wird.</span>
+                </label>
+                <label class="check-row">
                   <input type="checkbox" name="consent" />
                   <span>Ich ermächtige den Betreiber, den fälligen Betrag mittels SEPA-Lastschrift von meinem Konto einzuziehen, und bestelle kostenpflichtig.</span>
                 </label>
@@ -76,7 +80,4 @@ import Base from "../../src/layouts/Base.astro";
     </div>
   </section>
 
-  <Fragment slot="scripts">
-    <script is:inline src="assets/js/shop.js"></script>
-  </Fragment>
 </Base>

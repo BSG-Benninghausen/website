@@ -196,6 +196,9 @@ window.BSG_ADMIN_EMAIL=${JSON.stringify(club.admin_email)};
   <!-- Global: Sponsoren-Funktion (Footer-Logo-Leiste + Menü-Link) auf JEDER Seite.
        Komplett config-gesteuert (/api/sponsors-config); aus = passiert nichts. -->
   <script is:inline src="assets/js/sponsors.js"></script>
+  <!-- Global: Webshop-Menülink (nur eingeloggt, config-gesteuert via /api/shop-config).
+       Aus oder ausgeloggt = kein Link. Der Katalog/Checkout läuft nur auf shop.html. -->
+  <script is:inline src="assets/js/shop.js"></script>
   <slot name="scripts" />
 </body>
 </html>

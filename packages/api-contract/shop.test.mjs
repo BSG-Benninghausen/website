@@ -13,23 +13,25 @@ export default async function run(api, ck) {
   ck("Vorstand hat KEIN manage_shop (Shop = Privatperson)", !!vorstand && !vorstand.permissions.includes("manage_shop"));
   ck("Rolle 'shop' existiert mit manage_shop", !!shopRole && shopRole.permissions.includes("manage_shop"));
 
-  /* ----- Öffentliche Lesezugriffe ----- */
+  /* ----- Zugriff: Config öffentlich, Katalog nur eingeloggt (Store hinter Login) ----- */
   await api.logout();
   [s, d] = await api.getJ("/api/shop-config");
   ck("GET /api/shop-config öffentlich, default aus", s === 200 && Array.isArray(d.fields) && d.values.enabled === false);
   [s, d] = await api.getJ("/api/shop/products");
-  const seedCount = d.items.length;
-  ck("GET /api/shop/products öffentlich (seed)", s === 200 && seedCount > 0 && d.tier === "extern");
-  const gi = d.items.find((p) => p.id === "prod-gi");
-  ck("Externer sieht Externen-Preis", gi && gi.yourTier === "extern" && gi.yourPrice === 49.9);
-  ck("Förderpreis wird Öffentlichkeit NICHT offengelegt", gi && gi.prices.gesponsert === undefined);
+  ck("GET /api/shop/products anonym -> 401 (Store hinter Login)", s === 401);
 
   /* ----- Schreibschutz ----- */
   [s, d] = await api.postJ("/api/shop/products", { name: "Anon" });
-  ck("anonym -> 401", s === 401);
+  ck("anonym schreibt -> 401", s === 401);
 
   const nina = api.email("nina");
   await api.newUser("Nina Normal", nina); // eingeloggt, aber kein Mitglied
+  [s, d] = await api.getJ("/api/shop/products");
+  const seedCount = d.items.length;
+  ck("eingeloggtes Nicht-Mitglied sieht Katalog (Externen-Tarif)", s === 200 && seedCount > 0 && d.tier === "extern");
+  const gi = d.items.find((p) => p.id === "prod-gi");
+  ck("Externer sieht Externen-Preis", gi && gi.yourTier === "extern" && gi.yourPrice === 49.9);
+  ck("Förderpreis wird Nicht-Verwaltung NICHT offengelegt", gi && gi.prices.gesponsert === undefined);
   [s, d] = await api.postJ("/api/shop/products", { name: "Hack", prices: { extern: 5, mitglied: 4 } });
   ck("Nicht-Betreiber -> 403", s === 403);
   [s, d] = await api.postJ("/api/shop-config", { values: { enabled: true } });
@@ -64,10 +66,12 @@ export default async function run(api, ck) {
   /* ----- Mitglieder-Checkout: Mandat + Bestellung ----- */
   [s, d] = await api.postJ("/api/shop/orders", { items: [{ productId: "prod-gi", qty: 1 }], consent: true });
   ck("Bestellung ohne Mandat -> 409", s === 409 && d.code === "NO_MANDATE");
-  [s, d] = await api.postJ("/api/shop/mandate", { consent: false });
-  ck("Mandat ohne Zustimmung -> 422", s === 422 && d.errors && d.errors.consent);
+  [s, d] = await api.postJ("/api/shop/mandate", { consent: false, bankConsent: true });
+  ck("Mandat ohne SEPA-Zustimmung -> 422", s === 422 && d.errors && d.errors.consent);
   [s, d] = await api.postJ("/api/shop/mandate", { consent: true });
-  ck("Mandat erteilt (201)", s === 201 && /^DE/.test(d.mandate.iban) && d.mandate.status === "aktiv");
+  ck("Mandat ohne Bankdaten-Zustimmung -> 422", s === 422 && d.errors && d.errors.bankConsent);
+  [s, d] = await api.postJ("/api/shop/mandate", { consent: true, bankConsent: true });
+  ck("Mandat erteilt (201) inkl. Bankdaten-Zustimmung", s === 201 && /^DE/.test(d.mandate.iban) && d.mandate.status === "aktiv" && !!d.mandate.bankConsentAt);
   [s, d] = await api.getJ("/api/shop/mandate");
   ck("Mandat abrufbar", d.mandate && d.mandate.status === "aktiv");
 

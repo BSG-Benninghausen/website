@@ -12,6 +12,10 @@
   const NAV_CACHE_KEY = (NAV_NS === "bsg" ? "" : NAV_NS + ":") + "bsg_shop_nav";
   const navCacheShown = () => { try { return localStorage.getItem(NAV_CACHE_KEY) === "1"; } catch (e) { return false; } };
   const writeNavCache = (v) => { try { v ? localStorage.setItem(NAV_CACHE_KEY, "1") : localStorage.removeItem(NAV_CACHE_KEY); } catch (e) {} };
+  // Login-Status optimistisch aus dem Auth-Cache von main.js (gleicher Key/Namespace) –
+  // für das Menülink-Gating auf Nicht-Shop-Seiten ohne eigenen /api/auth/me-Aufruf.
+  const AUTH_CACHE_KEY = (NAV_NS === "bsg" ? "" : NAV_NS + ":") + "bsg_nav_auth";
+  const cachedLoggedIn = () => { try { return !!JSON.parse(localStorage.getItem(AUTH_CACHE_KEY) || "null"); } catch (e) { return false; } };
 
   function esc(v) {
     if (typeof BSG !== "undefined" && BSG.escape) return BSG.escape(v);
@@ -192,6 +196,8 @@
     e.preventDefault();
     const form = e.currentTarget;
     const consent = form.querySelector("[name=consent]");
+    const bankConsent = form.querySelector("[name=bankConsent]");
+    if (!bankConsent || !bankConsent.checked) { status("err", "Bitte der Nutzung deiner beim Verein hinterlegten Bankdaten zustimmen."); return; }
     if (!consent || !consent.checked) { status("err", "Bitte das SEPA-Lastschriftmandat bestätigen."); return; }
     if (!state.cart.length) { status("err", "Dein Warenkorb ist leer."); return; }
     const btn = form.querySelector("[type=submit]"); if (btn) btn.setAttribute("aria-busy", "true");
@@ -203,7 +209,7 @@
       let o = await placeOrder();
       // Nur wenn noch KEIN aktives Mandat existiert: einmalig erteilen und erneut bestellen.
       if (o.res.status === 409 && o.data && o.data.code === "NO_MANDATE") {
-        const m = await postJSON("/api/shop/mandate", { consent: true });
+        const m = await postJSON("/api/shop/mandate", { consent: true, bankConsent: true });
         if (!m.res.ok || !m.data.ok) {
           if (m.data && m.data.code === "ACCOUNT_INCOMPLETE") status("err", "Bitte zuerst deine IBAN im Konto hinterlegen.");
           else status("err", (m.data && m.data.message) || "Mandat konnte nicht erteilt werden.");
@@ -244,12 +250,17 @@
     } catch (e) {}
   }
 
-  async function loadCatalog() {
-    if (!catalogEl) return;
+  // Login autoritativ prüfen (für Redirect-Gate + Konto-/Mitglieds-Daten).
+  async function refreshLoggedIn() {
     try {
       const me = await (await fetch("/api/auth/me")).json();
       if (me && me.ok && me.user) { state.loggedIn = true; state.iban = me.user.iban || ""; state.name = me.user.name || ""; }
-    } catch (e) {}
+      else { state.loggedIn = false; }
+    } catch (e) { /* Netzfehler: Status unverändert lassen */ }
+  }
+
+  async function loadCatalog() {
+    if (!catalogEl) return;
     if (state.loggedIn) {
       try {
         const mem = await (await fetch("/api/memberships")).json();
@@ -296,13 +307,26 @@
       }
       return;
     }
-    setNavShown(!!cfg.showPage);
+
     if (catalogEl) {
+      // Store komplett hinter dem Login: Login autoritativ prüfen, sonst Redirect.
+      await refreshLoggedIn();
+      setNavShown(!!(cfg.showPage && state.loggedIn));
+      if (!state.loggedIn) { location.href = "login.html"; return; }
       const disabled = document.querySelector("[data-shop-disabled]");
       if (disabled) disabled.hidden = true;
       await loadCatalog();
+    } else {
+      // Nicht-Shop-Seiten: Menülink nur eingeloggt (optimistisch aus dem Auth-Cache).
+      setNavShown(!!(cfg.showPage && cachedLoggedIn()));
     }
   }
+
+  // Menülink-Status nach dem Live-Auth-Abgleich von main.js auffrischen (Login/Logout ohne Reload).
+  window.addEventListener("bsg:auth-change", () => {
+    if (catalogEl) return; // Shop-Seite hat ihren eigenen autoritativen Pfad
+    if (state.cfg && state.cfg.enabled) setNavShown(!!(state.cfg.showPage && cachedLoggedIn()));
+  });
 
   if (navCacheShown()) addNavLink();
   load();

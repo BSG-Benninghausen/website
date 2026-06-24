@@ -952,6 +952,7 @@
     /* ---------- Webshop: Produkte ---------- */
     "GET /api/shop/products": async () => {
       const user = currentUser();
+      if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
       const manage = hasPerm(user, "manage_shop");
       const tier = shopTierFor(user);
       const items = (await ensureShopProducts()).slice()
@@ -1030,17 +1031,20 @@
       if (!user) return json({ ok: false, message: "Nicht angemeldet." }, 401);
       if (!shopCanCheckout(user)) return json({ ok: false, message: "Nur aktive Vereinsmitglieder können ein SEPA-Mandat erteilen." }, 403);
       if (!asBool(body.consent)) return json({ ok: false, message: "Bitte das SEPA-Lastschriftmandat bestätigen.", errors: { consent: "Bitte bestätigen." } }, 422);
+      // Eigene Zustimmung: Nutzung der beim Verein hinterlegten Bankdaten (IBAN) für die Shop-Zahlung.
+      if (!asBool(body.bankConsent)) return json({ ok: false, message: "Bitte der Nutzung der beim Verein hinterlegten Bankdaten zustimmen.", errors: { bankConsent: "Bitte bestätigen." } }, 422);
       const iban = norm(body.iban) ? body.iban : user.iban;
       if (!iban || !isIban(iban)) return json({ ok: false, code: "ACCOUNT_INCOMPLETE", message: "Bitte zuerst eine gültige IBAN im Konto hinterlegen." }, 409);
       const cfg = await ensureShopConfig();
       const mandates = getStore(KEYS.shopMandates, []);
       mandates.forEach((m) => { if (m.userId === user.id && m.status === "aktiv") m.status = "widerrufen"; });
+      const now = new Date().toISOString();
       const mandate = {
         id: genId("man"), userId: user.id,
         mandateRef: "SHOP-" + user.id.replace(/^usr-/, "").toUpperCase().slice(0, 8) + "-" + Date.now().toString(36).toUpperCase(),
         iban: fmtIban(iban), accountHolder: norm(body.accountHolder) || user.name,
         creditorId: cfg.creditorId || "", creditorName: cfg.operatorName || "",
-        consentAt: new Date().toISOString(), status: "aktiv", createdAt: new Date().toISOString(),
+        consentAt: now, bankConsentAt: now, status: "aktiv", createdAt: now,
       };
       mandates.push(mandate); setStore(KEYS.shopMandates, mandates);
       return json({ ok: true, mandate, message: "SEPA-Lastschriftmandat gespeichert." }, 201);
